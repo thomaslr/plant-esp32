@@ -82,7 +82,7 @@ For a permanent soldered build in an enclosure, an **18-row by 24-column 0.1" (2
 * **Supply Monitor Divider (Row K & L Zero-Crossing):**
   * **R1 (10kΩ):** Vertically spans N6 (+5V bus) to K6 (Divider Node).
   * **R2 (10kΩ):** Runs horizontally along Row K from K6 (Node) to K4 (GND). Solder bridged at K4 $\to$ J4 (ESP32 GND) and K6 $\to$ J6 (GPIO 0 ADC).
-  * **C1 (100nF):** Ceramic filter with left leg in L4 (GND) and right leg in K5 (Node). Avoids crowding hole K4; directly grounded via Col 4 vertical bridge L4 $\to$ K4 $\to$ J4!
+  * **C1 (100nF):** Ceramic filter with left leg in L4 (GND) and right leg in K6 (Node). Avoids crowding hole K4; directly grounded via Col 4 vertical bridge L4 $\to$ K4 $\to$ J4, and node directly bridged K6 $\to$ J6!
 * **Outward Pump Terminal (Bottom Edge / Row B):**
   * **TB3 (2-Pin Pump):** Row B, Cols 19 (Drain -), 21 (+5V); wire entries face **DOWNWARDS** off Row A. Dedicated holes, completely separated from flyback diode D1.
 * **Actuators & Direct Solder Bridges (Separated D1 & TB3):**

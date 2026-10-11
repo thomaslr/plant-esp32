@@ -30,7 +30,7 @@ Every electrical connection in this build is explicitly realized using one of fo
 * **Top Sensor Terminals**: **TB2 (Soil)** & **TB1 (Ultrasonic)** on **Row Q**, with wire entries facing **UPWARDS** (North off top edge).
 * **Bottom Pump Terminal**: **TB3 (DC Pump)** on **Row B**, with wire entries facing **DOWNWARDS** (South off bottom edge).
 * **Flyback Diode Separation**: **D1 (1N5819)** is mounted in **Row E (Cols 19 & 21)**, moved up one row from Row D—giving two full rows of clearance from TB3!
-* **100µF Bulk Capacitor & C1 Filter Ground**: **C3 (100µF)** is joined directly between **VCC and GND** in **Row L (Cols 3 & 4)** right at the ESP32 power pins. **C1 (100nF)** has its left leg in **L4** (grounded with C3) and right leg in **K5** (Node), avoiding crowding hole K4.
+* **100µF Bulk Capacitor & C1 Filter Ground**: **C3 (100µF)** is joined directly between **VCC and GND** in **Row L (Cols 3 & 4)** right at the ESP32 power pins. **C1 (100nF)** has its left leg in **L4** (grounded with C3) and right leg in **K6** (Node), avoiding crowding hole K4.
 
 ```
        COL:  1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18  19  20  21  22  23  24
@@ -41,7 +41,7 @@ Every electrical connection in this build is explicitly realized using one of fo
     ROW N: [·] [·] [==== +5V SENSOR BUS ===] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·]
     ROW M: [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] (CLEAR)
     ROW L: [·] [·] [C3+][C3-/C1][·][·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] (100µF VCC-GND & C1 GND)
-    ROW K: [·] [·] [·] [R2GND][C1][Node][·][·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·]
+    ROW K: [·] [·] [·] [R2G] [·] [Node] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] (R2 GND at K4, Node at K6)
     ROW J: [·] [·] [ 5V GND 3V3  G0  G1  G2  G3  G4 ]  (ESP32-C3 SuperMini Header 1)        [·] [·] [·] [·]
     ROW I: [·] [·] |                                |                                      [·] [·] [·] [·]
     ROW H: [·] [·] |      SOCKET CAVITY             |                                      [·] [·] [·] [·]
@@ -67,7 +67,7 @@ Every electrical connection in this build is explicitly realized using one of fo
 | **Q1** | **N-MOSFET (Logic-Level)** | **FQP30N06L** (60V, 32A) | TO-220 (Vertical) | **Row C, Cols 18 (G), 19 (D), 20 (S)** |
 | **D1** | **Schottky Diode** | **1N5819** (40V, 1A) | DO-41 Axial | **Row E, Col 19 (Anode) $\to$ Col 21 (Cathode)** (Moved up to Row E!) |
 | **C3** | **Electrolytic Capacitor** | **$100\,\mu\text{F}$** (16V/25V) | Radial Can (2.5mm pitch) | **Row L, Col 3 (+) $\to$ Col 4 (-)** (Joined between VCC & GND!) |
-| **C1** | **Ceramic Capacitor** | $100\,\text{nF}$ (50V, "104") | Radial Disc (0.1" pitch) | **Row L, Col 4 (GND) $\to$ Row K, Col 5 (Node)** (Left leg in L4!) |
+| **C1** | **Ceramic Capacitor** | $100\,\text{nF}$ (50V, "104") | Radial Disc (0.1" pitch) | **Row L, Col 4 (GND) $\to$ Row K, Col 6 (Node)** (Direct to Node at K6!) |
 | **C2** | **Ceramic Capacitor** | $100\,\text{nF}$ (50V, "104") | Radial Disc (0.2" pitch) | **Row O, Col 7 (Data) $\to$ Col 11 (GND)** |
 | **R1** | **Metal Film Resistor** | $10\,\text{k}\Omega$ ($0.25\,\text{W}, 1\%$) | Axial | **Col 6, Row N (+5V) $\to$ Row K (Node)** |
 | **R2** | **Metal Film Resistor** | $10\,\text{k}\Omega$ ($0.25\,\text{W}, 1\%$) | Axial | **Row K, Col 6 (Node) $\to$ Col 4 (GND)** |
@@ -92,7 +92,7 @@ Every electrical connection in this build is explicitly realized using one of fo
 | **Q1 (FQP30N06L)** | Pin 1 (Gate)<br>Pin 2 (Drain)<br>Pin 3 (Source) | **C18**<br>**C19**<br>**C20** | TO-220 package across 3 adjacent holes.<br>Metal heatsink tab faces **NORTH** (inward toward Row D).<br>Plastic labeled front faces **SOUTH** (toward Row B). |
 | **R1 (10kΩ)** | Top (+5V)<br>Bottom (Divider Node) | **N6**<br>**K6** | 5V supply divider top leg. Spans vertically from Row N (+5V Bus) to Row K (Node). |
 | **R2 (10kΩ)** | Right (Divider Node)<br>Left (GND) | **K6**<br>**K4** | 5V supply divider bottom leg. Spans horizontally along Row K from Col 6 (Node) to Col 4 (GND). |
-| **C1 (100nF)** | Right (Divider Node)<br>Left (GND) | **K5**<br>**L4** | ADC ripple filter. Spans diagonally from Col 4 Row L (GND) to Col 5 Row K (Node). Left leg moved to L4; eliminates hole crowding at K4! |
+| **C1 (100nF)** | Right (Divider Node)<br>Left (GND) | **K6**<br>**L4** | ADC ripple filter. Spans diagonally from Col 4 Row L (GND) to Col 6 Row K (Node). Directly grounded via L4 and tied to divider node at K6! |
 | **C2 (100nF)** | Lead 1 (Data AOUT)<br>Lead 2 (GND) | **O7**<br>**O11** | Wi-Fi RF bypass capacitor directly across Soil AOUT and GND. |
 | **R3 (1kΩ)** | Echo In<br>Divider Node | **O19**<br>**O17** | Echo stepper upper leg. Spans Col 19 to Col 17 in Row O. |
 | **R4 (2kΩ)** | Divider Node<br>GND | **O17**<br>**P17** | Echo stepper lower leg. Spans Row O to Row P (GND). |
@@ -131,8 +131,7 @@ Because **perfboard holes are isolated**, every net requires a deliberate physic
 
 | Signal Net | From Pad | To Pad | Method | Exact Function |
 | :--- | :---: | :---: | :--- | :--- |
-| **5V Supply Sense** | **K6** (Divider Node) | **J6** (ESP32 GPIO 0) | **1-Pad Solder Bridge** | Direct solder bridge between Row K and Row J on Col 6 feeds 2.5V into ADC. |
-| **C1 Filter Bridge** | **K5** (C1 Node) | **K6** (Divider Node) | **1-Pad Solder Bridge** | Solder bridge on Row K links C1 right leg directly in parallel with R2 at divider node. |
+| **5V Supply Sense & Filter** | **K6** (Divider Node) | **J6** (ESP32 GPIO 0) | **1-Pad Solder Bridge** | Direct solder bridge between Row K and Row J on Col 6 ties R1, R2, and C1 node directly to ESP32 GPIO 0. |
 | **R2 GND Bridge** | **K4** (R2 GND) | **J4** (ESP32 GND) | **1-Pad Solder Bridge** | Direct solder bridge between Row K and Row J on Col 4 ties R2 ground to ESP32 ground. |
 | **Soil Analog Sense** | **Q7** (TB2 Pin 1 Data) | **J7** (ESP32 GPIO 1) | **Straight Insulated Wire** | Runs straight down Column 7 with **zero wire crossovers** into ADC1_CH1. |
 | **Soil Switched VCC** | **Q9** (TB2 Pin 2 VCC) | **J8** (ESP32 GPIO 2) | **Parallel Insulated Wire** | Runs parallel down Column 9/8 with **zero wire crossovers** from GPIO 2. |
@@ -192,9 +191,9 @@ This layout guarantees **complete galvanic isolation** between noisy motor surge
    * On solder side, bridge **L3 $\to$ K3 $\to$ J3** (to 5V) and **L4 $\to$ K4 $\to$ J4** (to GND).
    * Insert **R1 (10kΩ)** vertically into **N6 $\to$ K6**.
    * Insert **R2 (10kΩ)** horizontally along Row K into **K6 $\to$ K4**.
-   * Insert **C1 (100nF)** diagonally with left lead in **L4** (GND) and right lead in **K5** (Node).
+   * Insert **C1 (100nF)** diagonally with left lead in **L4** (GND) and right lead in **K6** (Node).
    * On underside (solder side):
-     * Create solder bridge across **K5 $\to$ K6 $\to$ J6** (connecting divider node and C1 directly to ESP32 GPIO 0).
+     * Create solder bridge across **K6 $\to$ J6** (connecting divider node and C1 directly to ESP32 GPIO 0).
      * Solder bridge **L4 $\to$ K4 $\to$ J4** ties C3 (-), C1 left lead, and R2 ground directly to ESP32 GND.
    * Insert **R3 (1kΩ)** into O19 $\to$ O17; insert **R4 (2kΩ)** into O17 $\to$ P17. Solder and tie P17 to Row P GND.
    * Insert **C2 (100nF)** into O7 $\to$ O11.

@@ -500,7 +500,7 @@
                 <div style="font-size: 12px; line-height: 1.6; color: var(--text-muted);">
                     <div>• <b>R1 (10kΩ)</b>: Sits vertically between <b>N6 (+5V)</b> and <b>K6 (Node)</b>.</div>
                     <div>• <b>R2 (10kΩ)</b>: Sits horizontally along Row K between <b>K6 (Node)</b> and <b>K4 (GND)</b>.</div>
-                    <div>• <b>C1 (100nF)</b>: Spans between <b>L4 (GND)</b> and <b>K5 (Node)</b>. Solder bridged K5 $\to$ K6 $\to$ J6 (Node) and L4 $\to$ K4 $\to$ J4 (GND).</div>
+                    <div>• <b>C1 (100nF)</b>: Spans between <b>L4 (GND)</b> and <b>K6 (Node)</b>. Solder bridged K6 $\to$ J6 (Node) and L4 $\to$ K4 $\to$ J4 (GND).</div>
                     <div>• <b>Bridge K6 $\to$ J6</b>: Connects 2.5V node directly to ESP32 GPIO 0.</div>
                     <div>• <b>Bridge K4 $\to$ J4</b>: Connects divider/filter ground to ESP32 GND (Pin J4).</div>
                 </div>
@@ -572,7 +572,7 @@
                             <tr><td><b>C3</b></td><td>100µF Bulk Cap (VCC-GND)</td><td><span class="coord-chip">L3(+), L4(-)</span></td></tr>
                             <tr><td><b>R1</b></td><td>10kΩ (Vertical)</td><td><span class="coord-chip">N6 (+5V) → K6 (Node)</span></td></tr>
                             <tr><td><b>R2</b></td><td>10kΩ (Horizontal)</td><td><span class="coord-chip">K6 (Node) → K4 (GND)</span></td></tr>
-                            <tr><td><b>C1</b></td><td>100nF Ceramic Filter</td><td><span class="coord-chip">L4 (GND) → K5 (Node)</span></td></tr>
+                            <tr><td><b>C1</b></td><td>100nF Ceramic Filter</td><td><span class="coord-chip">L4 (GND) → K6 (Node)</span></td></tr>
                             <tr><td><b>C2</b></td><td>100nF Ceramic (Soil RF)</td><td><span class="coord-chip">O7,11</span></td></tr>
                             <tr><td><b>R3,R4</b></td><td>1kΩ & 2kΩ (Echo Stepper)</td><td><span class="coord-chip">O19,17,P17</span></td></tr>
                             <tr><td><b>R5,R6</b></td><td>1kΩ & 100kΩ (Gate)</td><td><span class="coord-chip">C14,17,C18,A18</span></td></tr>
@@ -645,7 +645,7 @@
                     name: 'GPIO 0 (5V Rail Monitor ADC)',
                     color: '#d29922',
                     desc: 'ADC1_CH0 input monitoring 5V supply via R1 (10k), R2 (10k), and C1 (100nF) filter on Row K & L.',
-                    pads: ['J6','K6','K5','N6','K4','L4']
+                    pads: ['J6','K6','N6','K4','L4']
                 },
                 'GPIO1_SOIL': {
                     name: 'GPIO 1 (Soil Moisture Analog ADC)',
@@ -705,8 +705,7 @@
                 'L3': 'C3 Bulk Cap (+) 100µF -> Solder bridge down Col 3 to J3 (ESP32 5V In / VCC)',
                 'L4': 'C3 Bulk Cap (-) 100µF & C1 GND -> Solder bridge down Col 4 to K4 (R2 GND) and J4 (ESP32 GND)',
                 'K4': 'R2 Ground Pad -> Solder bridge down to J4 (ESP32 GND) and up to L4 (C1 / C3 GND)',
-                'K5': 'C1 Filter Node Lead -> Solder bridge right to K6 (Divider Node)',
-                'K6': 'Supply Divider Node -> Solder bridge down to J6 (GPIO 0), connects R1 bottom and R2 top',
+                'K6': 'Supply Divider Node -> Solder bridge down to J6 (GPIO 0), connects R1 bottom, R2 top, and C1 Node lead',
                 'N6': 'R1 Top Lead (+5V) -> Soldered directly into Row N +5V Bus',
                 'Q7': 'TB2 Pin 1 (Soil DATA) -> Straight jumper down to J7 (ESP32 GPIO 1)',
                 'Q9': 'TB2 Pin 2 (Soil VCC) -> Parallel jumper down to J8 (ESP32 GPIO 2)',
@@ -850,8 +849,8 @@
                 createBusConductor(targetLayer, 'N3', 'N15', '#f85149', 6, isMirrored, 'Row N +5V Bus', ['N3','N4','N5','N6','N15'], 'VBUS_5V');
 
                 // 2. SOLDER BRIDGES
-                // Supply Divider Node Bridge: K5 to K6 to J6 (Divider Node to ESP32 GPIO 0)
-                createSolderBridgeBlob(targetLayer, ['K5', 'K6', 'J6'], '#d29922', isMirrored, 'Supply Sense Node (K5-K6-J6)', 'GPIO0_ADC');
+                // Supply Divider Node Bridge: K6 to J6 (Divider Node to ESP32 GPIO 0)
+                createSolderBridgeBlob(targetLayer, ['K6', 'J6'], '#d29922', isMirrored, 'Supply Sense Node (K6-J6)', 'GPIO0_ADC');
 
                 // Supply Divider Ground Bridge: K4 to J4 (R2/C1 GND to ESP32 GND)
                 createSolderBridgeBlob(targetLayer, ['K4', 'J4'], '#4493f8', isMirrored, 'Supply GND Bridge (K4-J4)', 'GND_ANALOG');
@@ -1244,8 +1243,8 @@
                 // R2 (10k): Horizontal along Row K between K6 (Node) and K4 (GND)
                 renderResistor('R2 (10k)', 'K6', 'K4', '#e3b341');
 
-                // C1 (100nF): Ceramic filter spanning between L4 (GND) and K5 (Node)
-                renderCapacitorCeramic('C1 (100nF)', 'L4', 'K5');
+                // C1 (100nF): Ceramic filter spanning between L4 (GND) and K6 (Node)
+                renderCapacitorCeramic('C1 (100nF)', 'L4', 'K6');
 
                 // C2 (100nF): Soil RF filter across Q7 (AOUT) and P11 (GND) via O7/O11
                 renderCapacitorCeramic('C2 (100nF)', 'O7', 'O11');
