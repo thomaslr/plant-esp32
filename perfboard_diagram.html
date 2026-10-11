@@ -379,6 +379,48 @@
         .method-lead { background: rgba(63, 185, 80, 0.2); color: #3fb950; border: 1px solid rgba(63, 185, 80, 0.4); }
         .method-wire { background: rgba(188, 140, 255, 0.2); color: #bc8cff; border: 1px solid rgba(188, 140, 255, 0.4); }
 
+        .layer-badge-top {
+            background: rgba(188, 140, 255, 0.2);
+            color: #bc8cff;
+            border: 1px solid rgba(188, 140, 255, 0.4);
+            font-size: 9.5px;
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-weight: 700;
+        }
+        .layer-badge-bot {
+            background: rgba(240, 136, 62, 0.2);
+            color: #f0883e;
+            border: 1px solid rgba(240, 136, 62, 0.4);
+            font-size: 9.5px;
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-weight: 700;
+        }
+
+        .filter-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: #21262d;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
+            padding: 3px 9px;
+            color: #c9d1d9;
+            cursor: pointer;
+            user-select: none;
+            font-size: 11px;
+            transition: all 0.15s ease;
+        }
+        .filter-chip:hover {
+            border-color: #58a6ff;
+            color: #fff;
+        }
+        .filter-chip input {
+            cursor: pointer;
+            margin: 0;
+        }
+
         /* SVG Pad Highlight */
         .pad-circle { cursor: pointer; transition: stroke 0.15s; }
         .pad-circle:hover { stroke: #fff !important; stroke-width: 2px !important; }
@@ -397,7 +439,7 @@
                     ROWS R → A (DESCENDING) × COLS 1–24
                 </span>
             </h1>
-            <p>Cleaned, zero-crossing layout: R1/R2/C1 supply divider and parallel TB2 soil sensor wiring.</p>
+            <p>Anti-short dual-layer architecture: Top insulated jumper wires physically isolated from bottom solder tracks.</p>
         </div>
         <div class="nav-links">
             <a href="perfboard_circuit_guide.md" class="nav-btn">📖 Assembly Guide (MD)</a>
@@ -410,25 +452,25 @@
         <div class="canvas-card" id="canvas-card">
             <div class="notice-banner">
                 <div>
-                    <b>✅ CLEAN PERFBOARD LAYOUT:</b> C1 grounded at L4, D1 moved up to Row E (Cols 19/21), C3 (100µF) across VCC-GND at L3/L4. Zero bus crossovers!
+                    <b>🛡️ ZERO-SHORT DUAL-LAYER DESIGN:</b> All 11 crossing jumper wires run on <b>TOP</b> (Component Side). All 13 buses and solder bridges sit on <b>BOTTOM</b> (Solder Side). 1.6mm FR4 core prevents all shorts!
                 </div>
                 <div style="font-family:monospace; color:#8b949e;">Top = Row R • Bottom = Row A</div>
             </div>
 
             <!-- Visual Legend -->
             <div class="legend-bar">
-                <span style="font-weight:bold; color:var(--text-bright);">Wiring Legend:</span>
-                <div class="legend-item"><span class="legend-icon" style="background:#4493f8;"></span> <span>Bare Bus Wire (Pads Soldered)</span></div>
-                <div class="legend-item"><span class="legend-icon" style="background:#f0883e;"></span> <span>Solder Bridge (Adjacent Pads)</span></div>
-                <div class="legend-item"><span class="legend-icon" style="background:#3fb950;"></span> <span>Bent Component Lead</span></div>
-                <div class="legend-item"><span class="legend-icon" style="background:#bc8cff;"></span> <span>Insulated Hookup Jumper</span></div>
+                <span style="font-weight:bold; color:var(--text-bright);">Layer Legend:</span>
+                <div class="legend-item"><span class="legend-icon" style="background:#bc8cff;"></span> <span>[TOP] Insulated Wires (Elevated Above Board)</span></div>
+                <div class="legend-item"><span class="legend-icon" style="background:#4493f8;"></span> <span>[BOTTOM] Bare Bus Rails (Row P, N, A)</span></div>
+                <div class="legend-item"><span class="legend-icon" style="background:#f0883e;"></span> <span>[BOTTOM] Adjacent Solder Bridges</span></div>
+                <div class="legend-item"><span class="legend-icon" style="background:#3fb950;"></span> <span>[TOP] Components (Through-Hole)</span></div>
             </div>
 
             <div class="canvas-toolbar">
                 <div class="toolbar-left">
-                    <button class="view-pill active" id="btn-view-top">Top (Components & Full Wiring)</button>
+                    <button class="view-pill active" id="btn-view-top">Top (Component Side + Top Jumpers)</button>
                     <button class="view-pill" id="btn-view-bottom">Bottom (Solder Side - Mirrored)</button>
-                    <button class="view-pill" id="btn-view-xray">X-Ray (Composite)</button>
+                    <button class="view-pill" id="btn-view-xray">X-Ray (Composite Layered)</button>
                 </div>
                 <div class="toolbar-right">
                     <button class="zoom-btn" id="btn-fit-width" title="Fit to width (Fluid)">↔</button>
@@ -439,6 +481,15 @@
                     <button class="zoom-btn" id="btn-zoom-in" title="Zoom in (+)">+</button>
                     <button class="zoom-btn" id="btn-fullscreen" title="Toggle Fullscreen">⛶</button>
                 </div>
+            </div>
+
+            <!-- Quick Layer Toggles -->
+            <div class="layer-filter-bar" style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding: 7px 16px; background:#161b22; border-bottom:1px solid var(--card-border); font-size:11px;">
+                <span style="color:#8b949e; font-weight:bold; margin-right:4px;">Layer Toggles:</span>
+                <label class="filter-chip" id="lbl-top-wires"><input type="checkbox" id="chk-top-wires" checked> <span class="chip-color" style="background:#bc8cff; width:8px; height:8px; border-radius:50%; display:inline-block;"></span> Top Insulated Wires</label>
+                <label class="filter-chip" id="lbl-top-comps"><input type="checkbox" id="chk-top-comps" checked> <span class="chip-color" style="background:#58a6ff; width:8px; height:8px; border-radius:50%; display:inline-block;"></span> Top Components</label>
+                <label class="filter-chip" id="lbl-bot-bridges"><input type="checkbox" id="chk-bot-bridges"> <span class="chip-color" style="background:#f0883e; width:8px; height:8px; border-radius:50%; display:inline-block;"></span> Bottom Solder Bridges</label>
+                <label class="filter-chip" id="lbl-bot-buses"><input type="checkbox" id="chk-bot-buses"> <span class="chip-color" style="background:#4493f8; width:8px; height:8px; border-radius:50%; display:inline-block;"></span> Bottom Bus Rails</label>
             </div>
 
             <div class="svg-container" id="svg-container">
@@ -518,12 +569,49 @@
             <!-- Tabs: Wiring Schedule & BOM -->
             <div class="panel-card">
                 <div class="tab-headers">
-                    <button class="tab-btn active" data-tab="tab-wiring">Wiring Schedule (20 Conns)</button>
+                    <button class="tab-btn active" data-tab="tab-wiring">Wiring Schedule (24 Conns: Top 11 / Bot 13)</button>
                     <button class="tab-btn" data-tab="tab-bom">BOM (11 Parts)</button>
                     <button class="tab-btn" data-tab="tab-tests">Cold Tests</button>
                 </div>
 
                 <div class="tab-content active" id="tab-wiring">
+                    <div style="margin-bottom: 10px; padding: 7px 9px; background: rgba(56, 139, 253, 0.1); border: 1px solid rgba(56, 139, 253, 0.3); border-radius: 4px; font-size: 11px; color: #79c0ff; line-height: 1.5;">
+                        ⚡ <b>ANTI-SHORT PHYSICAL ISOLATION:</b><br>
+                        • <b>TOP (Component Side):</b> 11 insulated hookup wires run elevated above board.<br>
+                        • <b>BOTTOM (Solder Side):</b> 13 rigid buses & adjacent solder bridges. Zero crossings!
+                    </div>
+
+                    <h4 style="color:#bc8cff; font-size:11px; margin:8px 0 5px; display:flex; align-items:center; gap:6px;">
+                        <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#bc8cff;"></span>
+                        TOP LAYER: Insulated Hookup Wires (11 Wires)
+                    </h4>
+                    <table class="mini-table">
+                        <thead>
+                            <tr>
+                                <th>Net</th>
+                                <th>From → To</th>
+                                <th>Wire Spec / Routing</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><b>GND Feed</b></td><td>P14 → D14</td><td><span class="method-badge method-wire">24 AWG Blue (Down Col 14)</span></td></tr>
+                            <tr><td><b>5V Feed</b></td><td>N15 → E15</td><td><span class="method-badge method-wire">24 AWG Red (Down Col 15)</span></td></tr>
+                            <tr><td><b>5V Bus Tap</b></td><td>J3 → N3</td><td><span class="method-badge method-wire">24 AWG Red (Col 3 Tap)</span></td></tr>
+                            <tr><td><b>GND Bus Tap</b></td><td>J4 → P4</td><td><span class="method-badge method-wire">24 AWG Blue (Col 4 Tap)</span></td></tr>
+                            <tr><td><b>Ultrasonic 5V</b></td><td>N15 → Q15</td><td><span class="method-badge method-wire">26 AWG Red (Arches Row P)</span></td></tr>
+                            <tr><td><b>Echo In Link</b></td><td>Q19 → O19</td><td><span class="method-badge method-wire">26 AWG Grn (Arches Row P)</span></td></tr>
+                            <tr><td><b>Soil AOUT</b></td><td>Q7 → J7</td><td><span class="method-badge method-wire">26 AWG Green (Straight Col 7)</span></td></tr>
+                            <tr><td><b>Soil VCC</b></td><td>Q9 → J8</td><td><span class="method-badge method-wire">26 AWG Purple (Parallel Col 9/8)</span></td></tr>
+                            <tr><td><b>Ultrasonic TRIG</b></td><td>J9 → Q17</td><td><span class="method-badge method-wire">26 AWG Cyan</span></td></tr>
+                            <tr><td><b>Echo 3.3V Out</b></td><td>O17 → J10</td><td><span class="method-badge method-wire">26 AWG Green</span></td></tr>
+                            <tr><td><b>Pump Gate</b></td><td>D8 → C8</td><td><span class="method-badge method-wire">26 AWG Orange</span></td></tr>
+                        </tbody>
+                    </table>
+
+                    <h4 style="color:#f0883e; font-size:11px; margin:12px 0 5px; display:flex; align-items:center; gap:6px;">
+                        <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#f0883e;"></span>
+                        BOTTOM LAYER: Solder Bridges & Bare Buses (13 Conns)
+                    </h4>
                     <table class="mini-table">
                         <thead>
                             <tr>
@@ -533,26 +621,19 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr><td><b>Row P GND</b></td><td>P4 → P21</td><td><span class="method-badge method-bus">Bare Bus Wire</span></td></tr>
-                            <tr><td><b>Power GND</b></td><td>A12 → A14</td><td><span class="method-badge method-bridge">Bridge / Bus</span></td></tr>
-                            <tr><td><b>Row N 5V</b></td><td>N3 → N15</td><td><span class="method-badge method-bus">Bare Bus Wire</span></td></tr>
-                            <tr><td><b>GND Feed</b></td><td>P14 → D14</td><td><span class="method-badge method-wire">24 AWG Wire</span></td></tr>
-                            <tr><td><b>5V Feed</b></td><td>N15 → E15</td><td><span class="method-badge method-wire">24 AWG Wire</span></td></tr>
-                            <tr><td><b>5V Bus Tap</b></td><td>J3 → N3</td><td><span class="method-badge method-wire">Jumper Wire</span></td></tr>
-                            <tr><td><b>Analog GND Tap</b></td><td>J4 → P4</td><td><span class="method-badge method-wire">Jumper Wire</span></td></tr>
-                            <tr><td><b>C3 (+) 5V</b></td><td>L3 → J3</td><td><span class="method-badge method-bridge">Lead / Bridge</span></td></tr>
-                            <tr><td><b>C3/C1 (-) GND</b></td><td>L4 → J4</td><td><span class="method-badge method-bridge">Lead / Bridge</span></td></tr>
-                            <tr><td><b>Divider Node</b></td><td>K6 → J6</td><td><span class="method-badge method-bridge">Solder Bridge</span></td></tr>
-                            <tr><td><b>Divider GND</b></td><td>K4 → J4</td><td><span class="method-badge method-bridge">Solder Bridge</span></td></tr>
-                            <tr><td><b>Pump Drain</b></td><td>E13 → D13 → C13 → B13</td><td><span class="method-badge method-bridge">4-Pad Solder Bridge</span></td></tr>
-                            <tr><td><b>Pump GND</b></td><td>D14 → C14 → B14 → A14</td><td><span class="method-badge method-bridge">4-Pad Solder Bridge</span></td></tr>
-                            <tr><td><b>Pump +5V</b></td><td>E15 → D15 → C15 → B15</td><td><span class="method-badge method-bridge">4-Pad Bridge / Lead Bend</span></td></tr>
-                            <tr><td><b>Gate Node</b></td><td>C11 → C12</td><td><span class="method-badge method-bridge">2-Pad Solder Bridge</span></td></tr>
-                            <tr><td><b>Echo Stepper In</b></td><td>Q19 → O19</td><td><span class="method-badge method-bridge">Solder Bridge</span></td></tr>
-                            <tr><td><b>Echo 3.3V Out</b></td><td>O17 → J10</td><td><span class="method-badge method-wire">Hookup Wire</span></td></tr>
-                            <tr><td><b>Soil AOUT</b></td><td>Q7 → J7</td><td><span class="method-badge method-wire">Straight Jumper</span></td></tr>
-                            <tr><td><b>Soil VCC</b></td><td>Q9 → J8</td><td><span class="method-badge method-wire">Parallel Jumper</span></td></tr>
-                            <tr><td><b>Pump Gate</b></td><td>D8 → C8</td><td><span class="method-badge method-wire">Hookup Wire</span></td></tr>
+                            <tr><td><b>Row P GND Bus</b></td><td>P4 → P21</td><td><span class="method-badge method-bus">22 AWG Bare Bus Wire</span></td></tr>
+                            <tr><td><b>Row N 5V Bus</b></td><td>N3 → N15</td><td><span class="method-badge method-bus">22 AWG Bare Bus Wire</span></td></tr>
+                            <tr><td><b>Power GND Bus</b></td><td>A12 → A14</td><td><span class="method-badge method-bridge">3-Pad Solder Bridge / Bus</span></td></tr>
+                            <tr><td><b>Supply Node</b></td><td>K6 → J6</td><td><span class="method-badge method-bridge">2-Pad Solder Bridge</span></td></tr>
+                            <tr><td><b>Supply GND</b></td><td>K4 → J4</td><td><span class="method-badge method-bridge">2-Pad Solder Bridge</span></td></tr>
+                            <tr><td><b>C3 (+) 5V</b></td><td>L3 → K3 → J3</td><td><span class="method-badge method-bridge">3-Pad Solder Bridge</span></td></tr>
+                            <tr><td><b>C3/C1 (-) GND</b></td><td>L4 → K4 → J4</td><td><span class="method-badge method-bridge">3-Pad Solder Bridge</span></td></tr>
+                            <tr><td><b>Pump Drain Track</b></td><td>E13 → D13 → C13 → B13</td><td><span class="method-badge method-bridge">4-Pad Solder Bridge</span></td></tr>
+                            <tr><td><b>Pump GND Track</b></td><td>D14 → C14 → B14 → A14</td><td><span class="method-badge method-bridge">4-Pad Solder Bridge</span></td></tr>
+                            <tr><td><b>Pump +5V Track</b></td><td>E15 → D15 → C15 → B15</td><td><span class="method-badge method-bridge">4-Pad Solder Bridge</span></td></tr>
+                            <tr><td><b>Gate Resistor</b></td><td>C11 → C12</td><td><span class="method-badge method-bridge">2-Pad Solder Bridge</span></td></tr>
+                            <tr><td><b>Soil GND Tie</b></td><td>Q11 → P11 → O11</td><td><span class="method-badge method-bridge">3-Pad Solder Bridge</span></td></tr>
+                            <tr><td><b>Ultrasonic GND</b></td><td>Q21 → P21</td><td><span class="method-badge method-bridge">2-Pad Solder Bridge</span></td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -708,14 +789,14 @@
                 'K4': 'R2 Ground Pad -> Solder bridge down to J4 (ESP32 GND) and up to L4 (C1 / C3 GND)',
                 'K6': 'Supply Divider Node -> Solder bridge down to J6 (GPIO 0), connects R1 bottom, R2 top, and C1 Node lead',
                 'N6': 'R1 Top Lead (+5V) -> Soldered directly into Row N +5V Bus',
-                'N15': 'Row N +5V Bus End -> (1) Solder bridge to Q15 (TB1 5V), (2) Insulated wire down Col 15 to E15 (Pump 5V / D1 Cathode)',
+                'N15': 'Row N +5V Bus End -> (1) Top insulated wire to Q15 (TB1 5V), (2) Top insulated wire down Col 15 to E15 (Pump 5V / D1 Cathode)',
                 'P14': 'Row P GND Bus Tap -> Insulated wire down Col 14 to D14 (Driver GND feed)',
                 'Q7': 'TB2 Pin 1 (Soil DATA) -> Straight jumper down to J7 (ESP32 GPIO 1)',
                 'Q9': 'TB2 Pin 2 (Soil VCC) -> Parallel jumper down to J8 (ESP32 GPIO 2)',
                 'Q11': 'TB2 Pin 3 (Soil GND) -> Solder bridge to Row P Analog GND Bus (P11)',
-                'Q15': 'TB1 Pin 1 (Ultrasonic 5V) -> Solder bridge / lead to Row N +5V Bus (N15)',
+                'Q15': 'TB1 Pin 1 (Ultrasonic 5V) -> Top insulated wire from Row N +5V Bus (N15), arches safely over Row P GND',
                 'Q17': 'TB1 Pin 2 (Ultrasonic TRIG) -> Hookup jumper to J9 (GPIO 3)',
-                'Q19': 'TB1 Pin 3 (Ultrasonic ECHO) -> Solder bridge to O19 (R3 1k divider top)',
+                'Q19': 'TB1 Pin 3 (Ultrasonic ECHO) -> Top insulated wire to O19 (R3 1k divider top), arches safely over Row P GND',
                 'Q21': 'TB1 Pin 4 (Ultrasonic GND) -> Solder bridge to Row P Analog GND Bus (P21)',
                 'E13': 'D1 Flyback Diode (Anode) -> Solder bridge / lead bend down Col 13 to D13, C13 (Q1 Drain) & B13 (TB3 Pin 1 Drain)',
                 'E15': 'D1 Flyback Diode (Cathode) -> 5V feed from N15 down Col 15, solder bridge / lead bend down Col 15 to B15 (TB3 Pin 2 +5V)',
@@ -725,7 +806,7 @@
                 'C13': 'Q1 Drain -> Solder bridge to E13 (D1 Anode) and B13 (TB3 Pin 1 Drain)!',
                 'C14': 'Q1 Source -> Part of Col 14 4-pad GND solder bridge (D14-C14-B14-A14), tying Source directly to GND',
                 'O17': 'Echo Divider 3.3V Node -> Hookup jumper to J10 (GPIO 4)',
-                'O19': 'R3 Top Leg -> Bridged from Q19 (TB1 ECHO)',
+                'O19': 'R3 Top Leg -> Receives top insulated wire from Q19 (TB1 ECHO)',
                 'P17': 'R4 Bottom Leg -> Soldered directly into Row P Analog GND Bus',
                 'C8': 'R5 Left Leg -> Hookup jumper from D8 (GPIO 7)',
                 'C11': 'R5 Right Leg -> Solder bridge to C12 (Q1 Gate)',
@@ -842,82 +923,141 @@
                 }
             }
 
-            // ALL EXPLICIT CONNECTIONS (Buses, Bridges, Leads, Hookup Jumpers)
-            function renderAllConnections(targetLayer, isMirrored) {
+            // 1. TOP LAYER CONNECTIONS (Component Side - Insulated Hookup Wires)
+            function renderTopConnections(targetLayer) {
                 targetLayer.innerHTML = '';
 
-                // 1. POWER & GROUND BUSES
-                createBusConductor(targetLayer, 'P4', 'P21', '#4493f8', 6, isMirrored, 'Row P Analog GND Bus', ['P4','P11','P14','P17','P21'], 'GND_ANALOG');
-                createBusConductor(targetLayer, 'A12', 'A14', '#1f6feb', 7, isMirrored, 'Row A Power GND Bus (A12-A14)', ['A12','A13','A14'], 'GND_POWER');
-                createBusConductor(targetLayer, 'N3', 'N15', '#f85149', 6, isMirrored, 'Row N +5V Bus', ['N3','N4','N5','N6','N15'], 'VBUS_5V');
+                // TOP-SIDE INSULATED HOOKUP WIRES (All cross-rail and long connections run here to eliminate shorts!)
+                // 1. GND Bus to Driver Feed: P14 to D14 (24 AWG Blue)
+                createCurvedJumper(targetLayer, 'P14', 'D14', '#388bfd', 4, false, '[TOP WIRE] GND Bus to Driver Feed (P14-D14)', 0, 'GND_POWER');
 
-                // 2. SOLDER BRIDGES
+                // 2. +5V Bus to Pump Feed: N15 to E15 (24 AWG Red)
+                createCurvedJumper(targetLayer, 'N15', 'E15', '#ff7b72', 4, false, '[TOP WIRE] +5V Bus to Pump Feed (N15-E15)', 0, 'PUMP_5V');
+
+                // 3. 5V Bus Tap: J3 to N3 (24 AWG Red)
+                createCurvedJumper(targetLayer, 'J3', 'N3', '#f85149', 3.5, false, '[TOP WIRE] 5V Bus Tap (J3 to N3)', -16, 'VBUS_5V');
+
+                // 4. Analog GND Bus Tap: J4 to P4 (24 AWG Blue)
+                createCurvedJumper(targetLayer, 'J4', 'P4', '#4493f8', 3.5, false, '[TOP WIRE] GND Bus Tap (J4 to P4)', -16, 'GND_ANALOG');
+
+                // 5. Ultrasonic +5V Feed: N15 to Q15 (26 AWG Red - Arches safely over Row P GND on top!)
+                createCurvedJumper(targetLayer, 'N15', 'Q15', '#f85149', 3.5, false, '[TOP WIRE] Ultrasonic 5V Feed (N15 to Q15)', 20, 'VBUS_5V');
+
+                // 6. Ultrasonic ECHO Input Link: Q19 to O19 (26 AWG Green - Arches safely over Row P GND on top!)
+                createCurvedJumper(targetLayer, 'Q19', 'O19', '#56d364', 3.5, false, '[TOP WIRE] Echo In Jumper (Q19 to O19)', 0, 'GPIO4_ECHO');
+
+                // 7. Soil DATA (AOUT): Q7 to J7 (26 AWG Green - Straight down Col 7)
+                createCurvedJumper(targetLayer, 'Q7', 'J7', '#3fb950', 3.5, false, '[TOP WIRE] Soil DATA (Q7 to J7)', 0, 'GPIO1_SOIL');
+
+                // 8. Soil VCC (Switched): Q9 to J8 (26 AWG Purple - Parallel down Col 9/8)
+                createCurvedJumper(targetLayer, 'Q9', 'J8', '#a371f7', 3.5, false, '[TOP WIRE] Soil VCC (Q9 to J8)', 0, 'GPIO2_VCC');
+
+                // 9. Ultrasonic TRIG: J9 to Q17 (26 AWG Cyan)
+                createCurvedJumper(targetLayer, 'J9', 'Q17', '#39c5cf', 3.5, false, '[TOP WIRE] Ultrasonic TRIG (J9 to Q17)', -24, 'GPIO3_TRIG');
+
+                // 10. Ultrasonic ECHO Stepped 3.3V: O17 to J10 (26 AWG Green)
+                createCurvedJumper(targetLayer, 'O17', 'J10', '#56d364', 3.5, false, '[TOP WIRE] Echo 3.3V (O17 to J10)', 20, 'GPIO4_ECHO');
+
+                // 11. Pump Gate Drive: D8 to C8 (26 AWG Orange)
+                createCurvedJumper(targetLayer, 'D8', 'C8', '#f0883e', 3.5, false, '[TOP WIRE] GPIO 7 Gate Drive (D8 to C8)', 0, 'GPIO7_GATE');
+            }
+
+            // 2. BOTTOM LAYER CONNECTIONS (Solder Side - Buses & Solder Bridges)
+            function renderBottomConnections(targetLayer, isMirrored) {
+                targetLayer.innerHTML = '';
+
+                // 1. POWER & GROUND BUSES (Bare Tinned Copper Wire Soldered on Underside)
+                createBusConductor(targetLayer, 'P4', 'P21', '#4493f8', 6, isMirrored, '[BOT BUS] Row P Analog GND Bus', ['P4','P11','P14','P17','P21'], 'GND_ANALOG');
+                createBusConductor(targetLayer, 'A12', 'A14', '#1f6feb', 7, isMirrored, '[BOT BUS] Row A Power GND Bus (A12-A14)', ['A12','A13','A14'], 'GND_POWER');
+                createBusConductor(targetLayer, 'N3', 'N15', '#f85149', 6, isMirrored, '[BOT BUS] Row N +5V Bus', ['N3','N4','N5','N6','N15'], 'VBUS_5V');
+
+                // 2. SOLDER BRIDGES (Fillets between adjacent pads on solder side - Zero Crossings!)
                 // Supply Divider Node Bridge: K6 to J6 (Divider Node to ESP32 GPIO 0)
-                createSolderBridgeBlob(targetLayer, ['K6', 'J6'], '#d29922', isMirrored, 'Supply Sense Node (K6-J6)', 'GPIO0_ADC');
+                createSolderBridgeBlob(targetLayer, ['K6', 'J6'], '#d29922', isMirrored, '[BOT BRIDGE] Supply Sense Node (K6-J6)', 'GPIO0_ADC');
 
                 // Supply Divider Ground Bridge: K4 to J4 (R2/C1 GND to ESP32 GND)
-                createSolderBridgeBlob(targetLayer, ['K4', 'J4'], '#4493f8', isMirrored, 'Supply GND Bridge (K4-J4)', 'GND_ANALOG');
+                createSolderBridgeBlob(targetLayer, ['K4', 'J4'], '#4493f8', isMirrored, '[BOT BRIDGE] Supply GND Bridge (K4-J4)', 'GND_ANALOG');
 
-                // Pump Drain Bridge: E13 to D13 to C13 to B13 (D1 Anode -> Q1 Drain -> TB3 Pin 1)
-                createSolderBridgeBlob(targetLayer, ['E13', 'D13', 'C13', 'B13'], '#ec6547', isMirrored, 'Pump Drain Bridge (E13-D13-C13-B13)', 'PUMP_DRAIN');
+                // Pump Drain Track Bridge: E13 to D13 to C13 to B13 (D1 Anode -> Q1 Drain -> TB3 Pin 1)
+                createSolderBridgeBlob(targetLayer, ['E13', 'D13', 'C13', 'B13'], '#ec6547', isMirrored, '[BOT BRIDGE] Pump Drain Track (E13-D13-C13-B13)', 'PUMP_DRAIN');
 
-                // Pump GND Bridge: D14 to C14 to B14 to A14 (P14 Feed -> Q1 Source -> Row A GND Bus)
-                createSolderBridgeBlob(targetLayer, ['D14', 'C14', 'B14', 'A14'], '#1f6feb', isMirrored, 'Pump GND Bridge (D14-C14-B14-A14)', 'GND_POWER');
+                // Pump GND Track Bridge: D14 to C14 to B14 to A14 (Col 14 Track from D14 through Q1 Source to Row A GND)
+                createSolderBridgeBlob(targetLayer, ['D14', 'C14', 'B14', 'A14'], '#1f6feb', isMirrored, '[BOT BRIDGE] Pump GND Track (D14-C14-B14-A14)', 'GND_POWER');
 
-                // Gate Resistor Bridge: C11 to C12
-                createSolderBridgeBlob(targetLayer, ['C11', 'C12'], '#f0883e', isMirrored, 'Gate Resistor Bridge (C11-C12)', 'GPIO7_GATE');
+                // Gate Resistor Bridge: C11 to C12 (R5 Right Leg to Q1 Gate)
+                createSolderBridgeBlob(targetLayer, ['C11', 'C12'], '#f0883e', isMirrored, '[BOT BRIDGE] Gate Resistor Bridge (C11-C12)', 'GPIO7_GATE');
 
-                // Pump 5V Feed Bridge: E15 to D15 to C15 to B15 (D1 Cathode -> TB3 Pin 2)
-                createSolderBridgeBlob(targetLayer, ['E15', 'D15', 'C15', 'B15'], '#ff7b72', isMirrored, 'Pump 5V Feed Bridge (E15-B15)', 'PUMP_5V');
+                // Pump 5V Track Bridge: E15 to D15 to C15 to B15 (D1 Cathode to TB3 Pin 2)
+                createSolderBridgeBlob(targetLayer, ['E15', 'D15', 'C15', 'B15'], '#ff7b72', isMirrored, '[BOT BRIDGE] Pump 5V Track (E15-D15-C15-B15)', 'PUMP_5V');
 
                 // C3 Bulk Cap (+) Bridge: L3 to K3 to J3 (C3 + -> ESP32 5V In)
-                createSolderBridgeBlob(targetLayer, ['L3', 'K3', 'J3'], '#f85149', isMirrored, 'C3 (+) 5V Bridge (L3-K3-J3)', 'VBUS_5V');
+                createSolderBridgeBlob(targetLayer, ['L3', 'K3', 'J3'], '#f85149', isMirrored, '[BOT BRIDGE] C3 (+) 5V Bridge (L3-K3-J3)', 'VBUS_5V');
 
                 // C3 Bulk Cap & C1 (-) Bridge: L4 to K4 to J4 (C3 - & C1 GND -> ESP32 GND)
-                createSolderBridgeBlob(targetLayer, ['L4', 'K4', 'J4'], '#4493f8', isMirrored, 'GND Col 4 Bridge (L4-K4-J4)', 'GND_ANALOG');
-
-                // Echo In Bridge: Q19 to O19
-                createSolderBridgeBlob(targetLayer, ['Q19', 'O19'], '#56d364', isMirrored, 'Echo In Bridge (Q19-O19)', 'GPIO4_ECHO');
+                createSolderBridgeBlob(targetLayer, ['L4', 'K4', 'J4'], '#4493f8', isMirrored, '[BOT BRIDGE] GND Col 4 Bridge (L4-K4-J4)', 'GND_ANALOG');
 
                 // Soil GND Bridge: Q11 to P11 to O11
-                createSolderBridgeBlob(targetLayer, ['Q11', 'P11', 'O11'], '#4493f8', isMirrored, 'Soil GND Bridge (Q11-P11-O11)', 'GND_ANALOG');
+                createSolderBridgeBlob(targetLayer, ['Q11', 'P11', 'O11'], '#4493f8', isMirrored, '[BOT BRIDGE] Soil GND Bridge (Q11-P11-O11)', 'GND_ANALOG');
 
                 // Ultrasonic GND Bridge: Q21 to P21
-                createSolderBridgeBlob(targetLayer, ['Q21', 'P21'], '#4493f8', isMirrored, 'Ultrasonic GND Bridge (Q21-P21)', 'GND_ANALOG');
+                createSolderBridgeBlob(targetLayer, ['Q21', 'P21'], '#4493f8', isMirrored, '[BOT BRIDGE] Ultrasonic GND Bridge (Q21-P21)', 'GND_ANALOG');
 
-                // Ultrasonic 5V Bridge: Q15 to N15
-                createSolderBridgeBlob(targetLayer, ['Q15', 'N15'], '#f85149', isMirrored, 'Ultrasonic 5V Bridge (Q15-N15)', 'VBUS_5V');
+                // 3. THROUGH-HOLE WIRE ENTRY TERMINALS (Indicator solder rings where top wires arrive at solder side)
+                renderThroughHoleWirePads(targetLayer, isMirrored);
+            }
 
-                // 3. BENT COMPONENT LEADS
-                createBentLead(targetLayer, 'C12', 'A12', '#e3b341', 3, isMirrored, 'R6 Pull-down to Row A GND', 'GPIO7_GATE');
+            function renderThroughHoleWirePads(layer, isMirrored) {
+                const wirePads = [
+                    { pad: 'P14', net: 'GND_POWER', label: 'Wire: P14 GND Feed' },
+                    { pad: 'D14', net: 'GND_POWER', label: 'Wire: D14 GND In' },
+                    { pad: 'N15', net: 'PUMP_5V', label: 'Wire: N15 5V Feed' },
+                    { pad: 'E15', net: 'PUMP_5V', label: 'Wire: E15 5V In' },
+                    { pad: 'J3', net: 'VBUS_5V', label: 'Wire: J3 5V Tap' },
+                    { pad: 'N3', net: 'VBUS_5V', label: 'Wire: N3 5V In' },
+                    { pad: 'J4', net: 'GND_ANALOG', label: 'Wire: J4 GND Tap' },
+                    { pad: 'P4', net: 'GND_ANALOG', label: 'Wire: P4 GND In' },
+                    { pad: 'Q15', net: 'VBUS_5V', label: 'Wire: Q15 5V In' },
+                    { pad: 'Q19', net: 'GPIO4_ECHO', label: 'Wire: Q19 Echo Out' },
+                    { pad: 'O19', net: 'GPIO4_ECHO', label: 'Wire: O19 Echo In' },
+                    { pad: 'Q7', net: 'GPIO1_SOIL', label: 'Wire: Q7 Soil DATA' },
+                    { pad: 'J7', net: 'GPIO1_SOIL', label: 'Wire: J7 Soil ADC' },
+                    { pad: 'Q9', net: 'GPIO2_VCC', label: 'Wire: Q9 Soil VCC' },
+                    { pad: 'J8', net: 'GPIO2_VCC', label: 'Wire: J8 Switched VCC' },
+                    { pad: 'J9', net: 'GPIO3_TRIG', label: 'Wire: J9 TRIG Out' },
+                    { pad: 'Q17', net: 'GPIO3_TRIG', label: 'Wire: Q17 TRIG In' },
+                    { pad: 'O17', net: 'GPIO4_ECHO', label: 'Wire: O17 Echo 3.3V' },
+                    { pad: 'J10', net: 'GPIO4_ECHO', label: 'Wire: J10 Echo ADC' },
+                    { pad: 'D8', net: 'GPIO7_GATE', label: 'Wire: D8 Gate Out' },
+                    { pad: 'C8', net: 'GPIO7_GATE', label: 'Wire: C8 Gate In' }
+                ];
 
-                // 4. INSULATED HOOKUP JUMPERS
-                // GND Bus to Driver Feed: P14 to D14
-                createCurvedJumper(targetLayer, 'P14', 'D14', '#388bfd', 3.5, isMirrored, 'GND Bus to Driver Feed (P14-D14)', 0, 'GND_POWER');
+                for (const item of wirePads) {
+                    const pt = getCoord(item.pad, isMirrored);
+                    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                    g.setAttribute('class', `conn-element conn-${item.net} bridge-element wire-entry-pin`);
+                    
+                    const ring = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    ring.setAttribute('cx', pt.x);
+                    ring.setAttribute('cy', pt.y);
+                    ring.setAttribute('r', '5.5');
+                    ring.setAttribute('fill', 'url(#solder-grad)');
+                    ring.setAttribute('stroke', NETS[item.net] ? NETS[item.net].color : '#fff');
+                    ring.setAttribute('stroke-width', '1.5');
+                    g.appendChild(ring);
 
-                // Analog GND Bus Tap: J4 to P4
-                createCurvedJumper(targetLayer, 'J4', 'P4', '#4493f8', 3, isMirrored, 'GND to Row P Bus', -16, 'GND_ANALOG');
+                    const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    dot.setAttribute('cx', pt.x);
+                    dot.setAttribute('cy', pt.y);
+                    dot.setAttribute('r', '2');
+                    dot.setAttribute('fill', '#090d13');
+                    g.appendChild(dot);
 
-                // 5V Bus Tap: J3 to N3
-                createCurvedJumper(targetLayer, 'J3', 'N3', '#f85149', 3, isMirrored, '5V to Row N Bus', -16, 'VBUS_5V');
+                    const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+                    title.textContent = `[SOLDER JOINT] Wire Terminal from Top Side: Pad ${item.pad} (${item.label})`;
+                    g.appendChild(title);
 
-                // +5V Bus to Pump Power Feed: N15 to E15
-                createCurvedJumper(targetLayer, 'N15', 'E15', '#ff7b72', 4, isMirrored, '+5V Bus to Pump Feed (N15-E15)', 0, 'PUMP_5V');
-
-                // Pump Gate Drive: D8 to C8
-                createCurvedJumper(targetLayer, 'D8', 'C8', '#f0883e', 3, isMirrored, 'GPIO 7 Gate Drive', 0, 'GPIO7_GATE');
-
-                // Soil DATA (AOUT): TB2 Pin 1 (Q7) straight down to ESP32 GPIO 1 (J7) - ZERO CROSSING!
-                createCurvedJumper(targetLayer, 'Q7', 'J7', '#3fb950', 3, isMirrored, 'Soil DATA (Q7 to J7)', 0, 'GPIO1_SOIL');
-
-                // Soil VCC: TB2 Pin 2 (Q9) to ESP32 GPIO 2 (J8) - PARALLEL, ZERO CROSSING!
-                createCurvedJumper(targetLayer, 'Q9', 'J8', '#a371f7', 3, isMirrored, 'Soil VCC (Q9 to J8)', 0, 'GPIO2_VCC');
-
-                // Ultrasonic TRIG: J9 to Q17
-                createCurvedJumper(targetLayer, 'J9', 'Q17', '#39c5cf', 3, isMirrored, 'GPIO 3 Ultrasonic TRIG', -24, 'GPIO3_TRIG');
-
-                // Ultrasonic ECHO: O17 to J10
-                createCurvedJumper(targetLayer, 'O17', 'J10', '#56d364', 3, isMirrored, 'GPIO 4 Stepped ECHO 3.3V', 20, 'GPIO4_ECHO');
+                    layer.appendChild(g);
+                }
             }
 
             function createBusConductor(layer, p1, p2, color, strokeW, isMirrored, desc, tappedPads, netKey) {
@@ -925,18 +1065,32 @@
                 const pt2 = getCoord(p2, isMirrored);
 
                 const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-                g.setAttribute('class', `conn-element conn-${netKey}`);
+                g.setAttribute('class', `conn-element conn-${netKey} bus-element`);
+
+                const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+                title.textContent = `${desc} (${p1} → ${p2})`;
+                g.appendChild(title);
 
                 const busOuter = document.createElementNS('http://www.w3.org/2000/svg', 'line');
                 busOuter.setAttribute('x1', pt1.x);
                 busOuter.setAttribute('y1', pt1.y);
                 busOuter.setAttribute('x2', pt2.x);
                 busOuter.setAttribute('y2', pt2.y);
-                busOuter.setAttribute('stroke', '#d0d7de');
+                busOuter.setAttribute('stroke', '#0d1117');
                 busOuter.setAttribute('stroke-width', strokeW + 2.5);
                 busOuter.setAttribute('stroke-linecap', 'round');
                 busOuter.setAttribute('filter', 'url(#shadow)');
                 g.appendChild(busOuter);
+
+                const busBody = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                busBody.setAttribute('x1', pt1.x);
+                busBody.setAttribute('y1', pt1.y);
+                busBody.setAttribute('x2', pt2.x);
+                busBody.setAttribute('y2', pt2.y);
+                busBody.setAttribute('stroke', '#d0d7de');
+                busBody.setAttribute('stroke-width', strokeW + 0.5);
+                busBody.setAttribute('stroke-linecap', 'round');
+                g.appendChild(busBody);
 
                 const busCore = document.createElementNS('http://www.w3.org/2000/svg', 'line');
                 busCore.setAttribute('x1', pt1.x);
@@ -944,7 +1098,7 @@
                 busCore.setAttribute('x2', pt2.x);
                 busCore.setAttribute('y2', pt2.y);
                 busCore.setAttribute('stroke', color);
-                busCore.setAttribute('stroke-width', strokeW);
+                busCore.setAttribute('stroke-width', strokeW - 1.5);
                 busCore.setAttribute('stroke-linecap', 'round');
                 g.appendChild(busCore);
 
@@ -953,7 +1107,7 @@
                     const fillet = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                     fillet.setAttribute('cx', padPt.x);
                     fillet.setAttribute('cy', padPt.y);
-                    fillet.setAttribute('r', '6');
+                    fillet.setAttribute('r', '6.5');
                     fillet.setAttribute('fill', 'url(#solder-grad)');
                     fillet.setAttribute('stroke', color);
                     fillet.setAttribute('stroke-width', '1.5');
@@ -965,11 +1119,26 @@
 
             function createSolderBridgeBlob(layer, pads, color, isMirrored, desc, netKey) {
                 const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-                g.setAttribute('class', `conn-element conn-${netKey}`);
+                g.setAttribute('class', `conn-element conn-${netKey} bridge-element`);
+
+                const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+                title.textContent = `${desc}`;
+                g.appendChild(title);
 
                 for (let i = 0; i < pads.length - 1; i++) {
                     const pt1 = getCoord(pads[i], isMirrored);
                     const pt2 = getCoord(pads[i+1], isMirrored);
+
+                    const border = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    border.setAttribute('x1', pt1.x);
+                    border.setAttribute('y1', pt1.y);
+                    border.setAttribute('x2', pt2.x);
+                    border.setAttribute('y2', pt2.y);
+                    border.setAttribute('stroke', '#0d1117');
+                    border.setAttribute('stroke-width', '10');
+                    border.setAttribute('stroke-linecap', 'round');
+                    border.setAttribute('filter', 'url(#shadow)');
+                    g.appendChild(border);
 
                     const blob = document.createElementNS('http://www.w3.org/2000/svg', 'line');
                     blob.setAttribute('x1', pt1.x);
@@ -977,9 +1146,8 @@
                     blob.setAttribute('x2', pt2.x);
                     blob.setAttribute('y2', pt2.y);
                     blob.setAttribute('stroke', '#d0d7de');
-                    blob.setAttribute('stroke-width', '9');
+                    blob.setAttribute('stroke-width', '8');
                     blob.setAttribute('stroke-linecap', 'round');
-                    blob.setAttribute('filter', 'url(#shadow)');
                     g.appendChild(blob);
 
                     const core = document.createElementNS('http://www.w3.org/2000/svg', 'line');
@@ -988,7 +1156,7 @@
                     core.setAttribute('x2', pt2.x);
                     core.setAttribute('y2', pt2.y);
                     core.setAttribute('stroke', color);
-                    core.setAttribute('stroke-width', '4');
+                    core.setAttribute('stroke-width', '3.5');
                     core.setAttribute('stroke-linecap', 'round');
                     g.appendChild(core);
                 }
@@ -1013,7 +1181,11 @@
                 const pt2 = getCoord(p2, isMirrored);
 
                 const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-                g.setAttribute('class', `conn-element conn-${netKey}`);
+                g.setAttribute('class', `conn-element conn-${netKey} bridge-element`);
+
+                const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+                title.textContent = `${desc} (${p1} → ${p2})`;
+                g.appendChild(title);
 
                 const border = document.createElementNS('http://www.w3.org/2000/svg', 'line');
                 border.setAttribute('x1', pt1.x);
@@ -1054,7 +1226,11 @@
                 const pt2 = getCoord(p2, isMirrored);
 
                 const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-                g.setAttribute('class', `conn-element conn-${netKey}`);
+                g.setAttribute('class', `conn-element conn-${netKey} wire-element`);
+
+                const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+                title.textContent = `${desc} (${p1} → ${p2})`;
+                g.appendChild(title);
 
                 const dx = pt2.x - pt1.x;
                 const dy = pt2.y - pt1.y;
@@ -1063,33 +1239,55 @@
                 const cx2 = pt1.x + dx * 0.75;
                 const cy2 = pt1.y + dy * 0.75 + curveOffset;
 
+                const pathData = `M ${pt1.x} ${pt1.y} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${pt2.x} ${pt2.y}`;
+
+                // 1. Dark border & shadow
                 const pathBorder = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                pathBorder.setAttribute('d', `M ${pt1.x} ${pt1.y} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${pt2.x} ${pt2.y}`);
+                pathBorder.setAttribute('d', pathData);
                 pathBorder.setAttribute('fill', 'none');
                 pathBorder.setAttribute('stroke', '#0d1117');
-                pathBorder.setAttribute('stroke-width', strokeW + 2);
+                pathBorder.setAttribute('stroke-width', strokeW + 2.5);
                 pathBorder.setAttribute('stroke-linecap', 'round');
                 pathBorder.setAttribute('filter', 'url(#shadow)');
                 g.appendChild(pathBorder);
 
+                // 2. Colored wire insulation jacket
                 const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                path.setAttribute('d', `M ${pt1.x} ${pt1.y} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${pt2.x} ${pt2.y}`);
+                path.setAttribute('d', pathData);
                 path.setAttribute('fill', 'none');
                 path.setAttribute('stroke', color);
                 path.setAttribute('stroke-width', strokeW);
                 path.setAttribute('stroke-linecap', 'round');
-                path.setAttribute('opacity', '0.95');
+                path.setAttribute('opacity', '0.96');
                 g.appendChild(path);
 
+                // 3. Specular highlight (cylindrical wire sheen)
+                const pathSheen = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                pathSheen.setAttribute('d', pathData);
+                pathSheen.setAttribute('fill', 'none');
+                pathSheen.setAttribute('stroke', '#ffffff');
+                pathSheen.setAttribute('stroke-width', Math.max(1, strokeW * 0.25));
+                pathSheen.setAttribute('stroke-linecap', 'round');
+                pathSheen.setAttribute('opacity', '0.4');
+                g.appendChild(pathSheen);
+
+                // 4. Wire Terminals (Stripped wire ends entering holes)
                 for (const pt of [pt1, pt2]) {
                     const term = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                     term.setAttribute('cx', pt.x);
                     term.setAttribute('cy', pt.y);
-                    term.setAttribute('r', '4');
+                    term.setAttribute('r', '4.5');
                     term.setAttribute('fill', 'url(#solder-grad)');
-                    term.setAttribute('stroke', color);
-                    term.setAttribute('stroke-width', '1.5');
+                    term.setAttribute('stroke', '#0d1117');
+                    term.setAttribute('stroke-width', '1.2');
                     g.appendChild(term);
+
+                    const core = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    core.setAttribute('cx', pt.x);
+                    core.setAttribute('cy', pt.y);
+                    core.setAttribute('r', '2');
+                    core.setAttribute('fill', color);
+                    g.appendChild(core);
                 }
 
                 layer.appendChild(g);
@@ -1606,28 +1804,55 @@
                 renderGridLabels(isMirrored);
                 renderPads(isMirrored);
 
+                const chkTopWires = document.getElementById('chk-top-wires');
+                const chkTopComps = document.getElementById('chk-top-comps');
+                const chkBotBridges = document.getElementById('chk-bot-bridges');
+                const chkBotBuses = document.getElementById('chk-bot-buses');
+
                 if (mode === 'top') {
+                    // Top View: Components & Top Insulated Wires visible. Bottom solder traces hidden!
                     layerComponents.style.display = 'inline';
                     layerComponents.style.opacity = '1';
                     layerConnectionsBottom.style.display = 'none';
                     layerConnectionsTop.style.display = 'inline';
                     layerConnectionsTop.style.opacity = '1';
                     renderTopComponents();
-                    renderAllConnections(layerConnectionsTop, false);
+                    renderTopConnections(layerConnectionsTop);
+
+                    if (chkTopWires) chkTopWires.checked = true;
+                    if (chkTopComps) chkTopComps.checked = true;
+                    if (chkBotBridges) chkBotBridges.checked = false;
+                    if (chkBotBuses) chkBotBuses.checked = false;
                 } else if (mode === 'bottom') {
-                    layerComponents.style.display = 'none';
+                    // Bottom View: Mirrored solder side with solder bridges & bare bus lines. Components ghosted (12% opacity)
+                    layerComponents.style.display = 'inline';
+                    layerComponents.style.opacity = '0.12';
                     layerConnectionsTop.style.display = 'none';
                     layerConnectionsBottom.style.display = 'inline';
                     layerConnectionsBottom.style.opacity = '1';
-                    renderAllConnections(layerConnectionsBottom, true);
+                    renderTopComponents();
+                    renderBottomConnections(layerConnectionsBottom, true);
+
+                    if (chkTopWires) chkTopWires.checked = false;
+                    if (chkTopComps) chkTopComps.checked = false;
+                    if (chkBotBridges) chkBotBridges.checked = true;
+                    if (chkBotBuses) chkBotBuses.checked = true;
                 } else if (mode === 'xray') {
+                    // X-Ray Composite: Both layers visible simultaneously with clear visual distinction
                     layerComponents.style.display = 'inline';
                     layerComponents.style.opacity = '0.35';
-                    layerConnectionsBottom.style.display = 'none';
+                    layerConnectionsBottom.style.display = 'inline';
+                    layerConnectionsBottom.style.opacity = '0.9';
                     layerConnectionsTop.style.display = 'inline';
                     layerConnectionsTop.style.opacity = '1';
                     renderTopComponents();
-                    renderAllConnections(layerConnectionsTop, false);
+                    renderBottomConnections(layerConnectionsBottom, false);
+                    renderTopConnections(layerConnectionsTop);
+
+                    if (chkTopWires) chkTopWires.checked = true;
+                    if (chkTopComps) chkTopComps.checked = true;
+                    if (chkBotBridges) chkBotBridges.checked = true;
+                    if (chkBotBuses) chkBotBuses.checked = true;
                 }
 
                 highlightNet(activeNetKey);
@@ -1794,6 +2019,21 @@
             document.getElementById('btn-view-bottom').addEventListener('click', () => setViewMode('bottom'));
             document.getElementById('btn-view-xray').addEventListener('click', () => setViewMode('xray'));
             document.getElementById('btn-clear-net').addEventListener('click', () => highlightNet(null));
+
+            document.getElementById('chk-top-wires').addEventListener('change', (e) => {
+                layerConnectionsTop.style.display = e.target.checked ? 'inline' : 'none';
+            });
+            document.getElementById('chk-top-comps').addEventListener('change', (e) => {
+                layerComponents.style.display = e.target.checked ? 'inline' : 'none';
+            });
+            document.getElementById('chk-bot-bridges').addEventListener('change', (e) => {
+                const bridges = layerConnectionsBottom.querySelectorAll('.bridge-element, .wire-entry-pin');
+                bridges.forEach(b => b.style.display = e.target.checked ? 'inline' : 'none');
+            });
+            document.getElementById('chk-bot-buses').addEventListener('change', (e) => {
+                const buses = layerConnectionsBottom.querySelectorAll('.bus-element');
+                buses.forEach(b => b.style.display = e.target.checked ? 'inline' : 'none');
+            });
 
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 btn.addEventListener('click', () => {

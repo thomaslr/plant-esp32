@@ -99,9 +99,14 @@ For a permanent soldered build in an enclosure, an **18-row by 24-column 0.1" (2
   * **Analog / Sensor GND (Row P):** Bare bus wire along Row P (Cols 4–21) providing an ultra-quiet ground reference for ADC supply monitor (GPIO 0), capacitive soil sensor (GPIO 1), and ultrasonic echo divider.
   * **Power / Motor GND (Row A):** Solder bridge or bus wire along Row A (Cols 12–14) sinking high-current pump transients from Q1 Source (C14) and R6 pull-down (A12) via the Col 14 ground bridge.
   * **Ground Feed:** Straight vertical 24 AWG insulated wire from Row P at **P14 down to D14**, joining into the 4-pad solder bridge down to A14. Eliminates diagonal cross-board star wiring!
+* **Anti-Short Dual-Layer Wiring Architecture:**
+  * **Physical Dielectric Isolation:** Crossing insulated jumper wires across bare bus rails on the solder side creates severe short hazards. To guarantee **100% short-free operation**, the design physically isolates wiring into two separate layers through the 1.6 mm FR4 fiberglass core:
+    * **Bottom Layer (Solder Side — 13 Rigid Connections):** Strictly limited to bare bus rails along rows (B1 Row P GND, B2 Row N +5V, B3 Row A GND) and direct adjacent solder bridges (B4 K6-J6 Node, B5 K4-J4 GND, B6 L3-J3 C3 5V, B7 L4-J4 C3/C1 GND, B8 Col 13 Pump Drain, B9 Col 14 Pump GND, B10 Col 15 Pump 5V, B11 C11-C12 Gate, B12 Col 11 Soil GND, B13 Col 21 Ultrasonic GND). **Zero crossing wires on the bottom!**
+    * **Top Layer (Component Side — 11 Insulated Wires):** All rail-crossing and long-distance jumpers run as elevated, insulated hookup wires above the components (W1 P14→D14 GND Feed, W2 N15→E15 5V Pump Feed, W3 J3→N3 5V Bus Tap, W4 J4→P4 GND Bus Tap, W5 N15→Q15 TB1 5V, W6 Q19→O19 TB1 Echo, W7 Q7→J7 Soil Data, W8 Q9→J8 Soil VCC, W9 J9→Q17 Trig, W10 O17→J10 Echo 3.3V, W11 D8→C8 Gate).
+    * **Eliminated Short Hazards:** Specifically routes TB1 5V (`W5: N15→Q15`) and TB1 Echo (`W6: Q19→O19`) as insulated top-side wires arched over the Row P GND bus—preventing catastrophic +5V-to-GND shorts and Echo-to-GND grounding!
 * **Full Assembly Guide & Visualizer:**
   * Guide: [`perfboard_circuit_guide.md`](file:///Users/robertlongbottom/dev/plant-esp32/perfboard_circuit_guide.md)
-  * Interactive SVG Visualizer: [`perfboard_diagram.html`](file:///Users/robertlongbottom/dev/plant-esp32/perfboard_diagram.html) (Top, Bottom Mirrored, and X-Ray composite views with connection overlay toggles and fluid wide-screen zoom).
+  * Interactive SVG Visualizer: [`perfboard_diagram.html`](file:///Users/robertlongbottom/dev/plant-esp32/perfboard_diagram.html) (Top, Bottom Mirrored, and X-Ray composite views with independent layer toggle checkboxes for Top Insulated Wires, Top Components, Bottom Solder Bridges, Bottom Bus Rails, pad inspection, and fluid wide-screen zoom).
 
 ---
 
