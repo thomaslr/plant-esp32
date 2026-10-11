@@ -1,0 +1,1739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plant Monitor — 18×24 Perfboard Circuit Diagram</title>
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --card-bg: #161b22;
+            --card-border: #30363d;
+            --text-main: #c9d1d9;
+            --text-bright: #f0f6fc;
+            --text-muted: #8b949e;
+            --accent-blue: #58a6ff;
+            --accent-green: #3fb950;
+            --accent-red: #f85149;
+            --accent-purple: #bc8cff;
+            --accent-yellow: #d29922;
+            --accent-cyan: #39c5cf;
+            --accent-orange: #f0883e;
+            --perf-board: #1a3322;
+            --perf-border: #234d31;
+            --pad-copper: #c88d32;
+            --pad-hole: #0d1117;
+            --solder-joint: #d0d7de;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px 24px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 16px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .header h1 {
+            color: var(--text-bright);
+            font-size: 22px;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header p {
+            margin: 4px 0 0 0;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .nav-btn {
+            background: rgba(56, 139, 253, 0.15);
+            border: 1px solid rgba(56, 139, 253, 0.4);
+            color: var(--accent-blue);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .nav-btn:hover {
+            background: rgba(56, 139, 253, 0.25);
+            border-color: var(--accent-blue);
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 20px;
+            align-items: start;
+        }
+
+        .canvas-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.4);
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .canvas-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 12px;
+            margin-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .toolbar-left, .toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .view-pill {
+            background: #21262d;
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .view-pill:hover {
+            background: #30363d;
+            color: var(--text-bright);
+        }
+
+        .view-pill.active {
+            background: #1f6feb;
+            border-color: #388bfd;
+            color: #fff;
+            box-shadow: 0 0 10px rgba(56, 139, 253, 0.4);
+        }
+
+        .zoom-btn {
+            background: #21262d;
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .zoom-btn:hover {
+            background: #30363d;
+            color: var(--text-bright);
+        }
+
+        .zoom-label {
+            font-family: monospace;
+            font-size: 12px;
+            color: var(--text-muted);
+            min-width: 44px;
+            text-align: center;
+        }
+
+        .canvas-badge {
+            font-size: 10px;
+            font-weight: 700;
+            color: #7ee787;
+            background: rgba(46, 160, 67, 0.15);
+            border: 1px solid rgba(46, 160, 67, 0.4);
+            border-radius: 4px;
+            padding: 2px 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .svg-container {
+            width: 100%;
+            overflow: auto;
+            background: #090d13;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: center;
+            position: relative;
+            padding: 12px;
+        }
+
+        .svg-container.mode-fitscreen {
+            max-height: calc(100vh - 180px);
+        }
+
+        svg {
+            display: block;
+            user-select: none;
+            transition: width 0.2s ease, height 0.2s ease;
+        }
+
+        /* Tooltip */
+        #diagram-tooltip {
+            position: absolute;
+            background: rgba(13, 17, 23, 0.95);
+            border: 1px solid var(--accent-blue);
+            color: #fff;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-family: monospace;
+            pointer-events: none;
+            display: none;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+            line-height: 1.4;
+        }
+
+        /* Sidebar Panels */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .panel-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .panel-card h2 {
+            font-size: 14px;
+            margin: 0 0 12px 0;
+            color: var(--text-bright);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            padding-bottom: 8px;
+        }
+
+        /* Net list */
+        .net-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-height: 240px;
+            overflow-y: auto;
+        }
+
+        .net-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            background: #21262d;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .net-item:hover {
+            border-color: var(--accent-blue);
+            background: #2a313c;
+        }
+
+        .net-item.active {
+            border-color: #388bfd;
+            background: rgba(56, 139, 253, 0.15);
+            font-weight: 600;
+        }
+
+        .net-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-family: monospace;
+        }
+
+        .net-color-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .net-pins-count {
+            font-size: 10px;
+            color: var(--text-muted);
+            background: #161b22;
+            padding: 2px 6px;
+            border-radius: 10px;
+        }
+
+        /* Tabs */
+        .tab-headers {
+            display: flex;
+            border-bottom: 1px solid var(--card-border);
+            margin-bottom: 12px;
+            gap: 8px;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            color: var(--text-muted);
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-bright);
+        }
+
+        .tab-btn.active {
+            color: var(--accent-blue);
+            border-bottom-color: var(--accent-blue);
+        }
+
+        .tab-content {
+            display: none;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .mini-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            margin-top: 6px;
+        }
+
+        .mini-table th, .mini-table td {
+            padding: 6px 8px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .mini-table th {
+            color: var(--text-bright);
+            background: #21262d;
+            font-weight: 600;
+        }
+
+        .coord-chip {
+            font-family: monospace;
+            background: #21262d;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 2px 5px;
+            border-radius: 3px;
+            color: #79c0ff;
+            font-weight: bold;
+        }
+
+        /* SVG Interactive Styles */
+        .pad-circle {
+            cursor: pointer;
+            transition: fill 0.15s, stroke 0.15s, r 0.15s;
+        }
+
+        .pad-circle:hover {
+            stroke: #fff !important;
+            stroke-width: 2px !important;
+        }
+
+        .net-highlight {
+            stroke: #ffea79 !important;
+            stroke-width: 2.5px !important;
+            filter: drop-shadow(0 0 4px #e3b341);
+        }
+
+        .wire-highlight {
+            stroke: #fff !important;
+            stroke-width: 4px !important;
+            filter: drop-shadow(0 0 6px #58a6ff);
+        }
+
+        .dimmed {
+            opacity: 0.18 !important;
+            transition: opacity 0.2s;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div>
+            <h1>
+                🌱 Plant Monitor — 18×24 Perfboard Layout
+                <span class="canvas-badge">GRID: 18 ROWS (A–R) × 24 COLS (1–24)</span>
+            </h1>
+            <p>Permanent through-hole soldered assembly for ESP32-C3 SuperMini with FQP30N06L Logic-Level MOSFET & dual star-ground buses.</p>
+        </div>
+        <div class="nav-links">
+            <a href="perfboard_circuit_guide.md" class="nav-btn">📖 Assembly Guide (MD)</a>
+            <a href="circuit_diagram.html" class="nav-btn">🔌 Breadboard Diagram</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Main Canvas Card -->
+        <div class="canvas-card" id="canvas-card">
+            <div class="canvas-toolbar">
+                <div class="toolbar-left">
+                    <button class="view-pill active" id="btn-view-top">Top (Components)</button>
+                    <button class="view-pill" id="btn-view-bottom">Bottom (Solder Side)</button>
+                    <button class="view-pill" id="btn-view-xray">X-Ray (Composite)</button>
+                </div>
+                <div class="toolbar-right">
+                    <button class="zoom-btn" id="btn-fit-width" title="Fit to width (Fluid)">↔</button>
+                    <button class="zoom-btn" id="btn-fit-screen" title="Fit entire board on screen">⛶</button>
+                    <button class="zoom-btn" id="btn-native" title="100% Native size">1:1</button>
+                    <button class="zoom-btn" id="btn-zoom-out" title="Zoom out (-)">−</button>
+                    <span class="zoom-label" id="zoom-label">100%</span>
+                    <button class="zoom-btn" id="btn-zoom-in" title="Zoom in (+)">+</button>
+                    <button class="zoom-btn" id="btn-fullscreen" title="Toggle Fullscreen">⛶</button>
+                </div>
+            </div>
+
+            <div class="svg-container" id="svg-container">
+                <div id="diagram-tooltip"></div>
+                <!-- Interactive SVG -->
+                <svg id="perf-svg" viewBox="0 0 1140 900" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <!-- Grid Donut Pad Definition -->
+                        <radialGradient id="pad-grad" cx="50%" cy="50%" r="50%">
+                            <stop offset="60%" stop-color="#d49b42"/>
+                            <stop offset="85%" stop-color="#b07b28"/>
+                            <stop offset="100%" stop-color="#805615"/>
+                        </radialGradient>
+                        <radialGradient id="solder-grad" cx="40%" cy="40%" r="60%">
+                            <stop offset="0%" stop-color="#ffffff"/>
+                            <stop offset="40%" stop-color="#d0d7de"/>
+                            <stop offset="80%" stop-color="#8c959f"/>
+                            <stop offset="100%" stop-color="#57606a"/>
+                        </radialGradient>
+                        <!-- Component Dropshadow -->
+                        <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+                            <feDropShadow dx="2" dy="3" stdDeviation="3" flood-color="#000" flood-opacity="0.6"/>
+                        </filter>
+                    </defs>
+
+                    <!-- Background & FR4 Perfboard Substrate -->
+                    <rect x="0" y="0" width="1140" height="900" fill="#090d13" />
+
+                    <!-- Perfboard Base Plate -->
+                    <rect id="board-plate" x="70" y="60" width="980" height="760" rx="14" ry="14" fill="#1b3622" stroke="#2c5a38" stroke-width="3" filter="url(#shadow)" />
+                    <!-- Texture grid lines subtle -->
+                    <rect x="70" y="60" width="980" height="760" rx="14" ry="14" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="1" />
+
+                    <!-- Corner Mounting Holes -->
+                    <circle cx="95" cy="85" r="7" fill="#090d13" stroke="#d49b42" stroke-width="2.5" />
+                    <circle cx="1025" cy="85" r="7" fill="#090d13" stroke="#d49b42" stroke-width="2.5" />
+                    <circle cx="95" cy="795" r="7" fill="#090d13" stroke="#d49b42" stroke-width="2.5" />
+                    <circle cx="1025" cy="795" r="7" fill="#090d13" stroke="#d49b42" stroke-width="2.5" />
+
+                    <!-- Column Coordinate Labels (Top & Bottom) -->
+                    <g id="col-labels" font-family="monospace" font-size="11" font-weight="bold" fill="#8b949e" text-anchor="middle">
+                        <!-- Rendered by JS or static -->
+                    </g>
+
+                    <!-- Row Coordinate Labels (Left & Right) -->
+                    <g id="row-labels" font-family="monospace" font-size="11" font-weight="bold" fill="#8b949e" dominant-baseline="central">
+                        <!-- Rendered by JS or static -->
+                    </g>
+
+                    <!-- Layer 1: Underside Solder Pads & Tracks (Shown in Bottom & X-Ray view) -->
+                    <g id="layer-solder-side" style="display: none;">
+                        <!-- Solder Bridges & Bus Wires injected here -->
+                    </g>
+
+                    <!-- Layer 2: Perfboard Through-Hole Copper Pads (432 pads: 18 Rows x 24 Cols) -->
+                    <g id="layer-pads">
+                        <!-- Pads dynamically rendered or SVG static -->
+                    </g>
+
+                    <!-- Layer 3: Top-Side Components (ESP32, Terminals, MOSFET, Passives) -->
+                    <g id="layer-components">
+                        <!-- Top components rendered here -->
+                    </g>
+
+                    <!-- Layer 4: Top Insulated Wire Jumpers -->
+                    <g id="layer-top-wires">
+                        <!-- Top jumpers -->
+                    </g>
+
+                    <!-- Silkscreen & Annotations -->
+                    <g id="layer-silkscreen" pointer-events="none">
+                        <!-- Orientation and Board Info Texts -->
+                    </g>
+                </svg>
+            </div>
+        </div>
+
+        <!-- Right Control & Info Sidebar -->
+        <div class="sidebar">
+            <!-- Board Info Card -->
+            <div class="panel-card">
+                <h2>
+                    <span>Board Architecture</span>
+                    <span style="font-size: 11px; color: var(--accent-green);">18 × 24 DIP</span>
+                </h2>
+                <div style="font-size: 12px; line-height: 1.6; color: var(--text-muted);">
+                    <div>• <b>Microcontroller</b>: ESP32-C3 SuperMini in dual 1×8 female headers (Cols 3–10, Rows G & M).</div>
+                    <div>• <b>USB-C Access</b>: Faces Left off edge (Cols 1–2).</div>
+                    <div>• <b>Sensor Terminals</b>: TB2 (Soil) & TB1 (Echo) on Row B, wire entries face <b>UPWARDS</b>.</div>
+                    <div>• <b>Pump Terminal</b>: TB3 on Row Q, wire entries face <b>DOWNWARDS</b>.</div>
+                    <div>• <b>MOSFET</b>: FQP30N06L in Row O (Cols 18–20) with direct solder bridge to TB3 Drain!</div>
+                </div>
+            </div>
+
+            <!-- Net Inspector -->
+            <div class="panel-card">
+                <h2>
+                    <span>Net Inspector & Highlighting</span>
+                    <button id="btn-clear-net" style="background:transparent; border:none; color:var(--accent-blue); font-size:11px; cursor:pointer;">Reset</button>
+                </h2>
+                <div class="net-list" id="net-list">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Detailed Tabs Card -->
+            <div class="panel-card">
+                <div class="tab-headers">
+                    <button class="tab-btn active" data-tab="tab-bom">BOM (11 Items)</button>
+                    <button class="tab-btn" data-tab="tab-wiring">Wiring Schedule</button>
+                    <button class="tab-btn" data-tab="tab-tests">Cold Tests</button>
+                </div>
+
+                <!-- Tab 1: BOM -->
+                <div class="tab-content active" id="tab-bom">
+                    <table class="mini-table">
+                        <thead>
+                            <tr>
+                                <th>Des</th>
+                                <th>Part / Value</th>
+                                <th>Coords</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><b>U1</b></td><td>ESP32-C3 SuperMini</td><td><span class="coord-chip">G3-10, M3-10</span></td></tr>
+                            <tr><td><b>TB1</b></td><td>4-Pin 5.08mm Terminal</td><td><span class="coord-chip">B15,17,19,21</span></td></tr>
+                            <tr><td><b>TB2</b></td><td>3-Pin 5.08mm Terminal</td><td><span class="coord-chip">B7,9,11</span></td></tr>
+                            <tr><td><b>TB3</b></td><td>2-Pin 5.08mm Terminal</td><td><span class="coord-chip">Q19,21</span></td></tr>
+                            <tr><td><b>Q1</b></td><td>FQP30N06L TO-220</td><td><span class="coord-chip">O18,19,20</span></td></tr>
+                            <tr><td><b>D1</b></td><td>1N5819 Schottky Diode</td><td><span class="coord-chip">P19,21</span></td></tr>
+                            <tr><td><b>C3</b></td><td>470µF 16/25V Bulk Cap</td><td><span class="coord-chip">N21,23</span></td></tr>
+                            <tr><td><b>R1,R2</b></td><td>10kΩ 1/4W 1% (Supply)</td><td><span class="coord-chip">E6,F6,C6</span></td></tr>
+                            <tr><td><b>C1</b></td><td>100nF Ceramic (104)</td><td><span class="coord-chip">F5,C5</span></td></tr>
+                            <tr><td><b>C2</b></td><td>100nF Ceramic (Soil)</td><td><span class="coord-chip">D9,11</span></td></tr>
+                            <tr><td><b>R3,R4</b></td><td>1kΩ & 2kΩ (Echo)</td><td><span class="coord-chip">D19,17,C17</span></td></tr>
+                            <tr><td><b>R5,R6</b></td><td>1kΩ & 100kΩ (Gate)</td><td><span class="coord-chip">O14,17,P18,R18</span></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Tab 2: Wiring Schedule -->
+                <div class="tab-content" id="tab-wiring">
+                    <table class="mini-table">
+                        <thead>
+                            <tr>
+                                <th>Net</th>
+                                <th>Path / Bridge</th>
+                                <th>Type</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><b>Row C GND</b></td><td>C4 → C21</td><td>Bare Bus Wire</td></tr>
+                            <tr><td><b>Row R GND</b></td><td>R18 → R24</td><td>Bare Bus Wire</td></tr>
+                            <tr><td><b>Star Tie</b></td><td>G4 → R18</td><td>24 AWG Wire</td></tr>
+                            <tr><td><b>5V Bus</b></td><td>E3 → E15</td><td>Bare Bus Wire</td></tr>
+                            <tr><td><b>5V Feed</b></td><td>G3 → N21</td><td>24 AWG Wire</td></tr>
+                            <tr><td><b>Pump Drain</b></td><td>O19 → P19 → Q19</td><td><b>Solder Bridge</b></td></tr>
+                            <tr><td><b>Pump +5V</b></td><td>N21 → P21 → Q21</td><td><b>Solder Bridge</b></td></tr>
+                            <tr><td><b>Q1 Gate</b></td><td>O17 → O18 → P18</td><td><b>Solder Bridge</b></td></tr>
+                            <tr><td><b>Echo 3.3V</b></td><td>D17 → G10</td><td>Insulated Jumper</td></tr>
+                            <tr><td><b>Soil AOUT</b></td><td>C9 → G7</td><td>Insulated Jumper</td></tr>
+                            <tr><td><b>Soil VCC</b></td><td>B7 → G8</td><td>Insulated Jumper</td></tr>
+                            <tr><td><b>Pump Gate</b></td><td>M8 → O14</td><td>Insulated Jumper</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Tab 3: Cold Tests -->
+                <div class="tab-content" id="tab-tests">
+                    <div style="font-size: 11px; margin-bottom: 8px; color: var(--accent-yellow);">
+                        ⚠️ <b>Test with DMM BEFORE inserting ESP32 module!</b>
+                    </div>
+                    <table class="mini-table">
+                        <thead>
+                            <tr>
+                                <th>Test</th>
+                                <th>Pins</th>
+                                <th>Expected</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>5V to GND</td><td>G3 to G4</td><td><b>&gt; 10 kΩ</b> (Rising)</td></tr>
+                            <tr><td>3V3 to GND</td><td>G5 to G4</td><td><b>Open (∞)</b></td></tr>
+                            <tr><td>Sensor GND</td><td>G4 to B21</td><td><b>&lt; 0.5 Ω</b></td></tr>
+                            <tr><td>Power GND</td><td>G4 to O20</td><td><b>&lt; 0.5 Ω</b></td></tr>
+                            <tr><td>Supply Divider</td><td>G6 to G4</td><td><b>≈ 10.0 kΩ</b></td></tr>
+                            <tr><td>Gate Pull-down</td><td>M8 to G4</td><td><b>≈ 101 kΩ</b></td></tr>
+                            <tr><td>Echo Stepper</td><td>G10 to G4</td><td><b>≈ 2.0 kΩ</b></td></tr>
+                            <tr><td>Flyback Diode</td><td>Q19 to Q21</td><td><b>Diode 0.35V</b></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interactive JavaScript Engine -->
+    <script>
+        (function() {
+            // Grid Specs: 18 Rows (A-R), 24 Columns (1-24)
+            const ROWS = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R'];
+            const COLS = 24;
+            const PITCH = 36;
+            const ORIGIN_X = 135;
+            const ORIGIN_Y = 125;
+
+            // Net Definitions & Pad Memberships
+            const NETS = {
+                'GND_ANALOG': {
+                    name: 'GND (Analog Sensor Bus)',
+                    color: '#4493f8',
+                    desc: 'Row C quiet ground reference for ADC supply monitor, capacitive soil sensor, and ultrasonic echo divider.',
+                    pads: ['C4','C5','C6','C11','C17','C21','G4','B11','B21']
+                },
+                'GND_POWER': {
+                    name: 'GND (Power / Motor Bus)',
+                    color: '#1f6feb',
+                    desc: 'Row R high-current power ground for MOSFET Source and 470µF reservoir capacitor.',
+                    pads: ['R18','R19','R20','R21','R22','R23','R24','O20','N23','P18']
+                },
+                'VBUS_5V': {
+                    name: '+5V (USB & Logic Supply)',
+                    color: '#f85149',
+                    desc: 'USB 5V supply distributed via Row E to voltage monitor divider and ultrasonic sensor.',
+                    pads: ['G3','E3','E4','E5','E6','E15','B15']
+                },
+                'PUMP_5V': {
+                    name: '+5V (Pump Power Feed)',
+                    color: '#ff7b72',
+                    desc: 'Dedicated heavy-gauge 5V line buffering motor inrush current at C3 (470µF) and TB3 Pin 2.',
+                    pads: ['N21','P21','Q21']
+                },
+                'GPIO0_ADC': {
+                    name: 'GPIO 0 (5V Rail Monitor ADC)',
+                    color: '#d29922',
+                    desc: 'ADC1_CH0 input monitoring 5V supply rail via R1 (10k) / R2 (10k) divider and C1 (100nF) filter.',
+                    pads: ['G6','F6','E6','C6','F5','C5']
+                },
+                'GPIO1_SOIL': {
+                    name: 'GPIO 1 (Soil Moisture Analog ADC)',
+                    color: '#3fb950',
+                    desc: 'ADC1_CH1 input receiving conditioned analog voltage from capacitive soil probe.',
+                    pads: ['G7','B9','D9','C9']
+                },
+                'GPIO2_VCC': {
+                    name: 'GPIO 2 (Switched Soil VCC)',
+                    color: '#a371f7',
+                    desc: 'Switched 3.3V power driving soil sensor only during measurement (duty-cycled).',
+                    pads: ['G8','B7']
+                },
+                'GPIO3_TRIG': {
+                    name: 'GPIO 3 (Ultrasonic TRIG)',
+                    color: '#39c5cf',
+                    desc: '10µs trigger pulse output sent to HC-SR04 pin 2.',
+                    pads: ['G9','B17']
+                },
+                'GPIO4_ECHO': {
+                    name: 'GPIO 4 (Ultrasonic ECHO 3.3V)',
+                    color: '#56d364',
+                    desc: '5V Echo pulse stepped down to 3.33V via R3 (1k) / R4 (2k) divider to safely protect ESP32 input.',
+                    pads: ['G10','D17','D19','B19','C17']
+                },
+                'GPIO7_GATE': {
+                    name: 'GPIO 7 (Pump MOSFET Gate)',
+                    color: '#f0883e',
+                    desc: 'Digital output driving Q1 FQP30N06L Gate via R5 (1k damping) and R6 (100k pull-down).',
+                    pads: ['M8','O14','O17','O18','P18']
+                },
+                'PUMP_DRAIN': {
+                    name: 'Pump Drain (Switched Return -)',
+                    color: '#ec6547',
+                    desc: 'Switched negative terminal connected to Q1 Drain (O19), D1 Anode (P19), and TB3 Pin 1 (Q19).',
+                    pads: ['O19','P19','Q19']
+                }
+            };
+
+            // Mapping from Pad Coordinate -> Net Key
+            const PAD_MAP = {};
+            for (const [netKey, netData] of Object.entries(NETS)) {
+                for (const p of netData.pads) {
+                    if (!PAD_MAP[p]) PAD_MAP[p] = [];
+                    PAD_MAP[p].push(netKey);
+                }
+            }
+
+            // Helpers to get X, Y for a coordinate
+            function getCoord(coordStr, isMirrored = false) {
+                const rowChar = coordStr.charAt(0);
+                const colNum = parseInt(coordStr.substring(1), 10);
+                const rowIndex = ROWS.indexOf(rowChar);
+                const colIndex = colNum - 1;
+
+                const y = ORIGIN_Y + rowIndex * PITCH;
+                let x;
+                if (!isMirrored) {
+                    x = ORIGIN_X + colIndex * PITCH;
+                } else {
+                    x = ORIGIN_X + (COLS - 1 - colIndex) * PITCH;
+                }
+                return { x, y, row: rowChar, col: colNum };
+            }
+
+            // State
+            let currentView = 'top'; // 'top', 'bottom', 'xray'
+            let activeNetKey = null;
+
+            // DOM Elements
+            const svg = document.getElementById('perf-svg');
+            const svgContainer = document.getElementById('svg-container');
+            const canvasCard = document.getElementById('canvas-card');
+            const layerPads = document.getElementById('layer-pads');
+            const layerComponents = document.getElementById('layer-components');
+            const layerSolderSide = document.getElementById('layer-solder-side');
+            const layerTopWires = document.getElementById('layer-top-wires');
+            const layerSilkscreen = document.getElementById('layer-silkscreen');
+            const colLabels = document.getElementById('col-labels');
+            const rowLabels = document.getElementById('row-labels');
+            const tooltip = document.getElementById('diagram-tooltip');
+            const netListContainer = document.getElementById('net-list');
+
+            // Render Grid Coordinates
+            function renderGridLabels(isMirrored) {
+                colLabels.innerHTML = '';
+                rowLabels.innerHTML = '';
+
+                for (let c = 1; c <= COLS; c++) {
+                    const colNum = isMirrored ? (COLS - c + 1) : c;
+                    const x = ORIGIN_X + (c - 1) * PITCH;
+                    
+                    // Top Col Label
+                    const textTop = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    textTop.setAttribute('x', x);
+                    textTop.setAttribute('y', ORIGIN_Y - 24);
+                    textTop.textContent = colNum;
+                    colLabels.appendChild(textTop);
+
+                    // Bottom Col Label
+                    const textBot = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    textBot.setAttribute('x', x);
+                    textBot.setAttribute('y', ORIGIN_Y + (ROWS.length - 1) * PITCH + 32);
+                    textBot.textContent = colNum;
+                    colLabels.appendChild(textBot);
+                }
+
+                for (let r = 0; r < ROWS.length; r++) {
+                    const rowName = ROWS[r];
+                    const y = ORIGIN_Y + r * PITCH;
+
+                    // Left Row Label
+                    const textLeft = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    textLeft.setAttribute('x', ORIGIN_X - 32);
+                    textLeft.setAttribute('y', y);
+                    textLeft.setAttribute('text-anchor', 'end');
+                    textLeft.textContent = rowName;
+                    rowLabels.appendChild(textLeft);
+
+                    // Right Row Label
+                    const textRight = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    textRight.setAttribute('x', ORIGIN_X + (COLS - 1) * PITCH + 22);
+                    textRight.setAttribute('y', y);
+                    textRight.setAttribute('text-anchor', 'start');
+                    textRight.textContent = rowName;
+                    rowLabels.appendChild(textRight);
+                }
+            }
+
+            // Render 432 Perfboard Through-Hole Pads
+            function renderPads(isMirrored) {
+                layerPads.innerHTML = '';
+                for (let r = 0; r < ROWS.length; r++) {
+                    const rowChar = ROWS[r];
+                    for (let c = 1; c <= COLS; c++) {
+                        const colNum = c;
+                        const coordStr = `${rowChar}${colNum}`;
+                        const pt = getCoord(coordStr, isMirrored);
+
+                        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                        g.setAttribute('class', 'pad-group');
+                        g.setAttribute('data-coord', coordStr);
+
+                        // Copper annular ring (donut)
+                        const donut = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                        donut.setAttribute('cx', pt.x);
+                        donut.setAttribute('cy', pt.y);
+                        donut.setAttribute('r', '7.5');
+                        donut.setAttribute('fill', isMirrored ? 'url(#solder-grad)' : 'url(#pad-grad)');
+                        donut.setAttribute('stroke', '#6e4710');
+                        donut.setAttribute('stroke-width', '1');
+                        donut.setAttribute('class', 'pad-circle');
+                        donut.setAttribute('id', `pad-${coordStr}`);
+
+                        // Center dark hole
+                        const hole = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                        hole.setAttribute('cx', pt.x);
+                        hole.setAttribute('cy', pt.y);
+                        hole.setAttribute('r', '3.5');
+                        hole.setAttribute('fill', '#090d13');
+                        hole.setAttribute('pointer-events', 'none');
+
+                        g.appendChild(donut);
+                        g.appendChild(hole);
+
+                        // Hover events
+                        g.addEventListener('mouseenter', (e) => onPadHover(e, coordStr));
+                        g.addEventListener('mouseleave', onPadLeave);
+                        g.addEventListener('click', () => onPadClick(coordStr));
+
+                        layerPads.appendChild(g);
+                    }
+                }
+            }
+
+            // Render Top Components (Component View)
+            function renderTopComponents() {
+                layerComponents.innerHTML = '';
+
+                // 1. ESP32-C3 SuperMini Socket & Board Outline
+                // Straddles Rows G to M across Cols 3 to 10
+                const pG3 = getCoord('G3');
+                const pM10 = getCoord('M10');
+                const pG1 = getCoord('G1');
+                
+                const espGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                espGroup.setAttribute('id', 'comp-esp32');
+
+                // ESP32 PCB Outline (Dark purple / black)
+                const espX = pG3.x - 18;
+                const espY = pG3.y - 16;
+                const espW = (pM10.x - pG3.x) + 36;
+                const espH = (pM10.y - pG3.y) + 32;
+
+                const espPcb = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                espPcb.setAttribute('x', espX);
+                espPcb.setAttribute('y', espY);
+                espPcb.setAttribute('width', espW);
+                espPcb.setAttribute('height', espH);
+                espPcb.setAttribute('rx', '6');
+                espPcb.setAttribute('fill', '#141824');
+                espPcb.setAttribute('stroke', '#58a6ff');
+                espPcb.setAttribute('stroke-width', '2');
+                espPcb.setAttribute('filter', 'url(#shadow)');
+                espGroup.appendChild(espPcb);
+
+                // USB-C Connector (extending to the left over Cols 1-2)
+                const usbRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                usbRect.setAttribute('x', espX - 32);
+                usbRect.setAttribute('y', espY + (espH / 2) - 18);
+                usbRect.setAttribute('width', '36');
+                usbRect.setAttribute('height', '36');
+                usbRect.setAttribute('rx', '4');
+                usbRect.setAttribute('fill', '#8b949e');
+                usbRect.setAttribute('stroke', '#d0d7de');
+                usbRect.setAttribute('stroke-width', '1.5');
+                espGroup.appendChild(usbRect);
+
+                const usbSlot = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                usbSlot.setAttribute('x', espX - 30);
+                usbSlot.setAttribute('y', espY + (espH / 2) - 10);
+                usbSlot.setAttribute('width', '10');
+                usbSlot.setAttribute('height', '20');
+                usbSlot.setAttribute('rx', '2');
+                usbSlot.setAttribute('fill', '#21262d');
+                espGroup.appendChild(usbSlot);
+
+                // ESP32 Metal Shield (Silver Can)
+                const shield = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                shield.setAttribute('x', espX + 45);
+                shield.setAttribute('y', espY + 22);
+                shield.setAttribute('width', '140');
+                shield.setAttribute('height', espH - 44);
+                shield.setAttribute('rx', '4');
+                shield.setAttribute('fill', '#30363d');
+                shield.setAttribute('stroke', '#8b949e');
+                shield.setAttribute('stroke-width', '1.5');
+                espGroup.appendChild(shield);
+
+                // Shield Text
+                const shieldText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                shieldText.setAttribute('x', espX + 115);
+                shieldText.setAttribute('y', espY + (espH / 2) + 4);
+                shieldText.setAttribute('fill', '#c9d1d9');
+                shieldText.setAttribute('font-family', 'monospace');
+                shieldText.setAttribute('font-size', '11');
+                shieldText.setAttribute('font-weight', 'bold');
+                shieldText.setAttribute('text-anchor', 'middle');
+                shieldText.textContent = 'ESP32-C3 SuperMini';
+                espGroup.appendChild(shieldText);
+
+                // Antenna trace (gold PCB serpentine on right)
+                const ant = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                ant.setAttribute('x', espX + espW - 40);
+                ant.setAttribute('y', espY + 20);
+                ant.setAttribute('width', '24');
+                ant.setAttribute('height', espH - 40);
+                ant.setAttribute('rx', '2');
+                ant.setAttribute('fill', '#388bfd');
+                ant.setAttribute('opacity', '0.2');
+                ant.setAttribute('stroke', '#d29922');
+                ant.setAttribute('stroke-width', '1.5');
+                ant.setAttribute('stroke-dasharray', '3,3');
+                espGroup.appendChild(ant);
+
+                // Female Header Sockets (Black plastic blocks with pin entries)
+                // Row G header: Cols 3 to 10
+                const hdrG = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                hdrG.setAttribute('x', pG3.x - 14);
+                hdrG.setAttribute('y', pG3.y - 12);
+                hdrG.setAttribute('width', (pM10.x - pG3.x) + 28);
+                hdrG.setAttribute('height', '24');
+                hdrG.setAttribute('rx', '3');
+                hdrG.setAttribute('fill', '#0d1117');
+                hdrG.setAttribute('stroke', '#30363d');
+                hdrG.setAttribute('stroke-width', '1.5');
+                espGroup.appendChild(hdrG);
+
+                // Row M header: Cols 3 to 10
+                const hdrM = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                hdrM.setAttribute('x', pG3.x - 14);
+                hdrM.setAttribute('y', pM10.y - 12);
+                hdrM.setAttribute('width', (pM10.x - pG3.x) + 28);
+                hdrM.setAttribute('height', '24');
+                hdrM.setAttribute('rx', '3');
+                hdrM.setAttribute('fill', '#0d1117');
+                hdrM.setAttribute('stroke', '#30363d');
+                hdrM.setAttribute('stroke-width', '1.5');
+                espGroup.appendChild(hdrM);
+
+                // Pin socket entry squares
+                for (let c = 3; c <= 10; c++) {
+                    const ptG = getCoord(`G${c}`);
+                    const ptM = getCoord(`M${c}`);
+
+                    const sqG = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                    sqG.setAttribute('x', ptG.x - 5);
+                    sqG.setAttribute('y', ptG.y - 5);
+                    sqG.setAttribute('width', '10');
+                    sqG.setAttribute('height', '10');
+                    sqG.setAttribute('fill', '#d49b42');
+                    sqG.setAttribute('rx', '1');
+                    espGroup.appendChild(sqG);
+
+                    const sqM = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                    sqM.setAttribute('x', ptM.x - 5);
+                    sqM.setAttribute('y', ptM.y - 5);
+                    sqM.setAttribute('width', '10');
+                    sqM.setAttribute('height', '10');
+                    sqM.setAttribute('fill', '#d49b42');
+                    sqM.setAttribute('rx', '1');
+                    espGroup.appendChild(sqM);
+                }
+
+                layerComponents.appendChild(espGroup);
+
+                // 2. Terminal Block TB2 (3-Pin Soil Moisture on Row B: Cols 7, 9, 11)
+                renderTerminalBlock('TB2 (Soil Moisture)', ['B7','B9','B11'], 'UP');
+
+                // 3. Terminal Block TB1 (4-Pin HC-SR04 Ultrasonic on Row B: Cols 15, 17, 19, 21)
+                renderTerminalBlock('TB1 (Ultrasonic)', ['B15','B17','B19','B21'], 'UP');
+
+                // 4. Terminal Block TB3 (2-Pin DC Pump on Row Q: Cols 19, 21)
+                renderTerminalBlock('TB3 (DC Pump)', ['Q19','Q21'], 'DOWN');
+
+                // 5. Q1: FQP30N06L TO-220 MOSFET in Row O (Cols 18, 19, 20)
+                renderMosfet('Q1', 'O18', 'O19', 'O20');
+
+                // 6. D1: 1N5819 Schottky Diode in Row P (Cols 19 to 21)
+                renderDiode('D1 (1N5819)', 'P19', 'P21');
+
+                // 7. C3: 470µF Bulk Reservoir Capacitor in Row N (Cols 21 to 23)
+                renderCapacitorElectrolytic('C3 (470µF)', 'N21', 'N23');
+
+                // 8. Resistors & Ceramic Capacitors
+                renderResistor('R1 (10k)', 'E6', 'F6', '#e3b341'); // Brown-Black-Orange
+                renderResistor('R2 (10k)', 'F6', 'C6', '#e3b341');
+                renderCapacitorCeramic('C1 (100nF)', 'F5', 'C5');
+                renderCapacitorCeramic('C2 (100nF)', 'D9', 'D11');
+                renderResistor('R3 (1k)', 'D19', 'D17', '#936337');  // Brown-Black-Red
+                renderResistor('R4 (2k)', 'D17', 'C17', '#f85149');  // Red-Black-Red
+                renderResistor('R5 (1k)', 'O14', 'O17', '#936337');
+                renderResistor('R6 (100k)', 'P18', 'R18', '#e3b341'); // Brown-Black-Yellow
+            }
+
+            // Terminal Block Helper
+            function renderTerminalBlock(label, pads, direction) {
+                const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                group.setAttribute('class', 'comp-terminal');
+
+                const pStart = getCoord(pads[0]);
+                const pEnd = getCoord(pads[pads.length - 1]);
+
+                const blockX = pStart.x - 18;
+                const blockW = (pEnd.x - pStart.x) + 36;
+                const blockH = 44;
+                const blockY = direction === 'UP' ? (pStart.y - 30) : (pStart.y - 14);
+
+                // Green terminal body
+                const body = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                body.setAttribute('x', blockX);
+                body.setAttribute('y', blockY);
+                body.setAttribute('width', blockW);
+                body.setAttribute('height', blockH);
+                body.setAttribute('rx', '4');
+                body.setAttribute('fill', '#1b4d2e');
+                body.setAttribute('stroke', '#3fb950');
+                body.setAttribute('stroke-width', '1.5');
+                body.setAttribute('filter', 'url(#shadow)');
+                group.appendChild(body);
+
+                // Screws & Wire Cages
+                for (let i = 0; i < pads.length; i++) {
+                    const pt = getCoord(pads[i]);
+                    // Screw circle
+                    const screw = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    screw.setAttribute('cx', pt.x);
+                    screw.setAttribute('cy', blockY + (direction === 'UP' ? 26 : 18));
+                    screw.setAttribute('r', '7');
+                    screw.setAttribute('fill', '#30363d');
+                    screw.setAttribute('stroke', '#8b949e');
+                    screw.setAttribute('stroke-width', '1');
+                    group.appendChild(screw);
+
+                    // Cross slot
+                    const slot = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    slot.setAttribute('x1', pt.x - 4);
+                    slot.setAttribute('y1', blockY + (direction === 'UP' ? 26 : 18));
+                    slot.setAttribute('x2', pt.x + 4);
+                    slot.setAttribute('y2', blockY + (direction === 'UP' ? 26 : 18));
+                    slot.setAttribute('stroke', '#d0d7de');
+                    slot.setAttribute('stroke-width', '1.5');
+                    group.appendChild(slot);
+
+                    // Wire entry opening indication
+                    const entryY = direction === 'UP' ? (blockY + 4) : (blockY + blockH - 8);
+                    const entry = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                    entry.setAttribute('x', pt.x - 6);
+                    entry.setAttribute('y', entryY);
+                    entry.setAttribute('width', '12');
+                    entry.setAttribute('height', '5');
+                    entry.setAttribute('rx', '1');
+                    entry.setAttribute('fill', '#0d1117');
+                    group.appendChild(entry);
+                }
+
+                // Label Text
+                const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                txt.setAttribute('x', blockX + blockW / 2);
+                txt.setAttribute('y', direction === 'UP' ? (blockY - 6) : (blockY + blockH + 14));
+                txt.setAttribute('fill', '#7ee787');
+                txt.setAttribute('font-family', 'monospace');
+                txt.setAttribute('font-size', '10');
+                txt.setAttribute('font-weight', 'bold');
+                txt.setAttribute('text-anchor', 'middle');
+                txt.textContent = label;
+                group.appendChild(txt);
+
+                layerComponents.appendChild(group);
+            }
+
+            // MOSFET TO-220 Helper
+            function renderMosfet(label, pGate, pDrain, pSource) {
+                const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                const ptG = getCoord(pGate);
+                const ptD = getCoord(pDrain);
+                const ptS = getCoord(pSource);
+
+                const width = (ptS.x - ptG.x) + 32;
+                const x = ptG.x - 16;
+                const y = ptG.y - 20;
+
+                // Metal heatsink tab (North / Inward)
+                const tab = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                tab.setAttribute('x', x + 4);
+                tab.setAttribute('y', y - 8);
+                tab.setAttribute('width', width - 8);
+                tab.setAttribute('height', '8');
+                tab.setAttribute('fill', '#8c959f');
+                tab.setAttribute('stroke', '#d0d7de');
+                tab.setAttribute('stroke-width', '1');
+                group.appendChild(tab);
+
+                // Black Epoxy Body
+                const body = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                body.setAttribute('x', x);
+                body.setAttribute('y', y);
+                body.setAttribute('width', width);
+                body.setAttribute('height', '24');
+                body.setAttribute('rx', '3');
+                body.setAttribute('fill', '#21262d');
+                body.setAttribute('stroke', '#484f58');
+                body.setAttribute('stroke-width', '1.5');
+                body.setAttribute('filter', 'url(#shadow)');
+                group.appendChild(body);
+
+                // Label
+                const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                txt.setAttribute('x', ptD.x);
+                txt.setAttribute('y', y + 14);
+                txt.setAttribute('fill', '#f0f6fc');
+                txt.setAttribute('font-family', 'monospace');
+                txt.setAttribute('font-size', '9');
+                txt.setAttribute('font-weight', 'bold');
+                txt.setAttribute('text-anchor', 'middle');
+                txt.textContent = 'FQP30N06L';
+                group.appendChild(txt);
+
+                // Pin designations (G, D, S)
+                const pinLabels = [['G', ptG.x], ['D', ptD.x], ['S', ptS.x]];
+                for (const [pName, pX] of pinLabels) {
+                    const pTxt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                    pTxt.setAttribute('x', pX);
+                    pTxt.setAttribute('y', y + 36);
+                    pTxt.setAttribute('fill', '#8b949e');
+                    pTxt.setAttribute('font-family', 'monospace');
+                    pTxt.setAttribute('font-size', '9');
+                    pTxt.setAttribute('font-weight', 'bold');
+                    pTxt.setAttribute('text-anchor', 'middle');
+                    pTxt.textContent = pName;
+                    group.appendChild(pTxt);
+                }
+
+                layerComponents.appendChild(group);
+            }
+
+            // Diode Helper
+            function renderDiode(label, pAnode, pCathode) {
+                const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                const ptA = getCoord(pAnode);
+                const ptK = getCoord(pCathode);
+
+                // Diode body in middle
+                const midX = (ptA.x + ptK.x) / 2;
+                const midY = (ptA.y + ptK.y) / 2;
+
+                // Connecting lead line
+                const lead = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                lead.setAttribute('x1', ptA.x);
+                lead.setAttribute('y1', ptA.y);
+                lead.setAttribute('x2', ptK.x);
+                lead.setAttribute('y2', ptK.y);
+                lead.setAttribute('stroke', '#8b949e');
+                lead.setAttribute('stroke-width', '2');
+                group.appendChild(lead);
+
+                // Cylindrical body
+                const body = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                body.setAttribute('x', midX - 24);
+                body.setAttribute('y', midY - 8);
+                body.setAttribute('width', '48');
+                body.setAttribute('height', '16');
+                body.setAttribute('rx', '3');
+                body.setAttribute('fill', '#161b22');
+                body.setAttribute('stroke', '#30363d');
+                body.setAttribute('stroke-width', '1');
+                group.appendChild(body);
+
+                // Silver Cathode Band (facing Right / Col 21)
+                const band = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                band.setAttribute('x', midX + 12);
+                band.setAttribute('y', midY - 8);
+                band.setAttribute('width', '8');
+                band.setAttribute('height', '16');
+                band.setAttribute('fill', '#d0d7de');
+                group.appendChild(band);
+
+                // Label
+                const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                txt.setAttribute('x', midX - 4);
+                txt.setAttribute('y', midY + 4);
+                txt.setAttribute('fill', '#fff');
+                txt.setAttribute('font-family', 'monospace');
+                txt.setAttribute('font-size', '8');
+                txt.setAttribute('font-weight', 'bold');
+                txt.setAttribute('text-anchor', 'middle');
+                txt.textContent = '1N5819';
+                group.appendChild(txt);
+
+                layerComponents.appendChild(group);
+            }
+
+            // Electrolytic Capacitor Helper
+            function renderCapacitorElectrolytic(label, pPos, pNeg) {
+                const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                const ptP = getCoord(pPos);
+                const ptN = getCoord(pNeg);
+                const midX = (ptP.x + ptN.x) / 2;
+                const midY = (ptP.y + ptN.y) / 2;
+
+                // Aluminum round can
+                const can = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                can.setAttribute('cx', midX);
+                can.setAttribute('cy', midY);
+                can.setAttribute('r', '22');
+                can.setAttribute('fill', '#21262d');
+                can.setAttribute('stroke', '#58a6ff');
+                can.setAttribute('stroke-width', '2');
+                can.setAttribute('filter', 'url(#shadow)');
+                group.appendChild(can);
+
+                // Negative white stripe (on right toward Col 23)
+                const stripe = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                stripe.setAttribute('d', `M ${midX + 6} ${midY - 21} A 22 22 0 0 1 ${midX + 22} ${midY} A 22 22 0 0 1 ${midX + 6} ${midY + 21} Z`);
+                stripe.setAttribute('fill', '#d0d7de');
+                stripe.setAttribute('opacity', '0.7');
+                group.appendChild(stripe);
+
+                // Label
+                const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                txt.setAttribute('x', midX - 6);
+                txt.setAttribute('y', midY + 4);
+                txt.setAttribute('fill', '#fff');
+                txt.setAttribute('font-family', 'monospace');
+                txt.setAttribute('font-size', '9');
+                txt.setAttribute('font-weight', 'bold');
+                txt.setAttribute('text-anchor', 'middle');
+                txt.textContent = '470µF';
+                group.appendChild(txt);
+
+                layerComponents.appendChild(group);
+            }
+
+            // Resistor Helper
+            function renderResistor(label, p1, p2, bandColor) {
+                const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                const pt1 = getCoord(p1);
+                const pt2 = getCoord(p2);
+
+                const midX = (pt1.x + pt2.x) / 2;
+                const midY = (pt1.y + pt2.y) / 2;
+
+                // Lead wire
+                const lead = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                lead.setAttribute('x1', pt1.x);
+                lead.setAttribute('y1', pt1.y);
+                lead.setAttribute('x2', pt2.x);
+                lead.setAttribute('y2', pt2.y);
+                lead.setAttribute('stroke', '#8b949e');
+                lead.setAttribute('stroke-width', '2');
+                group.appendChild(lead);
+
+                // Resistor body
+                const isVertical = Math.abs(pt1.x - pt2.x) < Math.abs(pt1.y - pt2.y);
+                const body = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                if (isVertical) {
+                    body.setAttribute('x', midX - 6);
+                    body.setAttribute('y', midY - 14);
+                    body.setAttribute('width', '12');
+                    body.setAttribute('height', '28');
+                } else {
+                    body.setAttribute('x', midX - 16);
+                    body.setAttribute('y', midY - 6);
+                    body.setAttribute('width', '32');
+                    body.setAttribute('height', '12');
+                }
+                body.setAttribute('rx', '3');
+                body.setAttribute('fill', '#cbb382'); // Tan resistor body
+                body.setAttribute('stroke', '#8b949e');
+                body.setAttribute('stroke-width', '0.5');
+                group.appendChild(body);
+
+                // Center color stripe
+                const stripe = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                if (isVertical) {
+                    stripe.setAttribute('x', midX - 6);
+                    stripe.setAttribute('y', midY - 3);
+                    stripe.setAttribute('width', '12');
+                    stripe.setAttribute('height', '6');
+                } else {
+                    stripe.setAttribute('x', midX - 3);
+                    stripe.setAttribute('y', midY - 6);
+                    stripe.setAttribute('width', '6');
+                    stripe.setAttribute('height', '12');
+                }
+                stripe.setAttribute('fill', bandColor || '#f85149');
+                group.appendChild(stripe);
+
+                // Label Text
+                const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                txt.setAttribute('x', isVertical ? (midX + 16) : midX);
+                txt.setAttribute('y', isVertical ? midY + 4 : (midY - 10));
+                txt.setAttribute('fill', '#f0f6fc');
+                txt.setAttribute('font-family', 'monospace');
+                txt.setAttribute('font-size', '9');
+                txt.setAttribute('font-weight', 'bold');
+                txt.setAttribute('text-anchor', isVertical ? 'start' : 'middle');
+                txt.textContent = label;
+                group.appendChild(txt);
+
+                layerComponents.appendChild(group);
+            }
+
+            // Ceramic Capacitor Helper
+            function renderCapacitorCeramic(label, p1, p2) {
+                const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                const pt1 = getCoord(p1);
+                const pt2 = getCoord(p2);
+                const midX = (pt1.x + pt2.x) / 2;
+                const midY = (pt1.y + pt2.y) / 2;
+
+                const lead = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                lead.setAttribute('x1', pt1.x);
+                lead.setAttribute('y1', pt1.y);
+                lead.setAttribute('x2', pt2.x);
+                lead.setAttribute('y2', pt2.y);
+                lead.setAttribute('stroke', '#8b949e');
+                lead.setAttribute('stroke-width', '1.5');
+                group.appendChild(lead);
+
+                // Yellow ceramic disc
+                const disc = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                disc.setAttribute('cx', midX);
+                disc.setAttribute('cy', midY);
+                disc.setAttribute('r', '9');
+                disc.setAttribute('fill', '#e3b341');
+                disc.setAttribute('stroke', '#b08800');
+                disc.setAttribute('stroke-width', '1');
+                group.appendChild(disc);
+
+                const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                txt.setAttribute('x', midX);
+                txt.setAttribute('y', midY + 3);
+                txt.setAttribute('fill', '#000');
+                txt.setAttribute('font-family', 'monospace');
+                txt.setAttribute('font-size', '6');
+                txt.setAttribute('font-weight', 'bold');
+                txt.setAttribute('text-anchor', 'middle');
+                txt.textContent = '104';
+                group.appendChild(txt);
+
+                layerComponents.appendChild(group);
+            }
+
+            // Render Underside Solder Side Traces, Buses & Bridges
+            function renderSolderSide(isMirrored) {
+                layerSolderSide.innerHTML = '';
+
+                // 1. Row C Analog GND Bus (C4 to C21)
+                renderBusWire('C4', 'C21', '#4493f8', 4, isMirrored, 'Row C Analog GND Bus');
+
+                // 2. Row R Power GND Bus (R18 to R24)
+                renderBusWire('R18', 'R24', '#1f6feb', 5, isMirrored, 'Row R Power GND Bus');
+
+                // 3. Row E Top +5V Bus (E3 to E15)
+                renderBusWire('E3', 'E15', '#f85149', 4, isMirrored, 'Row E Top +5V Bus');
+
+                // 4. Solder Bridge: Q1 Drain (O19) -> D1 Anode (P19) -> TB3 Pin 1 (Q19)
+                renderSolderBridge(['O19', 'P19', 'Q19'], '#ec6547', isMirrored, 'High-Current Drain Bridge');
+
+                // 5. Solder Bridge: C3 + (N21) -> D1 Cathode (P21) -> TB3 Pin 2 (Q21)
+                renderSolderBridge(['N21', 'P21', 'Q21'], '#ff7b72', isMirrored, 'High-Current 5V Feed Bridge');
+
+                // 6. Solder Bridges around MOSFET Gate
+                renderSolderBridge(['O17', 'O18'], '#f0883e', isMirrored, 'R5 to Q1 Gate');
+                renderSolderBridge(['O18', 'P18'], '#f0883e', isMirrored, 'Q1 Gate to R6');
+
+                // 7. Component Lead Drops to Power GND
+                renderBusWire('O20', 'R20', '#1f6feb', 3, isMirrored, 'Q1 Source to Row R GND');
+                renderBusWire('N23', 'R23', '#1f6feb', 3, isMirrored, 'C3 (-) to Row R GND');
+
+                // 8. Supply Monitor Dividers Bridges on Row F & C
+                renderSolderBridge(['F5', 'F6'], '#d29922', isMirrored, 'C1 to R1/R2 Node');
+                renderSolderBridge(['F6', 'G6'], '#d29922', isMirrored, 'Node to GPIO 0');
+                renderSolderBridge(['C5', 'C6'], '#4493f8', isMirrored, 'R2/C1 to Row C GND');
+
+                // 9. Echo Dividers Bridges
+                renderSolderBridge(['B19', 'D19'], '#56d364', isMirrored, 'TB1 Echo to R3');
+                renderSolderBridge(['C17', 'D17'], '#56d364', isMirrored, 'R4 to Row C GND');
+
+                // 10. Star Ground Link Wire (G4 to R18)
+                renderInsulatedJumper('G4', 'R18', '#388bfd', isMirrored, 'Star Ground Tie Wire (24 AWG)');
+
+                // 11. +5V Power Feed Wire (G3 to N21)
+                renderInsulatedJumper('G3', 'N21', '#f85149', isMirrored, '+5V Heavy Feed (24 AWG)');
+
+                // 12. Signal Jumpers on Underside
+                renderInsulatedJumper('M8', 'O14', '#f0883e', isMirrored, 'GPIO 7 to R5');
+                renderInsulatedJumper('B7', 'G8', '#a371f7', isMirrored, 'TB2 VCC to GPIO 2');
+                renderInsulatedJumper('B9', 'G7', '#3fb950', isMirrored, 'TB2 AOUT to GPIO 1');
+                renderInsulatedJumper('B17', 'G9', '#39c5cf', isMirrored, 'TB1 TRIG to GPIO 3');
+                renderInsulatedJumper('D17', 'G10', '#56d364', isMirrored, 'Echo 3.3V to GPIO 4');
+            }
+
+            // Solder Bridge Line
+            function renderSolderBridge(pads, color, isMirrored, desc) {
+                const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                for (let i = 0; i < pads.length - 1; i++) {
+                    const pt1 = getCoord(pads[i], isMirrored);
+                    const pt2 = getCoord(pads[i+1], isMirrored);
+
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', pt1.x);
+                    line.setAttribute('y1', pt1.y);
+                    line.setAttribute('x2', pt2.x);
+                    line.setAttribute('y2', pt2.y);
+                    line.setAttribute('stroke', '#d0d7de');
+                    line.setAttribute('stroke-width', '7');
+                    line.setAttribute('stroke-linecap', 'round');
+                    line.setAttribute('filter', 'url(#shadow)');
+                    group.appendChild(line);
+
+                    // Inner shiny metallic trace
+                    const core = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    core.setAttribute('x1', pt1.x);
+                    core.setAttribute('y1', pt1.y);
+                    core.setAttribute('x2', pt2.x);
+                    core.setAttribute('y2', pt2.y);
+                    core.setAttribute('stroke', color);
+                    core.setAttribute('stroke-width', '3.5');
+                    core.setAttribute('stroke-linecap', 'round');
+                    group.appendChild(core);
+                }
+                layerSolderSide.appendChild(group);
+            }
+
+            // Bare Bus Wire
+            function renderBusWire(p1, p2, color, strokeW, isMirrored, desc) {
+                const pt1 = getCoord(p1, isMirrored);
+                const pt2 = getCoord(p2, isMirrored);
+
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', pt1.x);
+                line.setAttribute('y1', pt1.y);
+                line.setAttribute('x2', pt2.x);
+                line.setAttribute('y2', pt2.y);
+                line.setAttribute('stroke', color);
+                line.setAttribute('stroke-width', strokeW);
+                line.setAttribute('stroke-linecap', 'round');
+                line.setAttribute('opacity', '0.9');
+                layerSolderSide.appendChild(line);
+            }
+
+            // Insulated Hookup Jumper Wire
+            function renderInsulatedJumper(p1, p2, color, isMirrored, desc) {
+                const pt1 = getCoord(p1, isMirrored);
+                const pt2 = getCoord(p2, isMirrored);
+
+                // Curved Bezier wire
+                const dx = pt2.x - pt1.x;
+                const dy = pt2.y - pt1.y;
+                const cx1 = pt1.x + dx * 0.25;
+                const cy1 = pt1.y + dy * 0.25 + (dy === 0 ? -24 : 16);
+                const cx2 = pt1.x + dx * 0.75;
+                const cy2 = pt1.y + dy * 0.75 + (dy === 0 ? -24 : 16);
+
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('d', `M ${pt1.x} ${pt1.y} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${pt2.x} ${pt2.y}`);
+                path.setAttribute('fill', 'none');
+                path.setAttribute('stroke', color);
+                path.setAttribute('stroke-width', '2.5');
+                path.setAttribute('stroke-linecap', 'round');
+                path.setAttribute('opacity', '0.85');
+                path.setAttribute('filter', 'url(#shadow)');
+
+                layerSolderSide.appendChild(path);
+            }
+
+            // Update View Modes (Top, Bottom, X-Ray)
+            function setViewMode(mode) {
+                currentView = mode;
+                document.getElementById('btn-view-top').classList.toggle('active', mode === 'top');
+                document.getElementById('btn-view-bottom').classList.toggle('active', mode === 'bottom');
+                document.getElementById('btn-view-xray').classList.toggle('active', mode === 'xray');
+
+                const isMirrored = (mode === 'bottom');
+
+                renderGridLabels(isMirrored);
+                renderPads(isMirrored);
+                renderSolderSide(isMirrored);
+
+                if (mode === 'top') {
+                    layerComponents.style.display = 'inline';
+                    layerComponents.style.opacity = '1';
+                    layerSolderSide.style.display = 'none';
+                } else if (mode === 'bottom') {
+                    layerComponents.style.display = 'none';
+                    layerSolderSide.style.display = 'inline';
+                    layerSolderSide.style.opacity = '1';
+                } else if (mode === 'xray') {
+                    layerComponents.style.display = 'inline';
+                    layerComponents.style.opacity = '0.35';
+                    layerSolderSide.style.display = 'inline';
+                    layerSolderSide.style.opacity = '1';
+                    renderTopComponents();
+                }
+
+                if (mode === 'top') {
+                    renderTopComponents();
+                }
+
+                highlightNet(activeNetKey);
+            }
+
+            // Hover Tooltips
+            function onPadHover(e, coordStr) {
+                const nets = PAD_MAP[coordStr] || [];
+                let netNames = nets.map(n => NETS[n].name).join(', ') || 'Unassigned / Open';
+
+                tooltip.style.display = 'block';
+                tooltip.innerHTML = `
+                    <div style="font-weight:bold; color:#79c0ff;">Pad ${coordStr}</div>
+                    <div style="color:#f0f6fc; margin-top:2px;">${netNames}</div>
+                `;
+
+                const rect = svgContainer.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left + 15;
+                const mouseY = e.clientY - rect.top + 15;
+                tooltip.style.left = mouseX + 'px';
+                tooltip.style.top = mouseY + 'px';
+            }
+
+            function onPadLeave() {
+                tooltip.style.display = 'none';
+            }
+
+            function onPadClick(coordStr) {
+                const nets = PAD_MAP[coordStr];
+                if (nets && nets.length > 0) {
+                    highlightNet(nets[0]);
+                } else {
+                    highlightNet(null);
+                }
+            }
+
+            // Net Highlighting
+            function highlightNet(netKey) {
+                activeNetKey = netKey;
+
+                // Update net item UI
+                document.querySelectorAll('.net-item').forEach(el => {
+                    el.classList.toggle('active', el.getAttribute('data-net') === netKey);
+                });
+
+                // Clear highlights
+                document.querySelectorAll('.pad-circle').forEach(el => {
+                    el.classList.remove('net-highlight');
+                });
+
+                if (!netKey) return;
+
+                const netData = NETS[netKey];
+                if (!netData) return;
+
+                // Highlight all matching pads
+                for (const p of netData.pads) {
+                    const padEl = document.getElementById(`pad-${p}`);
+                    if (padEl) {
+                        padEl.classList.add('net-highlight');
+                    }
+                }
+            }
+
+            // Build Net Inspector Sidebar
+            function buildNetList() {
+                netListContainer.innerHTML = '';
+                for (const [key, data] of Object.entries(NETS)) {
+                    const item = document.createElement('div');
+                    item.className = 'net-item';
+                    item.setAttribute('data-net', key);
+
+                    item.innerHTML = `
+                        <div class="net-tag">
+                            <span class="net-color-dot" style="background:${data.color};"></span>
+                            <span>${data.name}</span>
+                        </div>
+                        <span class="net-pins-count">${data.pads.length} pads</span>
+                    `;
+
+                    item.addEventListener('click', () => {
+                        if (activeNetKey === key) {
+                            highlightNet(null);
+                        } else {
+                            highlightNet(key);
+                        }
+                    });
+
+                    netListContainer.appendChild(item);
+                }
+            }
+
+            // Zoom & Fluid Canvas Controller
+            const btnFitWidth = document.getElementById('btn-fit-width');
+            const btnFitScreen = document.getElementById('btn-fit-screen');
+            const btnNative = document.getElementById('btn-native');
+            const btnZoomIn = document.getElementById('btn-zoom-in');
+            const btnZoomOut = document.getElementById('btn-zoom-out');
+            const btnFullscreen = document.getElementById('btn-fullscreen');
+            const zoomLabel = document.getElementById('zoom-label');
+
+            let currentScaleMode = 'fit-width';
+            let customScale = 1.0;
+
+            function updateZoom() {
+                btnFitWidth.classList.toggle('active', currentScaleMode === 'fit-width');
+                btnFitScreen.classList.toggle('active', currentScaleMode === 'fit-screen');
+                btnNative.classList.toggle('active', currentScaleMode === 'native');
+
+                svgContainer.classList.remove('mode-fitscreen');
+
+                if (currentScaleMode === 'fit-screen') {
+                    svgContainer.classList.add('mode-fitscreen');
+                    svg.style.width = 'auto';
+                    svg.style.height = 'auto';
+                } else if (currentScaleMode === 'native') {
+                    svg.style.width = '1140px';
+                    svg.style.height = '900px';
+                } else if (currentScaleMode === 'custom') {
+                    svg.style.width = Math.round(1140 * customScale) + 'px';
+                    svg.style.height = Math.round(900 * customScale) + 'px';
+                } else {
+                    // Default: Fit Width (Fluid across wide screens)
+                    svg.style.width = '100%';
+                    svg.style.height = 'auto';
+                }
+
+                requestAnimationFrame(() => {
+                    const rect = svg.getBoundingClientRect();
+                    const pct = Math.round((rect.width / 1140) * 100);
+                    zoomLabel.textContent = pct + '%';
+                });
+            }
+
+            btnFitWidth.addEventListener('click', () => {
+                currentScaleMode = 'fit-width';
+                updateZoom();
+            });
+
+            btnFitScreen.addEventListener('click', () => {
+                currentScaleMode = 'fit-screen';
+                updateZoom();
+            });
+
+            btnNative.addEventListener('click', () => {
+                currentScaleMode = 'native';
+                updateZoom();
+            });
+
+            btnZoomIn.addEventListener('click', () => {
+                const currentWidth = svg.getBoundingClientRect().width;
+                customScale = Math.min(3.0, (currentWidth / 1140) + 0.15);
+                currentScaleMode = 'custom';
+                updateZoom();
+            });
+
+            btnZoomOut.addEventListener('click', () => {
+                const currentWidth = svg.getBoundingClientRect().width;
+                customScale = Math.max(0.35, (currentWidth / 1140) - 0.15);
+                currentScaleMode = 'custom';
+                updateZoom();
+            });
+
+            btnFullscreen.addEventListener('click', () => {
+                if (!document.fullscreenElement) {
+                    canvasCard.requestFullscreen().catch(err => console.error(err));
+                } else {
+                    document.exitFullscreen();
+                }
+            });
+
+            window.addEventListener('resize', () => {
+                if (currentScaleMode === 'fit-width' || currentScaleMode === 'fit-screen') {
+                    updateZoom();
+                }
+            });
+
+            // View Mode Buttons
+            document.getElementById('btn-view-top').addEventListener('click', () => setViewMode('top'));
+            document.getElementById('btn-view-bottom').addEventListener('click', () => setViewMode('bottom'));
+            document.getElementById('btn-view-xray').addEventListener('click', () => setViewMode('xray'));
+
+            document.getElementById('btn-clear-net').addEventListener('click', () => highlightNet(null));
+
+            // Tab Switching
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    btn.classList.add('active');
+                    document.getElementById(btn.getAttribute('data-tab')).classList.add('active');
+                });
+            });
+
+            // Keyboard Shortcuts
+            window.addEventListener('keydown', (e) => {
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+                if (e.key === '+' || e.key === '=') btnZoomIn.click();
+                else if (e.key === '-' || e.key === '_') btnZoomOut.click();
+                else if (e.key === '0') btnFitWidth.click();
+                else if (e.key === 'f' || e.key === 'F') {
+                    if (!e.ctrlKey && !e.metaKey) btnFullscreen.click();
+                }
+            });
+
+            // Initialize
+            buildNetList();
+            setViewMode('top');
+            updateZoom();
+        })();
+    </script>
+</body>
+</html>

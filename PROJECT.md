@@ -69,6 +69,30 @@ All terminal blocks are mounted with screw openings facing **100% OUTWARDS** off
 * **D1 (1N5819 Schottky Diode):** Flyback protection diode across TB3 (Cathode to +5V Col 15, Anode to Drain Col 13).
 * **C3 (470 µF electrolytic):** Bulk power reservoir across +5V and GND to suppress motor startup dips.
 
+### 2.5 Permanent Soldered Perfboard Layout (18 Rows A–R × 24 Columns 1–24)
+For a permanent soldered build in an enclosure, an **18-row by 24-column 0.1" (2.54 mm) pitch through-hole perfboard** layout is fully designed and documented:
+* **Board Dimensions:** 18 Rows ($A \dots R$, vertical) $\times$ 24 Columns ($1 \dots 24$, horizontal), 432 plated donut pads.
+* **Microcontroller Mounting:** 2× 1×8 female header sockets mounted across Columns 3–10 in **Row G** and **Row M** (standard 0.600" DIP pitch).
+* **USB-C Clearance:** USB-C connector faces **LEFT** into Columns 1–2, allowing flush cable connection with zero board interference.
+* **Outward Sensor Terminals (Top Edge):**
+  * **TB2 (3-Pin Soil):** Row B, Cols 7 (VCC), 9 (AOUT), 11 (GND); wire entries face **UPWARDS**.
+  * **TB1 (4-Pin Ultrasonic):** Row B, Cols 15 (5V), 17 (TRIG), 19 (ECHO), 21 (GND); wire entries face **UPWARDS**.
+  * Spacer between TB2 and TB1: Cols 12–14 (7.62 mm spacing for unobstructed screwdriver access).
+* **Outward Pump Terminal (Bottom Edge):**
+  * **TB3 (2-Pin Pump):** Row Q, Cols 19 (Drain -), 21 (+5V); wire entries face **DOWNWARDS**.
+* **Actuators & Direct Solder Bridges:**
+  * **Q1 (FQP30N06L TO-220 MOSFET):** Row O, Cols 18 (Gate), 19 (Drain), 20 (Source).
+  * **Direct 3-Pad Solder Bridge:** Q1 Drain (Col 19 Row O) $\to$ D1 Anode (Col 19 Row P) $\to$ TB3 Pin 1 Drain (Col 19 Row Q) — **zero hookup wire required for high-current switch!**
+  * **D1 (1N5819 Schottky Diode):** Row P, Cols 19 (Anode) to 21 (Cathode).
+  * **C3 (470µF Bulk Capacitor):** Row N, Cols 21 (+) to 23 (-).
+* **Noise Immunity Dual Star-Ground Buses:**
+  * **Analog / Sensor GND (Row C):** Bare bus wire along Row C (Cols 4–21) providing an ultra-quiet ground reference for ADC supply monitor (GPIO 0), capacitive soil sensor (GPIO 1), and ultrasonic echo divider.
+  * **Power / Motor GND (Row R):** Bare bus wire along Row R (Cols 18–24) sinking high-current pump inrush transients ($0.8\text{A}\text{--}1.2\text{A}$) from Q1 Source and C3 without inducing ground bounce in Row C.
+  * **Star Ground Tie:** Heavy 24 AWG insulated jumper linking ESP32 GND (G4) directly to Row R (R18).
+* **Full Assembly Guide & Visualizer:**
+  * Guide: [`perfboard_circuit_guide.md`](file:///Users/robertlongbottom/dev/plant-esp32/perfboard_circuit_guide.md)
+  * Interactive SVG Visualizer: [`perfboard_diagram.html`](file:///Users/robertlongbottom/dev/plant-esp32/perfboard_diagram.html) (Top, Bottom Mirrored, and X-Ray composite views with fluid wide-screen zoom).
+
 ---
 
 ## 3. Firmware Architecture & FreeRTOS Concurrency
@@ -218,8 +242,10 @@ The firmware preserves 100% backward compatibility with `plant-p2`:
 plant-esp32/
 ├── platformio.ini               # PlatformIO environment, board & library dependencies
 ├── PROJECT.md                   # Complete specification and requirements reference (this file)
-├── breadboard_circuit_guide.md  # Step-by-step physical breadboard wiring guide
-├── circuit_diagram.html         # Interactive SVG schematic and component bill of materials
+├── breadboard_circuit_guide.md  # Step-by-step physical breadboard wiring guide (15-column)
+├── circuit_diagram.html         # Interactive breadboard SVG visualizer & BOM
+├── perfboard_circuit_guide.md   # Permanent 18x24 soldered perfboard assembly & wiring guide
+├── perfboard_diagram.html       # Interactive perfboard SVG visualizer (Top, Bottom, X-Ray)
 ├── include/
 │   ├── config_schema.h          # Configuration structures and defaults
 │   ├── pin_definitions.h        # Board pinout mapping (GPIO 0, 1, 3, 4, 7, 8)
