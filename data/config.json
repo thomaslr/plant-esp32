@@ -1,0 +1,49 @@
+{
+  "system": {
+    "hostname": "plants",
+    "timezone": "Asia/Singapore",
+    "gmt_offset": 8,
+    "ntp_servers": [
+      "time.google.com",
+      "pool.ntp.org",
+      "time.nist.gov"
+    ],
+    "monitoring_interval_sec": 60
+  },
+  "gauges": {
+    "soil_moisture": {
+      "trigger_threshold": 40,
+      "dry_adc": 2800,
+      "wet_adc": 1100
+    },
+    "water_level": {
+      "tank_height_cm": 30.0,
+      "sensor_offset_cm": 3.0,
+      "min_safe_level_cm": 2.0
+    },
+    "voltage": {
+      "min_warning": 4.5,
+      "max_warning": 5.5
+    }
+  },
+  "timing": {
+    "startup_delay_sec": 30,
+    "check_interval_sec": 3600,
+    "sensor_read_interval_sec": 600,
+    "automated_water_duration_sec": 20,
+    "manual_water_duration_sec": 10
+  },
+  "safety": {
+    "max_continuous_pump_sec": 60,
+    "min_time_between_cycles_sec": 300,
+    "daily_watering_limit": {
+      "enabled": true,
+      "max_seconds_per_day": 60
+    },
+    "night_watering_protection": {
+      "enabled": true,
+      "start_hour": 22,
+      "end_hour": 9
+    }
+  }
+}

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plant Monitor P2 (ESP32-C3)</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-title">
+                <h1>🌱 Plant Monitor P2</h1>
+                <span class="badge" id="host-badge">plants.local</span>
+            </div>
+            <div class="header-status">
+                <span id="conn-status" class="dot dot-disconnected"></span>
+                <span id="conn-text">Connecting...</span>
+            </div>
+        </header>
+
+        <!-- Metric Gauges Cards -->
+        <div class="grid cards">
+            <div class="card" id="card-soil">
+                <div class="card-header">
+                    <h3>Soil Moisture</h3>
+                    <span class="card-icon">🪴</span>
+                </div>
+                <div class="card-value" id="val-soil">--%</div>
+                <div class="card-sub" id="sub-soil">Raw: -- mV</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="bar-soil" style="width: 0%;"></div>
+                </div>
+            </div>
+
+            <div class="card" id="card-water">
+                <div class="card-header">
+                    <h3>Reservoir Level</h3>
+                    <span class="card-icon">💧</span>
+                </div>
+                <div class="card-value" id="val-water">--%</div>
+                <div class="card-sub" id="sub-water">Depth: -- cm</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="bar-water" style="width: 0%;"></div>
+                </div>
+            </div>
+
+            <div class="card" id="card-voltage">
+                <div class="card-header">
+                    <h3>Supply Rail (5V)</h3>
+                    <span class="card-icon">⚡</span>
+                </div>
+                <div class="card-value" id="val-voltage">-- V</div>
+                <div class="card-sub" id="sub-voltage">Health: Checking...</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="bar-voltage" style="width: 0%;"></div>
+                </div>
+            </div>
+
+            <div class="card" id="card-temp">
+                <div class="card-header">
+                    <h3>Chip Temperature</h3>
+                    <span class="card-icon">🌡️</span>
+                </div>
+                <div class="card-value" id="val-temp">-- °C</div>
+                <div class="card-sub" id="sub-temp">ESP32-C3 Silicon</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="bar-temp" style="width: 0%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pump Control & Safety Panel -->
+        <div class="card pump-panel">
+            <div class="card-header">
+                <h3>Watering & Safety Supervisor</h3>
+                <span id="pump-state-badge" class="badge badge-idle">PUMP IDLE</span>
+            </div>
+            <div class="pump-grid">
+                <div class="pump-info">
+                    <p><strong>Status:</strong> <span id="pump-inhibit-reason">Normal operation</span></p>
+                    <p><strong>Cooldown Remaining:</strong> <span id="pump-cooldown">0s</span></p>
+                    <p><strong>Daily Watered:</strong> <span id="pump-daily">0s / 60s max</span></p>
+                </div>
+                <div class="pump-actions">
+                    <div class="action-inputs">
+                        <label for="water-duration">Duration (s):</label>
+                        <input type="number" id="water-duration" min="1" max="60" value="10">
+                    </div>
+                    <button id="btn-water" class="btn btn-primary">Water Now</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Diagnostics & System Info -->
+        <div class="grid diag-grid">
+            <div class="card">
+                <h3>Hardware Diagnostics</h3>
+                <ul class="diag-list">
+                    <li><span>IP Address:</span> <strong id="diag-ip">--</strong></li>
+                    <li><span>mDNS Host:</span> <strong id="diag-mdns">plants.local</strong></li>
+                    <li><span>Wi-Fi Signal:</span> <strong id="diag-rssi">-- dBm</strong></li>
+                    <li><span>System Uptime:</span> <strong id="diag-uptime">--</strong></li>
+                    <li><span>Preventive Resets:</span> <strong id="diag-resets">0</strong></li>
+                </ul>
+                <button id="btn-sensor-reset" class="btn btn-secondary">Force Ultrasonic Reset</button>
+            </div>
+
+            <div class="card">
+                <div class="log-header">
+                    <h3>Recent Sensor Log</h3>
+                    <button id="btn-refresh-logs" class="btn btn-small">Refresh</button>
+                </div>
+                <div class="table-container">
+                    <table id="log-table">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Soil</th>
+                                <th>Water</th>
+                                <th>Supply</th>
+                                <th>Temp</th>
+                            </tr>
+                        </thead>
+                        <tbody id="log-body">
+                            <tr><td colspan="5" style="text-align:center;">Loading logs...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            Plant Monitor ESP32-C3 &bull; FreeRTOS C++ Architecture &bull; <a href="/api/status" target="_blank">Raw Status API</a> &bull; <a href="/api/sensor-log?n=20" target="_blank">Sensor Log API</a>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+.pio
+.pio_core
+.vscode
+.idea
+*.pyc
+*.bin
+*.elf
+secrets.h
+.DS_Store

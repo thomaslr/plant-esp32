@@ -212,15 +212,17 @@
                     <text x="33" y="12" fill="#79c0ff" font-size="7" text-anchor="middle">GND</text>
                 </g>
 
-                <!-- Submersible DC Pump (Bottom Right) -->
+                <!-- Submersible DC Pump (Bottom Right - Flipped Left-to-Right) -->
                 <g transform="translate(930, 895)" filter="url(#dropShadow)">
                     <rect x="20" y="8" width="100" height="60" rx="8" fill="#30363d" stroke="#484f58" stroke-width="2"/>
-                    <rect x="0" y="22" width="22" height="30" rx="3" fill="#ffb703"/>
-                    <rect x="120" y="30" width="22" height="16" fill="#8b949e"/>
+                    <!-- Inlet on left, Outlet nozzle on right -->
+                    <rect x="0" y="30" width="22" height="16" fill="#8b949e"/>
+                    <rect x="118" y="22" width="22" height="30" rx="3" fill="#ffb703"/>
                     <circle cx="70" cy="38" r="14" fill="#212529"/>
                     <text x="70" y="42" fill="#ffffff" font-size="9" font-weight="bold" text-anchor="middle">5V DC PUMP</text>
-                    <text x="40" y="22" fill="#ff7b72" font-size="8">+</text>
-                    <text x="100" y="22" fill="#8b949e" font-size="8">-</text>
+                    <!-- Terminals aligned directly with TB3 pins above: - on Left (Col 13), + on Right (Col 15) -->
+                    <text x="40" y="22" fill="#8b949e" font-size="8">-</text>
+                    <text x="100" y="22" fill="#ff7b72" font-size="8">+</text>
                 </g>
 
 
@@ -321,8 +323,8 @@
                             <circle cx="210" cy="20" r="6" fill="#79c0ff"/><text x="210" y="38" text-anchor="middle">G0 (5V)</text>
                             <!-- Col 5: GPIO 1 (NOW SOIL MOISTURE ADC) -->
                             <circle cx="275" cy="20" r="6" fill="#3fb950"/><text x="275" y="38" text-anchor="middle">G1 (Soil)</text>
-                            <!-- Col 6: GPIO 2 -->
-                            <circle cx="340" cy="20" r="6" fill="#8b949e"/><text x="340" y="38" text-anchor="middle">G2</text>
+                            <!-- Col 6: GPIO 2 (Switched Soil VCC Power) -->
+                            <circle cx="340" cy="20" r="6" fill="#3fb950"/><text x="340" y="38" text-anchor="middle">G2 (Soil Pwr)</text>
                             <!-- Col 7: GPIO 3 (TRIG) -->
                             <circle cx="405" cy="20" r="6" fill="#58a6ff"/><text x="405" y="38" text-anchor="middle">G3</text>
                             <!-- Col 8: GPIO 4 (ECHO) -->
@@ -370,24 +372,24 @@
                         <text x="410" y="42" fill="#ffffff" font-size="8" text-anchor="middle">GND</text>
                     </g>
 
-                    <!-- [TB2] SOIL SENSOR 3-PIN (ROW A &bull; COLS 8, 10, 12) -->
-                    <!-- Wire entries and screws face DOWNWARDS (Outwards off bottom edge) -->
-                    <g transform="translate(490, 565)" filter="url(#dropShadow)">
+                    <!-- [TB2] SOIL SENSOR 3-PIN (ROW F &bull; COLS 10, 12, 14) -->
+                    <!-- Wire entries and screws face DOWNWARDS (into open center trench) -->
+                    <g transform="translate(625, 272)" filter="url(#dropShadow)">
                         <rect width="310" height="48" rx="5" fill="url(#terminalGreen)" stroke="#114e21" stroke-width="1.5"/>
                         <!-- Arrow indicator -->
-                        <polygon points="155,58 150,52 160,52" fill="#bc8cff"/>
-                        <text x="155" y="68" fill="#bc8cff" font-size="9.5" font-weight="bold" text-anchor="middle">&darr; WIRES ENTER FROM BOTTOM EDGE &darr;</text>
-                        <!-- Screws at Col 8 (x=20), Col 10 (x=160), Col 12 (x=290) -->
-                        <circle cx="20" cy="24" r="8" fill="#86efac" stroke="#166534" stroke-width="1.5"/>
-                        <circle cx="160" cy="24" r="8" fill="#86efac" stroke="#166534" stroke-width="1.5"/>
-                        <circle cx="290" cy="24" r="8" fill="#86efac" stroke="#166534" stroke-width="1.5"/>
-                        <line x1="16" y1="24" x2="24" y2="24" stroke="#166534" stroke-width="2"/>
-                        <line x1="156" y1="24" x2="164" y2="24" stroke="#166534" stroke-width="2"/>
-                        <line x1="286" y1="24" x2="294" y2="24" stroke="#166534" stroke-width="2"/>
-                        <text x="20" y="10" fill="#ffffff" font-size="8" text-anchor="middle">3V3</text>
-                        <text x="160" y="10" fill="#ffffff" font-size="8" text-anchor="middle">AOUT</text>
-                        <text x="290" y="10" fill="#ffffff" font-size="8" text-anchor="middle">GND</text>
-                        <text x="155" y="38" fill="#bc8cff" font-size="9" font-weight="bold" text-anchor="middle">TB2: Soil Moisture (Cols 8, 10, 12)</text>
+                        <polygon points="155,54 150,48 160,48" fill="#bc8cff"/>
+                        <text x="155" y="64" fill="#bc8cff" font-size="9" font-weight="bold" text-anchor="middle">&darr; SOIL PROBE WIRES (CENTER TRENCH) &darr;</text>
+                        <!-- Screws at Col 10 (x=25), Col 12 (x=155), Col 14 (x=285) -->
+                        <circle cx="25" cy="23" r="8" fill="#86efac" stroke="#166534" stroke-width="1.5"/>
+                        <circle cx="155" cy="23" r="8" fill="#86efac" stroke="#166534" stroke-width="1.5"/>
+                        <circle cx="285" cy="23" r="8" fill="#86efac" stroke="#166534" stroke-width="1.5"/>
+                        <line x1="21" y1="23" x2="29" y2="23" stroke="#166534" stroke-width="2"/>
+                        <line x1="151" y1="23" x2="159" y2="23" stroke="#166534" stroke-width="2"/>
+                        <line x1="281" y1="23" x2="289" y2="23" stroke="#166534" stroke-width="2"/>
+                        <text x="25" y="10" fill="#ffffff" font-size="7.5" text-anchor="middle">VCC (G2)</text>
+                        <text x="155" y="10" fill="#ffffff" font-size="8" text-anchor="middle">AOUT</text>
+                        <text x="285" y="10" fill="#ffffff" font-size="8" text-anchor="middle">GND</text>
+                        <text x="155" y="38" fill="#bc8cff" font-size="9" font-weight="bold" text-anchor="middle">TB2: Soil Moisture (Row F &bull; Cols 10, 12, 14)</text>
                     </g>
 
                     <!-- [TB3] PUMP MOTOR 2-PIN (ROW A &bull; COLS 13, 15) -->
@@ -408,26 +410,27 @@
 
 
                     <!-- ============================================================ -->
-                    <!-- 4. PUMP MOSFET (TO-220 &bull; ROWS C–D &bull; COLS 11, 13, 14) -->
+                    <!-- 4. PUMP MOSFET (TO-220 &bull; ROWS C–D &bull; COLS 12, 13, 14) -->
                     <!-- ============================================================ -->
-                    <g transform="translate(680, 465)" filter="url(#dropShadow)">
-                        <rect x="-10" y="-14" width="260" height="75" rx="6" fill="rgba(248, 81, 73, 0.08)" stroke="#f85149" stroke-width="1.2" stroke-dasharray="3"/>
-                        <text x="120" y="0" fill="#f85149" font-size="9" font-weight="bold" text-anchor="middle">Pump N-FET IRLZ44N (Rows C–D)</text>
+                    <!-- Standard 2.54mm (0.1") pin pitch across 3 adjacent holes: Col 12 (G), Col 13 (D), Col 14 (S) -->
+                    <g transform="translate(745, 465)" filter="url(#dropShadow)">
+                        <rect x="-10" y="-14" width="220" height="75" rx="6" fill="rgba(248, 81, 73, 0.08)" stroke="#f85149" stroke-width="1.2" stroke-dasharray="3"/>
+                        <text x="100" y="0" fill="#f85149" font-size="9" font-weight="bold" text-anchor="middle">Pump N-FET FQP30N06L (Cols 12–14)</text>
                         <!-- Heatsink Tab -->
-                        <rect x="15" y="10" width="210" height="8" fill="url(#metalSilver)" rx="1"/>
+                        <rect x="10" y="10" width="180" height="8" fill="url(#metalSilver)" rx="1"/>
                         <!-- Black Body -->
-                        <rect x="15" y="18" width="210" height="25" fill="#212529" stroke="#30363d" rx="2"/>
-                        <text x="120" y="35" fill="#ffffff" font-size="9" font-weight="bold" text-anchor="middle">IRLZ44N</text>
-                        <!-- Metal Leads extending into Breadboard Holes: Col 11 (x=35), Col 13 (x=165), Col 14 (x=230) -->
+                        <rect x="10" y="18" width="180" height="25" fill="#212529" stroke="#30363d" rx="2"/>
+                        <text x="100" y="35" fill="#ffffff" font-size="9" font-weight="bold" text-anchor="middle">FQP30N06L</text>
+                        <!-- Metal Leads extending into Breadboard Holes: Col 12 (x=35), Col 13 (x=100), Col 14 (x=165) -->
                         <line x1="35" y1="43" x2="35" y2="55" stroke="#ced4da" stroke-width="2.5"/>
+                        <line x1="100" y1="43" x2="100" y2="55" stroke="#ced4da" stroke-width="2.5"/>
                         <line x1="165" y1="43" x2="165" y2="55" stroke="#ced4da" stroke-width="2.5"/>
-                        <line x1="230" y1="43" x2="230" y2="55" stroke="#ced4da" stroke-width="2.5"/>
-                        <circle cx="35" cy="55" r="4" fill="#3fb950"/> <!-- Gate pin in Col 11 -->
-                        <circle cx="165" cy="55" r="4" fill="#484f58"/> <!-- Drain pin in Col 13 (Direct share with TB3!) -->
-                        <circle cx="230" cy="55" r="4" fill="#0969da"/> <!-- Source pin in Col 14 -->
-                        <text x="35" y="68" fill="#3fb950" font-size="7.5" text-anchor="middle">G (11)</text>
-                        <text x="165" y="68" fill="#adbac7" font-size="7.5" text-anchor="middle">D (13)</text>
-                        <text x="230" y="68" fill="#0969da" font-size="7.5" text-anchor="middle">S (14)</text>
+                        <circle cx="35" cy="55" r="4" fill="#3fb950"/> <!-- Gate pin in Col 12 -->
+                        <circle cx="100" cy="55" r="4" fill="#484f58"/> <!-- Drain pin in Col 13 (Direct share with TB3!) -->
+                        <circle cx="165" cy="55" r="4" fill="#0969da"/> <!-- Source pin in Col 14 -->
+                        <text x="35" y="68" fill="#3fb950" font-size="7.5" text-anchor="middle">G (12)</text>
+                        <text x="100" y="68" fill="#adbac7" font-size="7.5" text-anchor="middle">D (13)</text>
+                        <text x="165" y="68" fill="#0969da" font-size="7.5" text-anchor="middle">S (14)</text>
                     </g>
 
 
@@ -501,15 +504,15 @@
                         <text x="525" y="112" fill="#39c5cf" font-size="8" font-weight="bold">R4: 2kΩ</text>
                     </g>
 
-                    <!-- [C2] 100nF SOIL SENSOR RF FILTER (Col 10 Row C &rarr; Col 12 Row C) -->
+                    <!-- [C2] 100nF SOIL SENSOR RF FILTER (Col 12 Row H &rarr; Col 14 Row H) -->
                     <g id="comp_C2">
-                        <circle cx="715" cy="495" r="8" fill="#e3b341" stroke="#b08800" stroke-width="1.5"/>
-                        <text x="715" y="498" fill="#212529" font-size="6" font-weight="bold" text-anchor="middle">104</text>
-                        <!-- Leg 1 into Col 10 Row C (x=650, y=495) -->
-                        <line x1="707" y1="495" x2="650" y2="495" stroke="#ced4da" stroke-width="1.8"/>
-                        <!-- Leg 2 into Col 12 Row C (x=780, y=495) -->
-                        <line x1="723" y1="495" x2="780" y2="495" stroke="#ced4da" stroke-width="1.8"/>
-                        <text x="715" y="482" fill="#bc8cff" font-size="8" font-weight="bold" text-anchor="middle">C2: 100nF</text>
+                        <circle cx="845" cy="205" r="8" fill="#e3b341" stroke="#b08800" stroke-width="1.5"/>
+                        <text x="845" y="208" fill="#212529" font-size="6" font-weight="bold" text-anchor="middle">104</text>
+                        <!-- Leg 1 into Col 12 Row H (x=780, y=205) -->
+                        <line x1="837" y1="205" x2="780" y2="205" stroke="#ced4da" stroke-width="1.8"/>
+                        <!-- Leg 2 into Col 14 Row H (x=910, y=205) -->
+                        <line x1="853" y1="205" x2="910" y2="205" stroke="#ced4da" stroke-width="1.8"/>
+                        <text x="845" y="192" fill="#bc8cff" font-size="8" font-weight="bold" text-anchor="middle">C2: 100nF</text>
                     </g>
 
                     <!-- [D1] 1N5819 SCHOTTKY FLYBACK DIODE (Col 13 Row B &rarr; Col 15 Row B) -->
@@ -523,29 +526,29 @@
                         <text x="910" y="525" fill="#f85149" font-size="8" font-weight="bold" text-anchor="middle">D1: 1N5819</text>
                     </g>
 
-                    <!-- [R5] 1kΩ PUMP GATE DAMPING (Col 6 Row A &rarr; Col 11 Row C) -->
+                    <!-- [R5] 1kΩ PUMP GATE DAMPING (Col 6 Row A &rarr; Col 12 Row C) -->
                     <g id="comp_R5">
-                        <line x1="380" y1="585" x2="520" y2="585" stroke="#ced4da" stroke-width="2"/>
-                        <rect x="520" y="577" width="30" height="16" rx="3" fill="#cfb997" stroke="#484f58"/>
-                        <line x1="528" y1="577" x2="528" y2="593" stroke="#8b4513" stroke-width="2.5"/>
-                        <line x1="535" y1="577" x2="535" y2="593" stroke="#000000" stroke-width="2.5"/>
-                        <line x1="542" y1="577" x2="542" y2="593" stroke="#f85149" stroke-width="2.5"/>
-                        <!-- Lead to Col 11 Row C (x=715, y=495) -->
-                        <path d="M 550,585 L 715,585 L 715,520" fill="none" stroke="#ced4da" stroke-width="2"/>
-                        <text x="535" y="570" fill="#3fb950" font-size="8" font-weight="bold" text-anchor="middle">R5: 1kΩ</text>
+                        <line x1="380" y1="585" x2="540" y2="585" stroke="#ced4da" stroke-width="2"/>
+                        <rect x="540" y="577" width="30" height="16" rx="3" fill="#cfb997" stroke="#484f58"/>
+                        <line x1="548" y1="577" x2="548" y2="593" stroke="#8b4513" stroke-width="2.5"/>
+                        <line x1="555" y1="577" x2="555" y2="593" stroke="#000000" stroke-width="2.5"/>
+                        <line x1="562" y1="577" x2="562" y2="593" stroke="#f85149" stroke-width="2.5"/>
+                        <!-- Lead to Col 12 Row C (x=780, y=495) -->
+                        <path d="M 570,585 L 780,585 L 780,495" fill="none" stroke="#ced4da" stroke-width="2"/>
+                        <text x="555" y="570" fill="#3fb950" font-size="8" font-weight="bold" text-anchor="middle">R5: 1kΩ</text>
                     </g>
 
-                    <!-- [R6] 100kΩ PUMP GATE PULL-DOWN (Col 11 Row D &rarr; Bottom (-) GND Rail) -->
+                    <!-- [R6] 100kΩ PUMP GATE PULL-DOWN (Col 12 Row D &rarr; Bottom (-) GND Rail) -->
                     <g id="comp_R6">
-                        <line x1="715" y1="450" x2="715" y2="615" stroke="#ced4da" stroke-width="2"/>
-                        <rect x="707" y="615" width="16" height="30" rx="3" fill="#cfb997" stroke="#484f58"/>
+                        <line x1="780" y1="450" x2="780" y2="615" stroke="#ced4da" stroke-width="2"/>
+                        <rect x="772" y="615" width="16" height="30" rx="3" fill="#cfb997" stroke="#484f58"/>
                         <!-- Bands: Brown, Black, Yellow -->
-                        <line x1="707" y1="622" x2="723" y2="622" stroke="#8b4513" stroke-width="2.5"/>
-                        <line x1="707" y1="629" x2="723" y2="629" stroke="#000000" stroke-width="2.5"/>
-                        <line x1="707" y1="636" x2="723" y2="636" stroke="#d29922" stroke-width="2.5"/>
+                        <line x1="772" y1="622" x2="788" y2="622" stroke="#8b4513" stroke-width="2.5"/>
+                        <line x1="772" y1="629" x2="788" y2="629" stroke="#000000" stroke-width="2.5"/>
+                        <line x1="772" y1="636" x2="788" y2="636" stroke="#d29922" stroke-width="2.5"/>
                         <!-- Lead to Bottom (-) GND Rail (y=673) -->
-                        <line x1="715" y1="645" x2="715" y2="673" stroke="#ced4da" stroke-width="2"/>
-                        <text x="730" y="632" fill="#8b949e" font-size="7.5" font-weight="bold">R6: 100kΩ</text>
+                        <line x1="780" y1="645" x2="780" y2="673" stroke="#ced4da" stroke-width="2"/>
+                        <text x="765" y="632" fill="#8b949e" font-size="7.5" font-weight="bold" text-anchor="end">R6: 100kΩ</text>
                     </g>
 
                     <!-- [C3] 470µF BULK MOTOR CAPACITOR (Top Rails +5V &amp; GND at Col 15) -->
@@ -565,40 +568,42 @@
                 <g fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.95">
 
                     <!-- [A] +5V POWER JUMPERS (RED) -->
-                    <!-- ESP32 Col 1 Top (y=415) &rarr; Top 5V Rail (y=168) -->
-                    <path d="M 115,415 L 115,168" stroke="#f85149" stroke-width="3"/>
+                    <!-- ESP32 Col 1 Top (y=295) &rarr; Top 5V Rail (y=28) -->
+                    <path d="M 115,435 L 115,168" stroke="#f85149" stroke-width="3"/>
                     <!-- Top 5V Rail &rarr; TB1 Pin 1 (Col 9 at x=645, y=228) -->
                     <path d="M 645,168 L 645,228" stroke="#f85149" stroke-width="3"/>
                     <path d="M 645,208 L 92,90" stroke="#f85149" stroke-width="2.5"/> <!-- To sensor -->
                     <!-- Top 5V Rail &rarr; TB3 Pin 2 (Col 15 at x=1035, y=705) -->
                     <path d="M 1035,168 C 1035,360 1035,580 1035,705" stroke="#f85149" stroke-width="3"/>
-                    <path d="M 1035,725 L 970,903" stroke="#f85149" stroke-width="3"/> <!-- To pump (+) -->
+                    <path d="M 1035,725 L 1030,903" stroke="#f85149" stroke-width="3"/> <!-- To pump (+) -->
 
-                    <!-- [B] +3.3V POWER JUMPERS (GOLD) -->
-                    <!-- ESP32 Col 3 Top (y=415) &rarr; Bottom 3.3V Rail (y=789) -->
-                    <path d="M 245,415 C 245,740 245,740 245,789" stroke="#d29922" stroke-width="3"/>
-                    <!-- Bottom 3.3V Rail &rarr; TB2 Pin 1 (Col 8 at x=550, y=705) -->
-                    <path d="M 550,789 L 550,725" stroke="#d29922" stroke-width="3"/>
-                    <path d="M 550,725 C 550,830 447,830 447,922" stroke="#d29922" stroke-width="2.5"/> <!-- To soil VCC -->
+                    <!-- [B] SWITCHED SOIL SENSOR POWER (GREEN / DUTY-CYCLED via GPIO 2) -->
+                    <!-- ESP32 Col 6 Top (GPIO 2 at Col 6 Row G: x=440, y=390) &rarr; TB2 Pin 1 (Col 10 Row G: x=710, y=390) -->
+                    <path d="M 440,390 L 710,390" stroke="#3fb950" stroke-width="3"/>
+                    <!-- TB2 Pin 1 (x=710, y=415) &rarr; Soil VCC probe cable -->
+                    <path d="M 710,415 C 710,830 447,830 447,922" stroke="#3fb950" stroke-width="2.5"/>
+                    <!-- ESP32 Col 3 Top (3V3 at x=245) &rarr; Bottom 3.3V Rail (y=789) (Aux 3.3V) -->
+                    <path d="M 245,435 C 245,740 245,740 245,789" stroke="#d29922" stroke-width="2" stroke-dasharray="4"/>
 
                     <!-- [C] COMMON GROUND JUMPERS (BLUE) -->
-                    <!-- ESP32 Col 2 Top (y=415) &rarr; Top GND Rail (y=192) -->
-                    <path d="M 180,415 L 180,192" stroke="#0969da" stroke-width="3"/>
+                    <!-- ESP32 Col 2 Top &rarr; Top GND Rail -->
+                    <path d="M 180,435 L 180,192" stroke="#0969da" stroke-width="3"/>
                     <!-- Top GND Rail to Bottom GND Rail (Bridged under board) -->
                     <path d="M 85,192 C 40,192 40,813 85,813" stroke="#0969da" stroke-width="3.5" stroke-dasharray="6"/>
                     <text x="32" y="500" fill="#58a6ff" font-size="8" font-weight="bold" transform="rotate(-90 32 500)" text-anchor="middle">BRIDGED GND (UNDER BOARD)</text>
                     <!-- Top GND &rarr; TB1 Pin 4 (Col 15 at x=1035, y=228) -->
                     <path d="M 1035,192 L 1035,228" stroke="#0969da" stroke-width="2.5"/>
                     <path d="M 1035,208 L 210,90" stroke="#0969da" stroke-width="2"/>
-                    <!-- Bottom GND &rarr; TB2 Pin 3 (Col 12 at x=840, y=725) -->
-                    <path d="M 840,813 L 840,725" stroke="#0969da" stroke-width="2.5"/>
-                    <path d="M 840,725 C 840,850 463,850 463,922" stroke="#0969da" stroke-width="2"/>
+                    <!-- Top GND &rarr; TB2 Pin 3 (Col 14 at x=970, y=390) -->
+                    <path d="M 970,192 L 970,390" stroke="#0969da" stroke-width="2.5"/>
+                    <!-- TB2 Pin 3 &rarr; Soil probe GND cable -->
+                    <path d="M 970,415 C 970,850 463,850 463,922" stroke="#0969da" stroke-width="2"/>
                     <!-- MOSFET Source (Col 14 at x=970, y=535) &rarr; Bottom GND Rail -->
                     <path d="M 970,535 L 970,813" stroke="#0969da" stroke-width="3.5"/>
 
                     <!-- [D] TRIG SIGNAL (BLUE) -->
-                    <!-- ESP32 Col 7 Top (G3 at x=505, y=415) &rarr; TB1 Pin 2 (Col 11 at x=775, y=228) -->
-                    <path d="M 505,415 C 505,290 775,290 775,228" stroke="#58a6ff" stroke-width="3"/>
+                    <!-- ESP32 Col 7 Top (G3 at x=505) &rarr; TB1 Pin 2 (Col 11 at x=775) -->
+                    <path d="M 505,435 C 505,290 775,290 775,228" stroke="#58a6ff" stroke-width="3"/>
                     <path d="M 775,208 L 130,90" stroke="#58a6ff" stroke-width="2.5"/>
 
                     <!-- [E] ECHO SIGNAL (CYAN) -->
@@ -606,14 +611,14 @@
                     <path d="M 170,90 L 905,208" stroke="#39c5cf" stroke-width="2.5"/>
 
                     <!-- [F] SWAPPED SOIL AOUT (YELLOW &rarr; GPIO 1) -->
-                    <!-- Soil Probe AOUT &rarr; TB2 Pin 2 (Col 10 at x=710, y=725) -->
-                    <path d="M 455,922 C 455,830 710,830 710,725" stroke="#e3b341" stroke-width="2.5"/>
-                    <!-- TB2 Pin 2 (Col 10) &rarr; ESP32 Col 5 Top (GPIO 1 at x=375, y=415) -->
-                    <path d="M 710,705 C 710,480 375,480 375,415" stroke="#e3b341" stroke-width="3"/>
+                    <!-- Soil Probe AOUT &rarr; TB2 Pin 2 (Col 12 at x=840, y=415) -->
+                    <path d="M 455,922 C 455,830 840,830 840,415" stroke="#e3b341" stroke-width="2.5"/>
+                    <!-- TB2 Pin 2 (Col 12 Row G at x=840, y=390) &rarr; ESP32 Col 5 Top (GPIO 1 at x=375, y=390) -->
+                    <path d="M 840,390 C 840,345 375,345 375,390" stroke="#e3b341" stroke-width="3"/>
 
                     <!-- [G] PUMP DRAIN RETURN (DARK SLATE) -->
                     <!-- Pump (-) &rarr; TB3 Pin 1 (Col 13 at x=905, y=725) -->
-                    <path d="M 1030,903 L 905,725" stroke="#6e7681" stroke-width="3"/>
+                    <path d="M 970,903 L 905,725" stroke="#6e7681" stroke-width="3"/>
                     <!-- Col 13 is shared internally between TB3 Pin 1 and MOSFET Drain! -->
                     <path d="M 905,705 L 905,535" stroke="#6e7681" stroke-width="3.5" stroke-dasharray="3"/>
                 </g>
@@ -621,8 +626,8 @@
                 <!-- Connection Dots at specific tie-points -->
                 <g fill="#f0f6fc">
                     <circle cx="115" cy="415" r="3.5"/><circle cx="180" cy="415" r="3.5"/><circle cx="245" cy="415" r="3.5"/>
-                    <circle cx="310" cy="415" r="3.5"/><circle cx="375" cy="415" r="3.5"/><circle cx="505" cy="415" r="3.5"/>
-                    <circle cx="570" cy="415" r="3.5"/><circle cx="440" cy="725" r="3.5"/>
+                    <circle cx="310" cy="415" r="3.5"/><circle cx="375" cy="415" r="3.5"/><circle cx="440" cy="415" r="3.5"/>
+                    <circle cx="505" cy="415" r="3.5"/><circle cx="570" cy="415" r="3.5"/><circle cx="440" cy="725" r="3.5"/>
                     <circle cx="645" cy="228" r="3.5"/><circle cx="775" cy="228" r="3.5"/><circle cx="905" cy="228" r="3.5"/><circle cx="1035" cy="228" r="3.5"/>
                     <circle cx="550" cy="705" r="3.5"/><circle cx="710" cy="705" r="3.5"/><circle cx="840" cy="705" r="3.5"/>
                     <circle cx="905" cy="705" r="3.5"/><circle cx="1035" cy="705" r="3.5"/>
@@ -672,18 +677,23 @@
                         </tr>
                         <tr>
                             <td><strong>C2</strong></td>
-                            <td>100 nF &bull; Col 10 &rarr; Col 12</td>
+                            <td>100 nF &bull; Col 12 Row H &rarr; Col 14 Row H</td>
                             <td><strong>Soil Sensor RF Filter</strong>: Absorbs high-frequency Wi-Fi transmission bursts from distorting soil readings.</td>
                         </tr>
                         <tr>
                             <td><strong>R5</strong></td>
-                            <td>1 kΩ &bull; Col 6 &rarr; Col 11</td>
+                            <td>1 kΩ &bull; Col 6 &rarr; Col 12</td>
                             <td><strong>Gate Damping Resistor</strong>: Suppresses high-frequency parasitic ringing on MOSFET Gate.</td>
                         </tr>
                         <tr>
                             <td><strong>R6</strong></td>
-                            <td>100 kΩ &bull; Col 11 &rarr; GND Rail</td>
+                            <td>100 kΩ &bull; Col 12 &rarr; GND Rail</td>
                             <td><strong>Gate Pull-Down Resistor</strong>: Holds Gate firmly at 0V during boot/reset so pump stays strictly OFF.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Q1</strong></td>
+                            <td>FQP30N06L &bull; Cols 12, 13, 14</td>
+                            <td><strong>Logic-Level N-MOSFET</strong>: Low-side pump motor switch across 3 adjacent holes (Pin 1 G: Col 12, Pin 2 D: Col 13, Pin 3 S: Col 14). Fully saturated at 3.3V logic level ($V_{GS(th)} \le 2.5\text{V}$, $R_{DS(on)} &lt; 0.05\,\Omega$).</td>
                         </tr>
                         <tr>
                             <td><strong>D1</strong></td>
@@ -700,7 +710,7 @@
             </div>
 
             <div class="info-card">
-                <h3>Swapped ADC Pin Allocations</h3>
+                <h3>Pin Allocations &amp; Switched Power</h3>
                 <table class="comp-table">
                     <thead>
                         <tr><th>Pin</th><th>Peripheral</th><th>Target</th></tr>
@@ -708,19 +718,20 @@
                     <tbody>
                         <tr><td><strong>GPIO 0 (Col 4)</strong></td><td>ADC1_CH0</td><td><span class="badge badge-adc">5V Supply Monitor</span> (10k Divider)</td></tr>
                         <tr><td><strong>GPIO 1 (Col 5)</strong></td><td>ADC1_CH1</td><td><span class="badge badge-adc">Soil Moisture Probe</span> (AOUT)</td></tr>
+                        <tr><td><strong>GPIO 2 (Col 6 Top)</strong></td><td>Digital OUT</td><td><span class="badge badge-dig">Switched Soil VCC</span> (Duty-cycled 3.3V)</td></tr>
                         <tr><td><strong>GPIO 3 (Col 7)</strong></td><td>Digital OUT</td><td><span class="badge badge-dig">HC-SR04 TRIG</span></td></tr>
                         <tr><td><strong>GPIO 4 (Col 8)</strong></td><td>Digital IN</td><td><span class="badge badge-dig">HC-SR04 ECHO</span> (via 1k/2k)</td></tr>
-                        <tr><td><strong>GPIO 7 (Col 6)</strong></td><td>Digital OUT</td><td><span class="badge badge-dig">Pump MOSFET Gate</span> (via 1k)</td></tr>
+                        <tr><td><strong>GPIO 7 (Col 6 Bot)</strong></td><td>Digital OUT</td><td><span class="badge badge-dig">Pump MOSFET Gate</span> (via 1k into Col 12)</td></tr>
                     </tbody>
                 </table>
             </div>
 
             <div class="info-card">
-                <h3>Terminal Orientation (100% Outward)</h3>
+                <h3>Terminal Orientation (Unobstructed Access)</h3>
                 <ul style="padding-left:14px; margin:0; line-height:1.5; font-size:11.5px;">
-                    <li><strong>TB1 (Top Edge &bull; Row J)</strong>: Faces <strong>UPWARDS</strong>. 4-pin Ultrasonic (5V, TRIG, ECHO, GND).</li>
-                    <li><strong>TB2 (Bottom Edge &bull; Row A)</strong>: Faces <strong>DOWNWARDS</strong>. 3-pin Soil (3V3, AOUT, GND).</li>
-                    <li><strong>TB3 (Bottom Edge &bull; Row A)</strong>: Faces <strong>DOWNWARDS</strong>. 2-pin Pump (DRAIN, +5V).</li>
+                    <li><strong>TB1 (Top Edge &bull; Row J)</strong>: Faces <strong>UPWARDS</strong> off top edge. 4-pin Ultrasonic (5V, TRIG, ECHO, GND).</li>
+                    <li><strong>TB2 (Top Half &bull; Row F)</strong>: Faces <strong>DOWNWARDS</strong> into open Center Trench. 3-pin Soil (Cols 10, 12, 14: VCC via G2, AOUT, GND).</li>
+                    <li><strong>TB3 (Bottom Edge &bull; Row A)</strong>: Faces <strong>DOWNWARDS</strong> off bottom edge. 2-pin Pump (DRAIN, +5V).</li>
                 </ul>
             </div>
         </div>
