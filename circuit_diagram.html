@@ -24,17 +24,22 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
-            padding: 24px;
+            padding: 20px 24px;
+            box-sizing: border-box;
         }
 
         .header {
-            max-width: 1340px;
-            margin: 0 auto 20px auto;
+            width: 100%;
+            max-width: 100%;
+            margin: 0 auto 16px auto;
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-bottom: 1px solid var(--border-color);
             padding-bottom: 16px;
+            box-sizing: border-box;
+            flex-wrap: wrap;
+            gap: 12px;
         }
 
         .header h1 {
@@ -50,11 +55,14 @@
         }
 
         .container {
-            max-width: 1340px;
+            width: 100%;
+            max-width: 100%;
             margin: 0 auto;
             display: grid;
-            grid-template-columns: 1fr 380px;
+            grid-template-columns: 1fr 390px;
             gap: 20px;
+            align-items: start;
+            box-sizing: border-box;
         }
 
         .canvas-card {
@@ -62,14 +70,163 @@
             border: 1px solid var(--border-color);
             border-radius: 8px;
             padding: 16px;
-            overflow: auto;
             box-shadow: 0 6px 18px rgba(0,0,0,0.4);
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .canvas-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 12px;
+            margin-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .toolbar-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .canvas-badge {
+            font-size: 10px;
+            font-weight: 700;
+            color: #79c0ff;
+            background: rgba(56, 139, 253, 0.15);
+            border: 1px solid rgba(56, 139, 253, 0.4);
+            border-radius: 4px;
+            padding: 2px 7px;
+            letter-spacing: 0.5px;
+        }
+
+        .canvas-dims {
+            font-size: 11px;
+            color: #768390;
+            font-family: monospace;
+        }
+
+        .toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .btn-tool {
+            background: #21262d;
+            color: #c9d1d9;
+            border: 1px solid #30363d;
+            padding: 5px 11px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 11.5px;
+            font-weight: 500;
+            transition: all 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-tool:hover {
+            background: #30363d;
+            color: #f0f6fc;
+            border-color: #8b949e;
+        }
+
+        .btn-tool.active {
+            background: #1f6feb;
+            color: #ffffff;
+            border-color: #388bfd;
+        }
+
+        .btn-icon {
+            padding: 5px 10px;
+            font-size: 13px;
+            font-weight: bold;
+            line-height: 1;
+        }
+
+        .zoom-group {
+            display: inline-flex;
+            align-items: center;
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .zoom-group .btn-tool {
+            border: none;
+            border-radius: 0;
+            background: transparent;
+        }
+
+        .zoom-group .btn-tool:hover {
+            background: #21262d;
+        }
+
+        .zoom-label {
+            font-size: 11px;
+            font-family: monospace;
+            color: #adbac7;
+            padding: 0 8px;
+            min-width: 44px;
+            text-align: center;
+            user-select: none;
+        }
+
+        .svg-container {
+            width: 100%;
+            overflow: auto;
+            border-radius: 6px;
+            background: #12161f;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            box-sizing: border-box;
+            padding: 8px;
+        }
+
+        #circuitSvg {
+            width: 100%;
+            max-width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 6px;
+            transition: width 0.1s ease-out, height 0.1s ease-out;
+        }
+
+        .svg-container.mode-fitscreen #circuitSvg {
+            width: auto;
+            max-width: 100%;
+            max-height: calc(100vh - 200px);
+            height: auto;
+        }
+
+        .svg-container.mode-native #circuitSvg {
+            width: 1240px;
+            max-width: none;
+            height: 980px;
+            flex-shrink: 0;
+        }
+
+        .svg-container.mode-custom #circuitSvg {
+            max-width: none;
+            flex-shrink: 0;
         }
 
         .sidebar {
             display: flex;
             flex-direction: column;
             gap: 16px;
+            min-width: 0;
         }
 
         .info-card {
@@ -138,6 +295,23 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             user-select: none;
         }
+
+        @media (max-width: 1180px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            .sidebar {
+                grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+                display: grid;
+            }
+        }
+
+        @media print {
+            body { padding: 0; background: #ffffff; color: #000000; }
+            .canvas-toolbar, .btn-action { display: none !important; }
+            .container { grid-template-columns: 1fr; }
+            .canvas-card { border: none; box-shadow: none; padding: 0; }
+        }
     </style>
 </head>
 <body>
@@ -154,7 +328,28 @@
     <div class="container">
         <!-- SVG Canvas Card -->
         <div class="canvas-card">
-            <svg id="circuitSvg" width="1240" height="980" viewBox="0 0 1240 980" xmlns="http://www.w3.org/2000/svg">
+            <!-- Responsive Canvas Toolbar -->
+            <div class="canvas-toolbar">
+                <div class="toolbar-left">
+                    <span class="canvas-badge">VECTOR CANVAS</span>
+                    <span class="canvas-dims" id="canvasDims">Native: 1240 &times; 980</span>
+                </div>
+                <div class="toolbar-right">
+                    <button class="btn-tool active" id="btnFitWidth" title="Fit to Panel Width (Scales across wide screens with zero horizontal scrolling)">Fit Width</button>
+                    <button class="btn-tool" id="btnFitScreen" title="Fit Entire Diagram in Screen without vertical scrolling">Fit Screen</button>
+                    <button class="btn-tool" id="btnNative" title="1:1 Native Resolution (1240px)">1:1 (Native)</button>
+                    <div class="zoom-group">
+                        <button class="btn-tool btn-icon" id="btnZoomOut" title="Zoom Out (–)">−</button>
+                        <span class="zoom-label" id="zoomLabel">100%</span>
+                        <button class="btn-tool btn-icon" id="btnZoomIn" title="Zoom In (+)">+</button>
+                    </div>
+                    <button class="btn-tool btn-icon" id="btnFullscreen" title="Toggle Fullscreen (F)">⛶</button>
+                </div>
+            </div>
+
+            <!-- Scrollable / Scalable Container -->
+            <div class="svg-container" id="svgContainer">
+                <svg id="circuitSvg" viewBox="0 0 1240 980" xmlns="http://www.w3.org/2000/svg">
                 <defs>
                     <filter id="dropShadow" x="-10%" y="-10%" width="120%" height="120%">
                         <feDropShadow dx="2" dy="4" stdDeviation="4" flood-opacity="0.45"/>
@@ -633,6 +828,7 @@
                     <circle cx="905" cy="705" r="3.5"/><circle cx="1035" cy="705" r="3.5"/>
                 </g>
             </svg>
+            </div>
         </div>
 
         <!-- ============================================================ -->
@@ -736,5 +932,123 @@
             </div>
         </div>
     </div>
+
+    <!-- Interactive Canvas & Zoom Controller -->
+    <script>
+        (function() {
+            const svg = document.getElementById('circuitSvg');
+            const container = document.getElementById('svgContainer');
+            const btnFitWidth = document.getElementById('btnFitWidth');
+            const btnFitScreen = document.getElementById('btnFitScreen');
+            const btnNative = document.getElementById('btnNative');
+            const btnZoomIn = document.getElementById('btnZoomIn');
+            const btnZoomOut = document.getElementById('btnZoomOut');
+            const zoomLabel = document.getElementById('zoomLabel');
+            const canvasDims = document.getElementById('canvasDims');
+            const btnFullscreen = document.getElementById('btnFullscreen');
+            const canvasCard = document.querySelector('.canvas-card');
+
+            let currentMode = localStorage.getItem('circuit_diagram_view_mode') || 'fit-width';
+            let customScale = 1.0;
+
+            function updateUI() {
+                btnFitWidth.classList.toggle('active', currentMode === 'fit-width');
+                btnFitScreen.classList.toggle('active', currentMode === 'fit-screen');
+                btnNative.classList.toggle('active', currentMode === 'native');
+
+                container.classList.remove('mode-fitscreen', 'mode-native', 'mode-custom');
+                if (currentMode === 'fit-screen') {
+                    container.classList.add('mode-fitscreen');
+                    svg.style.width = 'auto';
+                    svg.style.height = 'auto';
+                } else if (currentMode === 'native') {
+                    container.classList.add('mode-native');
+                    svg.style.width = '1240px';
+                    svg.style.height = '980px';
+                } else if (currentMode === 'custom') {
+                    container.classList.add('mode-custom');
+                    svg.style.width = Math.round(1240 * customScale) + 'px';
+                    svg.style.height = Math.round(980 * customScale) + 'px';
+                } else {
+                    // Default: fit-width (fluid across wide screens)
+                    svg.style.width = '100%';
+                    svg.style.height = 'auto';
+                }
+
+                requestAnimationFrame(() => {
+                    const rect = svg.getBoundingClientRect();
+                    const pct = Math.round((rect.width / 1240) * 100);
+                    zoomLabel.textContent = pct + '%';
+                    canvasDims.textContent = Math.round(rect.width) + ' × ' + Math.round(rect.height) + ' px';
+                });
+
+                if (currentMode !== 'custom') {
+                    localStorage.setItem('circuit_diagram_view_mode', currentMode);
+                }
+            }
+
+            btnFitWidth.addEventListener('click', () => {
+                currentMode = 'fit-width';
+                updateUI();
+            });
+
+            btnFitScreen.addEventListener('click', () => {
+                currentMode = 'fit-screen';
+                updateUI();
+            });
+
+            btnNative.addEventListener('click', () => {
+                currentMode = 'native';
+                updateUI();
+            });
+
+            btnZoomIn.addEventListener('click', () => {
+                const currentWidth = svg.getBoundingClientRect().width;
+                customScale = Math.min(3.0, (currentWidth / 1240) + 0.15);
+                currentMode = 'custom';
+                updateUI();
+            });
+
+            btnZoomOut.addEventListener('click', () => {
+                const currentWidth = svg.getBoundingClientRect().width;
+                customScale = Math.max(0.35, (currentWidth / 1240) - 0.15);
+                currentMode = 'custom';
+                updateUI();
+            });
+
+            btnFullscreen.addEventListener('click', () => {
+                if (!document.fullscreenElement) {
+                    canvasCard.requestFullscreen().catch(err => console.error(err));
+                } else {
+                    document.exitFullscreen();
+                }
+            });
+
+            window.addEventListener('resize', () => {
+                if (currentMode === 'fit-width' || currentMode === 'fit-screen') {
+                    updateUI();
+                }
+            });
+
+            // Keyboard Shortcuts: +, -, 0 (reset), f (fullscreen)
+            window.addEventListener('keydown', (e) => {
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+                if (e.key === '+' || e.key === '=') {
+                    btnZoomIn.click();
+                } else if (e.key === '-' || e.key === '_') {
+                    btnZoomOut.click();
+                } else if (e.key === '0') {
+                    btnFitWidth.click();
+                } else if (e.key === 'f' || e.key === 'F') {
+                    if (!e.ctrlKey && !e.metaKey) {
+                        btnFullscreen.click();
+                    }
+                }
+            });
+
+            // Initialize
+            updateUI();
+        })();
+    </script>
 </body>
 </html>
