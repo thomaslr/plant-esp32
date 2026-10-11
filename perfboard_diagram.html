@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Plant Monitor — 18×24 Perfboard Circuit Diagram (Rows R → A)</title>
+    <title>Plant Monitor — 18×24 Perfboard Wiring Diagram (Explicit Connections)</title>
     <style>
         :root {
-            --bg-color: #0d1117;
-            --card-bg: #161b22;
-            --card-border: #30363d;
-            --text-main: #c9d1d9;
+            --bg-color: #0b0e14;
+            --card-bg: #151922;
+            --card-border: #2d333b;
+            --text-main: #adbac7;
             --text-bright: #f0f6fc;
-            --text-muted: #8b949e;
+            --text-muted: #768390;
             --accent-blue: #58a6ff;
             --accent-green: #3fb950;
             --accent-red: #f85149;
@@ -19,23 +19,17 @@
             --accent-yellow: #d29922;
             --accent-cyan: #39c5cf;
             --accent-orange: #f0883e;
-            --perf-board: #1a3322;
-            --perf-border: #234d31;
-            --pad-copper: #c88d32;
-            --pad-hole: #0d1117;
-            --solder-joint: #d0d7de;
+            --solder-silver: #d0d7de;
         }
 
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-main);
             margin: 0;
-            padding: 20px 24px;
+            padding: 16px 20px;
         }
 
         .header {
@@ -43,15 +37,15 @@
             justify-content: space-between;
             align-items: center;
             border-bottom: 1px solid var(--card-border);
-            padding-bottom: 16px;
-            margin-bottom: 16px;
+            padding-bottom: 12px;
+            margin-bottom: 12px;
             flex-wrap: wrap;
             gap: 12px;
         }
 
         .header h1 {
             color: var(--text-bright);
-            font-size: 22px;
+            font-size: 21px;
             margin: 0;
             display: flex;
             align-items: center;
@@ -59,14 +53,14 @@
         }
 
         .header p {
-            margin: 4px 0 0 0;
+            margin: 3px 0 0 0;
             font-size: 13px;
             color: var(--text-muted);
         }
 
         .nav-links {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             align-items: center;
         }
 
@@ -74,23 +68,17 @@
             background: rgba(56, 139, 253, 0.15);
             border: 1px solid rgba(56, 139, 253, 0.4);
             color: var(--accent-blue);
-            padding: 6px 12px;
+            padding: 5px 10px;
             border-radius: 6px;
             font-size: 12px;
             text-decoration: none;
             font-weight: 500;
-            transition: all 0.2s;
-        }
-
-        .nav-btn:hover {
-            background: rgba(56, 139, 253, 0.25);
-            border-color: var(--accent-blue);
         }
 
         .container {
             display: grid;
-            grid-template-columns: 1fr 400px;
-            gap: 20px;
+            grid-template-columns: 1fr 410px;
+            gap: 16px;
             align-items: start;
         }
 
@@ -98,7 +86,7 @@
             background-color: var(--card-bg);
             border: 1px solid var(--card-border);
             border-radius: 8px;
-            padding: 16px;
+            padding: 14px;
             box-shadow: 0 6px 18px rgba(0,0,0,0.4);
             display: flex;
             flex-direction: column;
@@ -106,21 +94,63 @@
             overflow: hidden;
         }
 
+        .notice-banner {
+            background: rgba(210, 153, 34, 0.12);
+            border: 1px solid rgba(210, 153, 34, 0.4);
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 11.5px;
+            color: #f0f6fc;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .notice-banner b { color: var(--accent-yellow); }
+
+        .legend-bar {
+            display: flex;
+            gap: 14px;
+            background: #1c2128;
+            border: 1px solid var(--card-border);
+            border-radius: 6px;
+            padding: 6px 12px;
+            margin-bottom: 10px;
+            font-size: 11px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-icon {
+            width: 14px;
+            height: 6px;
+            border-radius: 2px;
+            display: inline-block;
+        }
+
         .canvas-toolbar {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding-bottom: 12px;
-            margin-bottom: 12px;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 8px;
         }
 
         .toolbar-left, .toolbar-right {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             flex-wrap: wrap;
         }
 
@@ -128,17 +158,12 @@
             background: #21262d;
             border: 1px solid var(--card-border);
             color: var(--text-main);
-            padding: 6px 12px;
+            padding: 5px 10px;
             border-radius: 6px;
             font-size: 12px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
-        }
-
-        .view-pill:hover {
-            background: #30363d;
-            color: var(--text-bright);
         }
 
         .view-pill.active {
@@ -152,57 +177,22 @@
             background: #21262d;
             border: 1px solid var(--card-border);
             color: var(--text-main);
-            width: 32px;
-            height: 32px;
+            width: 30px;
+            height: 30px;
             border-radius: 6px;
-            font-size: 14px;
+            font-size: 13px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.2s;
-        }
-
-        .zoom-btn:hover {
-            background: #30363d;
-            color: var(--text-bright);
         }
 
         .zoom-label {
             font-family: monospace;
-            font-size: 12px;
-            color: var(--text-muted);
-            min-width: 44px;
-            text-align: center;
-        }
-
-        .canvas-badge {
-            font-size: 10px;
-            font-weight: 700;
-            color: #7ee787;
-            background: rgba(46, 160, 67, 0.15);
-            border: 1px solid rgba(46, 160, 67, 0.4);
-            border-radius: 4px;
-            padding: 2px 8px;
-            letter-spacing: 0.5px;
-        }
-
-        .notice-banner {
-            background: rgba(210, 153, 34, 0.12);
-            border: 1px solid rgba(210, 153, 34, 0.4);
-            border-radius: 6px;
-            padding: 8px 12px;
             font-size: 11px;
-            color: #f0f6fc;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-        }
-
-        .notice-banner b {
-            color: var(--accent-yellow);
+            color: var(--text-muted);
+            min-width: 40px;
+            text-align: center;
         }
 
         .svg-container {
@@ -214,23 +204,22 @@
             display: flex;
             justify-content: center;
             position: relative;
-            padding: 12px;
+            padding: 8px;
         }
 
         .svg-container.mode-fitscreen {
-            max-height: calc(100vh - 200px);
+            max-height: calc(100vh - 210px);
         }
 
         svg {
             display: block;
             user-select: none;
-            transition: width 0.2s ease, height 0.2s ease;
         }
 
         /* Tooltip */
         #diagram-tooltip {
             position: absolute;
-            background: rgba(13, 17, 23, 0.95);
+            background: rgba(13, 17, 23, 0.96);
             border: 1px solid var(--accent-blue);
             color: #fff;
             padding: 8px 12px;
@@ -240,43 +229,43 @@
             pointer-events: none;
             display: none;
             z-index: 1000;
-            box-shadow: 0 4px 14px rgba(0,0,0,0.8);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.85);
             line-height: 1.5;
-            max-width: 280px;
+            max-width: 300px;
         }
 
-        /* Sidebar Panels */
+        /* Sidebar */
         .sidebar {
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 14px;
         }
 
         .panel-card {
             background-color: var(--card-bg);
             border: 1px solid var(--card-border);
             border-radius: 8px;
-            padding: 16px;
+            padding: 14px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
 
         .panel-card h2 {
-            font-size: 14px;
-            margin: 0 0 12px 0;
+            font-size: 13.5px;
+            margin: 0 0 10px 0;
             color: var(--text-bright);
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-            padding-bottom: 8px;
+            padding-bottom: 6px;
         }
 
         /* Net list */
         .net-list {
             display: flex;
             flex-direction: column;
-            gap: 6px;
-            max-height: 240px;
+            gap: 5px;
+            max-height: 220px;
             overflow-y: auto;
         }
 
@@ -284,9 +273,9 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 6px 10px;
+            padding: 5px 8px;
             border-radius: 5px;
-            font-size: 12px;
+            font-size: 11.5px;
             background: #21262d;
             border: 1px solid transparent;
             cursor: pointer;
@@ -300,7 +289,7 @@
 
         .net-item.active {
             border-color: #388bfd;
-            background: rgba(56, 139, 253, 0.15);
+            background: rgba(56, 139, 253, 0.18);
             font-weight: 600;
         }
 
@@ -318,19 +307,11 @@
             display: inline-block;
         }
 
-        .net-pins-count {
-            font-size: 10px;
-            color: var(--text-muted);
-            background: #161b22;
-            padding: 2px 6px;
-            border-radius: 10px;
-        }
-
         /* Tabs */
         .tab-headers {
             display: flex;
             border-bottom: 1px solid var(--card-border);
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             gap: 8px;
         }
 
@@ -339,15 +320,10 @@
             border: none;
             border-bottom: 2px solid transparent;
             color: var(--text-muted);
-            padding: 8px 12px;
+            padding: 6px 10px;
             font-size: 12px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .tab-btn:hover {
-            color: var(--text-bright);
         }
 
         .tab-btn.active {
@@ -357,23 +333,20 @@
 
         .tab-content {
             display: none;
-            font-size: 12px;
+            font-size: 11.5px;
             line-height: 1.5;
         }
 
-        .tab-content.active {
-            display: block;
-        }
+        .tab-content.active { display: block; }
 
         .mini-table {
             width: 100%;
             border-collapse: collapse;
             font-size: 11px;
-            margin-top: 6px;
         }
 
         .mini-table th, .mini-table td {
-            padding: 6px 8px;
+            padding: 5px 6px;
             text-align: left;
             border-bottom: 1px solid rgba(255, 255, 255, 0.06);
         }
@@ -388,15 +361,15 @@
             font-family: monospace;
             background: #21262d;
             border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 2px 5px;
+            padding: 1px 4px;
             border-radius: 3px;
             color: #79c0ff;
             font-weight: bold;
         }
 
         .method-badge {
-            font-size: 10px;
-            padding: 2px 5px;
+            font-size: 9.5px;
+            padding: 2px 4px;
             border-radius: 3px;
             font-weight: 600;
             display: inline-block;
@@ -406,26 +379,12 @@
         .method-lead { background: rgba(63, 185, 80, 0.2); color: #3fb950; border: 1px solid rgba(63, 185, 80, 0.4); }
         .method-wire { background: rgba(188, 140, 255, 0.2); color: #bc8cff; border: 1px solid rgba(188, 140, 255, 0.4); }
 
-        /* SVG Interactive Styles */
-        .pad-circle {
-            cursor: pointer;
-            transition: fill 0.15s, stroke 0.15s;
-        }
-
-        .pad-circle:hover {
-            stroke: #fff !important;
-            stroke-width: 2px !important;
-        }
-
-        .net-highlight {
-            stroke: #ffea79 !important;
-            stroke-width: 2.5px !important;
-            filter: drop-shadow(0 0 5px #e3b341);
-        }
-
-        .connection-line {
-            transition: opacity 0.2s, stroke-width 0.2s;
-        }
+        /* SVG Pad Highlight */
+        .pad-circle { cursor: pointer; transition: stroke 0.15s; }
+        .pad-circle:hover { stroke: #fff !important; stroke-width: 2px !important; }
+        .net-highlight { stroke: #ffea79 !important; stroke-width: 2.5px !important; filter: drop-shadow(0 0 5px #e3b341); }
+        .wire-highlight { filter: drop-shadow(0 0 6px #fff) !important; stroke-width: 4.5px !important; }
+        .dimmed { opacity: 0.15 !important; }
     </style>
 </head>
 <body>
@@ -434,9 +393,11 @@
         <div>
             <h1>
                 🌱 Plant Monitor — 18×24 Perfboard Layout
-                <span class="canvas-badge">GRID: ROWS R → A (DESCENDING) × COLS 1–24</span>
+                <span style="font-size: 11px; color:#7ee787; background:rgba(46,160,67,0.15); border:1px solid rgba(46,160,67,0.4); border-radius:4px; padding:2px 7px;">
+                    ROWS R → A (DESCENDING) × COLS 1–24
+                </span>
             </h1>
-            <p>Permanent through-hole soldered assembly for ESP32-C3 SuperMini with FQP30N06L MOSFET & dual star-ground buses.</p>
+            <p>Every single connection is physically and explicitly shown (buses, solder bridges, bent leads, and insulated hookup jumpers).</p>
         </div>
         <div class="nav-links">
             <a href="perfboard_circuit_guide.md" class="nav-btn">📖 Assembly Guide (MD)</a>
@@ -447,22 +408,27 @@
     <div class="container">
         <!-- Main Canvas Card -->
         <div class="canvas-card" id="canvas-card">
-            <!-- Notice: Perfboard vs Breadboard -->
             <div class="notice-banner">
                 <div>
-                    <b>⚠️ PERFBOARD HOLES ARE ISOLATED:</b> Unlike a breadboard, there are NO internal copper traces. Every connection must be made via a solder bridge, bare bus wire, bent lead, or hookup wire.
+                    <b>⚠️ PERFBOARD HOLES ARE 100% ISOLATED:</b> There are NO hidden breadboard traces. Every single connection you see on this diagram must be physically made with solder or wire!
                 </div>
                 <div style="font-family:monospace; color:#8b949e;">Top = Row R • Bottom = Row A</div>
             </div>
 
+            <!-- Visual Legend -->
+            <div class="legend-bar">
+                <span style="font-weight:bold; color:var(--text-bright);">Wiring Legend:</span>
+                <div class="legend-item"><span class="legend-icon" style="background:#4493f8;"></span> <span>Bare Bus Wire (Pads Soldered)</span></div>
+                <div class="legend-item"><span class="legend-icon" style="background:#f0883e;"></span> <span>Solder Bridge (Adjacent Pads)</span></div>
+                <div class="legend-item"><span class="legend-icon" style="background:#3fb950;"></span> <span>Bent Component Lead</span></div>
+                <div class="legend-item"><span class="legend-icon" style="background:#bc8cff;"></span> <span>Insulated Hookup Jumper</span></div>
+            </div>
+
             <div class="canvas-toolbar">
                 <div class="toolbar-left">
-                    <button class="view-pill active" id="btn-view-top">Top (Components + Wires)</button>
+                    <button class="view-pill active" id="btn-view-top">Top (Components & Full Wiring)</button>
                     <button class="view-pill" id="btn-view-bottom">Bottom (Solder Side - Mirrored)</button>
                     <button class="view-pill" id="btn-view-xray">X-Ray (Composite)</button>
-                    <label style="font-size:11px; margin-left:8px; cursor:pointer; color:var(--text-muted); display:inline-flex; align-items:center; gap:4px;">
-                        <input type="checkbox" id="chk-show-overlay" checked> Show Connection Traces
-                    </label>
                 </div>
                 <div class="toolbar-right">
                     <button class="zoom-btn" id="btn-fit-width" title="Fit to width (Fluid)">↔</button>
@@ -478,7 +444,7 @@
             <div class="svg-container" id="svg-container">
                 <div id="diagram-tooltip"></div>
                 <!-- Interactive SVG -->
-                <svg id="perf-svg" viewBox="0 0 1140 900" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg">
+                <svg id="perf-svg" viewBox="0 0 1160 920" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg">
                     <defs>
                         <!-- Grid Donut Pad Definition -->
                         <radialGradient id="pad-grad" cx="50%" cy="50%" r="50%">
@@ -492,106 +458,96 @@
                             <stop offset="80%" stop-color="#8c959f"/>
                             <stop offset="100%" stop-color="#57606a"/>
                         </radialGradient>
-                        <!-- Component Dropshadow -->
+                        <!-- Dropshadow -->
                         <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
                             <feDropShadow dx="2" dy="3" stdDeviation="3" flood-color="#000" flood-opacity="0.6"/>
                         </filter>
                     </defs>
 
                     <!-- Background & FR4 Perfboard Substrate -->
-                    <rect x="0" y="0" width="1140" height="900" fill="#090d13" />
+                    <rect x="0" y="0" width="1160" height="920" fill="#090d13" />
 
                     <!-- Perfboard Base Plate -->
-                    <rect id="board-plate" x="70" y="60" width="980" height="760" rx="14" ry="14" fill="#1b3622" stroke="#2c5a38" stroke-width="3" filter="url(#shadow)" />
+                    <rect id="board-plate" x="70" y="60" width="1000" height="770" rx="14" ry="14" fill="#1b3622" stroke="#2c5a38" stroke-width="3" filter="url(#shadow)" />
 
                     <!-- Corner Mounting Holes -->
                     <circle cx="95" cy="85" r="7" fill="#090d13" stroke="#d49b42" stroke-width="2.5" />
-                    <circle cx="1025" cy="85" r="7" fill="#090d13" stroke="#d49b42" stroke-width="2.5" />
-                    <circle cx="95" cy="795" r="7" fill="#090d13" stroke="#d49b42" stroke-width="2.5" />
-                    <circle cx="1025" cy="795" r="7" fill="#090d13" stroke="#d49b42" stroke-width="2.5" />
+                    <circle cx="1045" cy="85" r="7" fill="#090d13" stroke="#d49b42" stroke-width="2.5" />
+                    <circle cx="95" cy="805" r="7" fill="#090d13" stroke="#d49b42" stroke-width="2.5" />
+                    <circle cx="1045" cy="805" r="7" fill="#090d13" stroke="#d49b42" stroke-width="2.5" />
 
-                    <!-- Column Coordinate Labels (Top & Bottom) -->
+                    <!-- Coordinate Labels -->
                     <g id="col-labels" font-family="monospace" font-size="11" font-weight="bold" fill="#8b949e" text-anchor="middle"></g>
-
-                    <!-- Row Coordinate Labels (Left & Right) -->
                     <g id="row-labels" font-family="monospace" font-size="11" font-weight="bold" fill="#8b949e" dominant-baseline="central"></g>
 
-                    <!-- Layer 1: Underside Solder Pads & Tracks (Shown in Bottom & X-Ray view) -->
-                    <g id="layer-solder-side" style="display: none;"></g>
-
-                    <!-- Layer 2: Perfboard Through-Hole Copper Pads (432 pads: 18 Rows x 24 Cols) -->
+                    <!-- SVG Layers -->
                     <g id="layer-pads"></g>
-
-                    <!-- Layer 3: Top-Side Components (ESP32, Terminals, MOSFET, Passives) -->
+                    <g id="layer-connections-bottom" style="display:none;"></g>
                     <g id="layer-components"></g>
-
-                    <!-- Layer 4: Top Wiring Jumpers & Connection Callouts -->
-                    <g id="layer-top-wires"></g>
+                    <g id="layer-connections-top"></g>
+                    <g id="layer-labels" pointer-events="none"></g>
                 </svg>
             </div>
         </div>
 
-        <!-- Right Control & Info Sidebar -->
+        <!-- Sidebar -->
         <div class="sidebar">
-            <!-- Board Info Card -->
             <div class="panel-card">
                 <h2>
-                    <span>Board Architecture</span>
-                    <span style="font-size: 11px; color: var(--accent-green);">18 × 24 DIP</span>
+                    <span>Board Summary</span>
+                    <span style="font-size: 11px; color: var(--accent-green);">18×24 DIP</span>
                 </h2>
                 <div style="font-size: 12px; line-height: 1.6; color: var(--text-muted);">
-                    <div>• <b>Row Orientation</b>: <b>R (Top Edge) down to A (Bottom Edge)</b>.</div>
-                    <div>• <b>Microcontroller</b>: ESP32-C3 SuperMini mounted in dual 1×8 female headers (Cols 3–10, <b>Rows L & F</b>).</div>
-                    <div>• <b>USB-C Access</b>: Extends off Left edge (Cols 1–2).</div>
-                    <div>• <b>Sensor Terminals</b>: TB2 (Soil) & TB1 (Echo) in <b>Row Q</b>, entries face <b>UPWARDS</b> off Row R.</div>
-                    <div>• <b>Pump Terminal</b>: TB3 in <b>Row B</b>, entries face <b>DOWNWARDS</b> off Row A.</div>
-                    <div>• <b>MOSFET</b>: FQP30N06L in <b>Row C</b> (Cols 18–20) with direct 2-pad solder bridge to TB3 Drain!</div>
+                    <div>• <b>Rows</b>: <b>R (Top Edge) down to A (Bottom Edge)</b>.</div>
+                    <div>• <b>ESP32 Sockets</b>: <b>Row L</b> (Header 1) & <b>Row F</b> (Header 2) across Cols 3–10.</div>
+                    <div>• <b>Sensors (TB2 & TB1)</b>: Row Q, wires face <b>UPWARDS</b>.</div>
+                    <div>• <b>Pump (TB3)</b>: Row B, wires face <b>DOWNWARDS</b>.</div>
+                    <div>• <b>MOSFET (Q1)</b>: Row C (Cols 18–20), soldered directly to TB3!</div>
                 </div>
             </div>
 
             <!-- Net Inspector -->
             <div class="panel-card">
                 <h2>
-                    <span>Net Inspector & Highlighting</span>
-                    <button id="btn-clear-net" style="background:transparent; border:none; color:var(--accent-blue); font-size:11px; cursor:pointer;">Reset</button>
+                    <span>Net Inspector & Trace Filter</span>
+                    <button id="btn-clear-net" style="background:transparent; border:none; color:var(--accent-blue); font-size:11px; cursor:pointer;">Show All</button>
                 </h2>
                 <div class="net-list" id="net-list"></div>
             </div>
 
-            <!-- Detailed Tabs Card -->
+            <!-- Tabs: Wiring Schedule & BOM -->
             <div class="panel-card">
                 <div class="tab-headers">
-                    <button class="tab-btn active" data-tab="tab-wiring">Wiring Schedule</button>
-                    <button class="tab-btn" data-tab="tab-bom">BOM (11 Items)</button>
+                    <button class="tab-btn active" data-tab="tab-wiring">Wiring Schedule (17 Conns)</button>
+                    <button class="tab-btn" data-tab="tab-bom">BOM (11 Parts)</button>
                     <button class="tab-btn" data-tab="tab-tests">Cold Tests</button>
                 </div>
 
-                <!-- Tab 1: Wiring Schedule (Prominent!) -->
                 <div class="tab-content active" id="tab-wiring">
-                    <div style="font-size:11px; color:var(--text-muted); margin-bottom:6px;">
-                        Every physical connection required to link the isolated perfboard holes:
-                    </div>
                     <table class="mini-table">
                         <thead>
                             <tr>
                                 <th>Net</th>
                                 <th>From → To</th>
-                                <th>Method</th>
+                                <th>Physical Method</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr><td><b>Row P GND</b></td><td>P4 → P21</td><td><span class="method-badge method-bus">Bare Bus Wire</span></td></tr>
                             <tr><td><b>Row A GND</b></td><td>A18 → A24</td><td><span class="method-badge method-bus">Bare Bus Wire</span></td></tr>
-                            <tr><td><b>Star Tie</b></td><td>L4 → A18</td><td><span class="method-badge method-wire">24 AWG Wire</span></td></tr>
-                            <tr><td><b>5V Bus</b></td><td>N3 → N15</td><td><span class="method-badge method-bus">Bare Bus Wire</span></td></tr>
+                            <tr><td><b>Row N 5V</b></td><td>N3 → N15</td><td><span class="method-badge method-bus">Bare Bus Wire</span></td></tr>
+                            <tr><td><b>Star GND</b></td><td>L4 → A18</td><td><span class="method-badge method-wire">24 AWG Wire</span></td></tr>
                             <tr><td><b>5V Feed</b></td><td>L3 → D21</td><td><span class="method-badge method-wire">24 AWG Wire</span></td></tr>
-                            <tr><td><b>Pump Drain</b></td><td>C19 → B19</td><td><span class="method-badge method-bridge">Solder Bridge</span></td></tr>
+                            <tr><td><b>5V Bus Tap</b></td><td>L3 → N3</td><td><span class="method-badge method-wire">Jumper Wire</span></td></tr>
+                            <tr><td><b>Analog GND Tap</b></td><td>L4 → P4</td><td><span class="method-badge method-wire">Jumper Wire</span></td></tr>
+                            <tr><td><b>Supply Sense</b></td><td>M5–M6–L6</td><td><span class="method-badge method-bridge">3-Pad Solder Bridge</span></td></tr>
+                            <tr><td><b>Pump Drain</b></td><td>C19 → B19</td><td><span class="method-badge method-bridge">2-Pad Solder Bridge</span></td></tr>
                             <tr><td><b>Pump +5V</b></td><td>D21 → B21</td><td><span class="method-badge method-lead">Lead / Bridge</span></td></tr>
-                            <tr><td><b>Q1 Gate</b></td><td>C17 → C18</td><td><span class="method-badge method-bridge">Solder Bridge</span></td></tr>
-                            <tr><td><b>Q1 Source</b></td><td>C20 → A20</td><td><span class="method-badge method-lead">Lead Bend</span></td></tr>
-                            <tr><td><b>C3 (-)</b></td><td>D23 → A23</td><td><span class="method-badge method-lead">Lead Bend</span></td></tr>
-                            <tr><td><b>Supply Sense</b></td><td>M6 → L6</td><td><span class="method-badge method-bridge">Solder Bridge</span></td></tr>
-                            <tr><td><b>Echo 3.3V</b></td><td>O17 → L10</td><td><span class="method-badge method-wire">Hookup Wire</span></td></tr>
+                            <tr><td><b>Gate Node</b></td><td>C17 → C18</td><td><span class="method-badge method-bridge">2-Pad Solder Bridge</span></td></tr>
+                            <tr><td><b>Q1 Source GND</b></td><td>C20 → A20</td><td><span class="method-badge method-lead">Lead Bend</span></td></tr>
+                            <tr><td><b>C3 (-) GND</b></td><td>D23 → A23</td><td><span class="method-badge method-lead">Lead Bend</span></td></tr>
+                            <tr><td><b>Echo Stepper In</b></td><td>Q19 → O19</td><td><span class="method-badge method-bridge">Solder Bridge</span></td></tr>
+                            <tr><td><b>Echo 3.3V Out</b></td><td>O17 → L10</td><td><span class="method-badge method-wire">Hookup Wire</span></td></tr>
                             <tr><td><b>Soil AOUT</b></td><td>O9 → L7</td><td><span class="method-badge method-wire">Hookup Wire</span></td></tr>
                             <tr><td><b>Soil VCC</b></td><td>Q7 → L8</td><td><span class="method-badge method-wire">Hookup Wire</span></td></tr>
                             <tr><td><b>Pump Gate</b></td><td>F8 → C14</td><td><span class="method-badge method-wire">Hookup Wire</span></td></tr>
@@ -599,45 +555,35 @@
                     </table>
                 </div>
 
-                <!-- Tab 2: BOM -->
                 <div class="tab-content" id="tab-bom">
                     <table class="mini-table">
                         <thead>
-                            <tr>
-                                <th>Des</th>
-                                <th>Part / Value</th>
-                                <th>Coords (R→A)</th>
-                            </tr>
+                            <tr><th>Des</th><th>Part / Rating</th><th>Coords (R→A)</th></tr>
                         </thead>
                         <tbody>
                             <tr><td><b>U1</b></td><td>ESP32-C3 SuperMini</td><td><span class="coord-chip">L3-10, F3-10</span></td></tr>
-                            <tr><td><b>TB1</b></td><td>4-Pin 5.08mm Terminal</td><td><span class="coord-chip">Q15,17,19,21</span></td></tr>
-                            <tr><td><b>TB2</b></td><td>3-Pin 5.08mm Terminal</td><td><span class="coord-chip">Q7,9,11</span></td></tr>
-                            <tr><td><b>TB3</b></td><td>2-Pin 5.08mm Terminal</td><td><span class="coord-chip">B19,21</span></td></tr>
+                            <tr><td><b>TB1</b></td><td>4-Pin Terminal (Ultrasonic)</td><td><span class="coord-chip">Q15,17,19,21</span></td></tr>
+                            <tr><td><b>TB2</b></td><td>3-Pin Terminal (Soil)</td><td><span class="coord-chip">Q7,9,11</span></td></tr>
+                            <tr><td><b>TB3</b></td><td>2-Pin Terminal (Pump)</td><td><span class="coord-chip">B19,21</span></td></tr>
                             <tr><td><b>Q1</b></td><td>FQP30N06L TO-220</td><td><span class="coord-chip">C18,19,20</span></td></tr>
                             <tr><td><b>D1</b></td><td>1N5819 Schottky Diode</td><td><span class="coord-chip">B19,21</span></td></tr>
-                            <tr><td><b>C3</b></td><td>470µF Bulk Cap</td><td><span class="coord-chip">D21,23</span></td></tr>
-                            <tr><td><b>R1,R2</b></td><td>10kΩ 1/4W 1%</td><td><span class="coord-chip">N6,M6,P6</span></td></tr>
+                            <tr><td><b>C3</b></td><td>470µF 16/25V Bulk Cap</td><td><span class="coord-chip">D21,23</span></td></tr>
+                            <tr><td><b>R1,R2</b></td><td>10kΩ 1/4W 1% (Supply)</td><td><span class="coord-chip">N6,M6,P6</span></td></tr>
                             <tr><td><b>C1</b></td><td>100nF Ceramic (104)</td><td><span class="coord-chip">M5,P5</span></td></tr>
-                            <tr><td><b>C2</b></td><td>100nF Ceramic (Soil)</td><td><span class="coord-chip">O9,11</span></td></tr>
-                            <tr><td><b>R3,R4</b></td><td>1kΩ & 2kΩ (Echo)</td><td><span class="coord-chip">O19,17,P17</span></td></tr>
+                            <tr><td><b>C2</b></td><td>100nF Ceramic (Soil RF)</td><td><span class="coord-chip">O9,11</span></td></tr>
+                            <tr><td><b>R3,R4</b></td><td>1kΩ & 2kΩ (Echo Stepper)</td><td><span class="coord-chip">O19,17,P17</span></td></tr>
                             <tr><td><b>R5,R6</b></td><td>1kΩ & 100kΩ (Gate)</td><td><span class="coord-chip">C14,17,C18,A18</span></td></tr>
                         </tbody>
                     </table>
                 </div>
 
-                <!-- Tab 3: Cold Tests -->
                 <div class="tab-content" id="tab-tests">
-                    <div style="font-size: 11px; margin-bottom: 8px; color: var(--accent-yellow);">
-                        ⚠️ <b>Verify with DMM BEFORE inserting the ESP32 module!</b>
+                    <div style="font-size: 11px; margin-bottom: 6px; color: var(--accent-yellow);">
+                        ⚠️ <b>Cold DMM Resistance Checks (Before inserting ESP32):</b>
                     </div>
                     <table class="mini-table">
                         <thead>
-                            <tr>
-                                <th>Test</th>
-                                <th>Probes</th>
-                                <th>Expected</th>
-                            </tr>
+                            <tr><th>Test</th><th>Pins</th><th>Expected</th></tr>
                         </thead>
                         <tbody>
                             <tr><td>5V to GND</td><td>L3 to L4</td><td><b>&gt; 10 kΩ</b> (Rising)</td></tr>
@@ -655,41 +601,41 @@
         </div>
     </div>
 
-    <!-- Interactive JavaScript Engine -->
+    <!-- Script -->
     <script>
         (function() {
-            // Descending Rows from Top (R) to Bottom (A)
+            // Descending Rows R to A
             const ROWS = ['R','Q','P','O','N','M','L','K','J','I','H','G','F','E','D','C','B','A'];
             const COLS = 24;
             const PITCH = 36;
             const ORIGIN_X = 135;
             const ORIGIN_Y = 125;
 
-            // Circuit Nets & Pad Memberships for Descending R -> A Grid
+            // Circuit Nets
             const NETS = {
                 'GND_ANALOG': {
-                    name: 'GND (Analog Sensor Bus - Row P)',
+                    name: 'GND (Row P Analog Sensor Bus)',
                     color: '#4493f8',
-                    desc: 'Row P quiet ground bus for ADC supply monitor, capacitive soil probe, and ultrasonic echo divider.',
+                    desc: 'Row P quiet ground bus for ADC supply monitor, capacitive soil sensor, and ultrasonic echo divider.',
                     pads: ['P4','P5','P6','P11','P17','P21','L4','Q11','Q21','O11']
                 },
                 'GND_POWER': {
-                    name: 'GND (Power Motor Bus - Row A)',
+                    name: 'GND (Row A Power Motor Bus)',
                     color: '#1f6feb',
                     desc: 'Row A heavy-duty ground bus for MOSFET Source and 470µF reservoir capacitor.',
                     pads: ['A18','A19','A20','A21','A22','A23','A24','C20','D23']
                 },
                 'VBUS_5V': {
-                    name: '+5V (USB & Sensor Supply - Row N)',
+                    name: '+5V (Row N Sensor Supply Bus)',
                     color: '#f85149',
-                    desc: 'USB 5V supply distributed via Row N to voltage monitor divider and ultrasonic sensor.',
+                    desc: 'USB 5V supply distributed via Row N to supply monitor divider and ultrasonic sensor.',
                     pads: ['L3','N3','N4','N5','N6','N15','Q15']
                 },
                 'PUMP_5V': {
                     name: '+5V (Pump Power Feed)',
                     color: '#ff7b72',
-                    desc: 'Dedicated heavy 5V feed line buffering motor startup inrush at C3 (470µF) and TB3 Pin 2.',
-                    pads: ['D21','B21']
+                    desc: 'Dedicated heavy 5V feed line buffering motor startup current at C3 (470µF) and TB3 Pin 2.',
+                    pads: ['D21','B21','L3']
                 },
                 'GPIO0_ADC': {
                     name: 'GPIO 0 (5V Rail Monitor ADC)',
@@ -735,7 +681,6 @@
                 }
             };
 
-            // Mapping from Pad Coordinate -> Net Key
             const PAD_MAP = {};
             for (const [netKey, netData] of Object.entries(NETS)) {
                 for (const p of netData.pads) {
@@ -744,36 +689,44 @@
                 }
             }
 
-            // Connection descriptions for tooltip
             const CONNECTION_NOTES = {
-                'L3': 'ESP32 5V In -> Feeds Row N +5V Bus (N3) and heavy jumper to C3 (+) at D21',
-                'L4': 'ESP32 GND -> Feeds Row P Analog GND Bus (P4) and Star Ground Link to Row A (A18)',
-                'L6': 'ESP32 GPIO 0 -> Solder bridge directly to M6 (R1/R2 divider node)',
-                'L7': 'ESP32 GPIO 1 -> Hookup jumper from O9 (filtered Soil AOUT)',
-                'L8': 'ESP32 GPIO 2 -> Hookup jumper to Q7 (TB2 Soil Switched VCC)',
-                'L9': 'ESP32 GPIO 3 -> Hookup jumper to Q17 (TB1 Ultrasonic TRIG)',
-                'L10': 'ESP32 GPIO 4 -> Hookup jumper from O17 (3.33V Stepped Echo pulse)',
-                'F8': 'ESP32 GPIO 7 -> Hookup jumper to C14 (R5 1k Gate resistor left lead)',
+                'L3': 'ESP32 5V In -> (1) Jumper down to N3 (+5V Bus), (2) Heavy wire to D21 (C3 + / TB3 +5V)',
+                'L4': 'ESP32 GND -> (1) Jumper up to P4 (Analog GND Bus), (2) Star Ground Tie to A18 (Power GND Bus)',
+                'L6': 'ESP32 GPIO 0 -> Solder bridge directly to M6 (Divider Node)',
+                'L7': 'ESP32 GPIO 1 -> Hookup jumper from O9 (Soil AOUT)',
+                'L8': 'ESP32 GPIO 2 -> Hookup jumper to Q7 (Soil VCC)',
+                'L9': 'ESP32 GPIO 3 -> Hookup jumper to Q17 (Ultrasonic TRIG)',
+                'L10': 'ESP32 GPIO 4 -> Hookup jumper from O17 (Echo 3.33V Node)',
+                'F8': 'ESP32 GPIO 7 -> Hookup jumper to C14 (R5 1k Gate resistor)',
                 'Q7': 'TB2 Pin 1 (Soil VCC) -> Hookup jumper to L8 (GPIO 2)',
                 'Q9': 'TB2 Pin 2 (Soil AOUT) -> Bridge to O9 (C2 RF Filter & Jumper to L7)',
-                'Q11': 'TB2 Pin 3 (Soil GND) -> Solder bridge to Row P Analog GND bus (P11)',
-                'Q15': 'TB1 Pin 1 (Ultrasonic 5V) -> Solder bridge / lead to Row N +5V bus (N15)',
+                'Q11': 'TB2 Pin 3 (Soil GND) -> Solder bridge to Row P Analog GND Bus (P11)',
+                'Q15': 'TB1 Pin 1 (Ultrasonic 5V) -> Solder bridge / lead to Row N +5V Bus (N15)',
                 'Q17': 'TB1 Pin 2 (Ultrasonic TRIG) -> Hookup jumper to L9 (GPIO 3)',
                 'Q19': 'TB1 Pin 3 (Ultrasonic ECHO) -> Solder bridge to O19 (R3 1k divider top)',
-                'Q21': 'TB1 Pin 4 (Ultrasonic GND) -> Solder bridge to Row P Analog GND bus (P21)',
+                'Q21': 'TB1 Pin 4 (Ultrasonic GND) -> Solder bridge to Row P Analog GND Bus (P21)',
                 'B19': 'TB3 Pin 1 (Pump -) -> Direct 2-pad solder bridge to C19 (Q1 Drain) & D1 Anode',
-                'B21': 'TB3 Pin 2 (Pump +5V) -> Tied to D21 (C3 +) and D1 Cathode',
+                'B21': 'TB3 Pin 2 (Pump +5V) -> Lead from D21 (C3 +), D1 Cathode, and +5V feed from L3',
                 'C18': 'Q1 Gate -> Solder bridge to C17 (R5 output) and top lead of R6 (100k pull-down)',
                 'C19': 'Q1 Drain -> Direct 2-pad solder bridge to B19 (TB3 Pin 1 Drain)!',
-                'C20': 'Q1 Source -> Lead bend down Column 20 into Row A Power GND bus (A20)',
+                'C20': 'Q1 Source -> Lead bend down Column 20 into Row A Power GND Bus (A20)',
                 'D21': 'C3 Bulk Cap (+) -> Heavy 5V feed from L3, tied to TB3 Pin 2 (B21)',
-                'D23': 'C3 Bulk Cap (-) -> Lead bend down Column 23 into Row A Power GND bus (A23)',
+                'D23': 'C3 Bulk Cap (-) -> Lead bend down Column 23 into Row A Power GND Bus (A23)',
+                'M5': 'C1 Filter Top -> Solder bridge to M6 (Divider Node)',
                 'M6': 'Supply Divider Node -> Solder bridge to L6 (GPIO 0) and M5 (C1 cap)',
+                'N6': 'R1 Top Leg -> Soldered directly into Row N +5V Bus',
+                'P6': 'R2 Bottom Leg -> Soldered directly into Row P Analog GND Bus',
+                'P5': 'C1 Bottom Leg -> Soldered directly into Row P Analog GND Bus',
+                'O9': 'Soil Filter Node -> Bridged from Q9, Jumper to L7 (GPIO 1)',
+                'O11': 'C2 Filter GND -> Bridged to Row P Analog GND Bus (P11)',
                 'O17': 'Echo Divider 3.3V Node -> Hookup jumper to L10 (GPIO 4)',
-                'A18': 'Row A Power GND Star Point -> Receives heavy Star Ground Link from L4 (ESP32 GND)'
+                'O19': 'R3 Top Leg -> Bridged from Q19 (TB1 ECHO)',
+                'P17': 'R4 Bottom Leg -> Soldered directly into Row P Analog GND Bus',
+                'C14': 'R5 Left Leg -> Hookup jumper from F8 (GPIO 7)',
+                'C17': 'R5 Right Leg -> Solder bridge to C18 (Q1 Gate)',
+                'A18': 'Power GND Star Tie -> Receives Star Tie from L4, ties R6 bottom to Row A Bus'
             };
 
-            // Helpers to get X, Y for a coordinate
             function getCoord(coordStr, isMirrored = false) {
                 const rowChar = coordStr.charAt(0);
                 const colNum = parseInt(coordStr.substring(1), 10);
@@ -781,34 +734,26 @@
                 const colIndex = colNum - 1;
 
                 const y = ORIGIN_Y + rowIndex * PITCH;
-                let x;
-                if (!isMirrored) {
-                    x = ORIGIN_X + colIndex * PITCH;
-                } else {
-                    x = ORIGIN_X + (COLS - 1 - colIndex) * PITCH;
-                }
+                let x = !isMirrored ? (ORIGIN_X + colIndex * PITCH) : (ORIGIN_X + (COLS - 1 - colIndex) * PITCH);
                 return { x, y, row: rowChar, col: colNum };
             }
 
-            // State
-            let currentView = 'top'; // 'top', 'bottom', 'xray'
+            let currentView = 'top';
             let activeNetKey = null;
 
-            // DOM Elements
             const svg = document.getElementById('perf-svg');
             const svgContainer = document.getElementById('svg-container');
             const canvasCard = document.getElementById('canvas-card');
             const layerPads = document.getElementById('layer-pads');
             const layerComponents = document.getElementById('layer-components');
-            const layerSolderSide = document.getElementById('layer-solder-side');
-            const layerTopWires = document.getElementById('layer-top-wires');
+            const layerConnectionsTop = document.getElementById('layer-connections-top');
+            const layerConnectionsBottom = document.getElementById('layer-connections-bottom');
+            const layerLabels = document.getElementById('layer-labels');
             const colLabels = document.getElementById('col-labels');
             const rowLabels = document.getElementById('row-labels');
             const tooltip = document.getElementById('diagram-tooltip');
             const netListContainer = document.getElementById('net-list');
-            const chkShowOverlay = document.getElementById('chk-show-overlay');
 
-            // Render Grid Coordinates (Rows R down to A!)
             function renderGridLabels(isMirrored) {
                 colLabels.innerHTML = '';
                 rowLabels.innerHTML = '';
@@ -817,14 +762,12 @@
                     const colNum = isMirrored ? (COLS - c + 1) : c;
                     const x = ORIGIN_X + (c - 1) * PITCH;
                     
-                    // Top Col Label
                     const textTop = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                     textTop.setAttribute('x', x);
                     textTop.setAttribute('y', ORIGIN_Y - 24);
                     textTop.textContent = colNum;
                     colLabels.appendChild(textTop);
 
-                    // Bottom Col Label
                     const textBot = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                     textBot.setAttribute('x', x);
                     textBot.setAttribute('y', ORIGIN_Y + (ROWS.length - 1) * PITCH + 32);
@@ -836,7 +779,6 @@
                     const rowName = ROWS[r];
                     const y = ORIGIN_Y + r * PITCH;
 
-                    // Left Row Label
                     const textLeft = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                     textLeft.setAttribute('x', ORIGIN_X - 32);
                     textLeft.setAttribute('y', y);
@@ -844,7 +786,6 @@
                     textLeft.textContent = rowName;
                     rowLabels.appendChild(textLeft);
 
-                    // Right Row Label
                     const textRight = document.createElementNS('http://www.w3.org/2000/svg', 'text');
                     textRight.setAttribute('x', ORIGIN_X + (COLS - 1) * PITCH + 22);
                     textRight.setAttribute('y', y);
@@ -854,7 +795,6 @@
                 }
             }
 
-            // Render 432 Isolated Perfboard Pads
             function renderPads(isMirrored) {
                 layerPads.innerHTML = '';
                 for (let r = 0; r < ROWS.length; r++) {
@@ -868,7 +808,6 @@
                         g.setAttribute('class', 'pad-group');
                         g.setAttribute('data-coord', coordStr);
 
-                        // Annular copper donut
                         const donut = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                         donut.setAttribute('cx', pt.x);
                         donut.setAttribute('cy', pt.y);
@@ -879,7 +818,6 @@
                         donut.setAttribute('class', 'pad-circle');
                         donut.setAttribute('id', `pad-${coordStr}`);
 
-                        // Center dark hole
                         const hole = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                         hole.setAttribute('cx', pt.x);
                         hole.setAttribute('cy', pt.y);
@@ -890,7 +828,6 @@
                         g.appendChild(donut);
                         g.appendChild(hole);
 
-                        // Hover events
                         g.addEventListener('mouseenter', (e) => onPadHover(e, coordStr));
                         g.addEventListener('mouseleave', onPadLeave);
                         g.addEventListener('click', () => onPadClick(coordStr));
@@ -900,12 +837,268 @@
                 }
             }
 
-            // Render Top Components (Rows R -> A Descending)
+            // EXPLICIT WIRING CONNECTIONS GENERATOR (Used on both Top and Bottom views!)
+            function renderAllConnections(targetLayer, isMirrored) {
+                targetLayer.innerHTML = '';
+
+                // 1. POWER & GROUND BUSES (Thick bare tinned bus wires)
+                // Row P: Analog GND Bus (P4 to P21)
+                createBusConductor(targetLayer, 'P4', 'P21', '#4493f8', 6, isMirrored, 'Row P Analog GND Bus', ['P4','P5','P6','P11','P17','P21'], 'GND_ANALOG');
+
+                // Row A: Power GND Bus (A18 to A24)
+                createBusConductor(targetLayer, 'A18', 'A24', '#1f6feb', 7, isMirrored, 'Row A Power GND Bus', ['A18','A19','A20','A21','A22','A23','A24'], 'GND_POWER');
+
+                // Row N: +5V Bus (N3 to N15)
+                createBusConductor(targetLayer, 'N3', 'N15', '#f85149', 6, isMirrored, 'Row N +5V Bus', ['N3','N4','N5','N6','N15'], 'VBUS_5V');
+
+                // 2. SOLDER BRIDGES (Thick silver blobs directly bridging adjacent pads)
+                // Bridge M5 - M6 - L6: C1 Top, R1/R2 Divider Node, ESP32 GPIO 0!
+                createSolderBridgeBlob(targetLayer, ['M5', 'M6', 'L6'], '#d29922', isMirrored, 'Supply Sense Bridge (M5-M6-L6)', 'GPIO0_ADC');
+
+                // Bridge C19 - B19: Q1 Drain to TB3 Pin 1 Drain & D1 Anode!
+                createSolderBridgeBlob(targetLayer, ['C19', 'B19'], '#ec6547', isMirrored, 'Pump Drain Bridge (C19-B19)', 'PUMP_DRAIN');
+
+                // Bridge C17 - C18: R5 output to Q1 Gate!
+                createSolderBridgeBlob(targetLayer, ['C17', 'C18'], '#f0883e', isMirrored, 'Gate Resistor Bridge (C17-C18)', 'GPIO7_GATE');
+
+                // Bridge D21 - B21: C3 (+) to TB3 Pin 2 (+5V) and D1 Cathode!
+                createSolderBridgeBlob(targetLayer, ['D21', 'B21'], '#ff7b72', isMirrored, 'Pump 5V Feed Bridge (D21-B21)', 'PUMP_5V');
+
+                // Bridge Q19 - O19: TB1 ECHO to R3 input!
+                createSolderBridgeBlob(targetLayer, ['Q19', 'O19'], '#56d364', isMirrored, 'Echo In Bridge (Q19-O19)', 'GPIO4_ECHO');
+
+                // Bridge Q11 - P11 - O11: TB2 GND to Row P GND & C2 filter GND!
+                createSolderBridgeBlob(targetLayer, ['Q11', 'P11', 'O11'], '#4493f8', isMirrored, 'Soil GND Bridge (Q11-P11-O11)', 'GND_ANALOG');
+
+                // Bridge Q21 - P21: TB1 GND to Row P GND!
+                createSolderBridgeBlob(targetLayer, ['Q21', 'P21'], '#4493f8', isMirrored, 'Ultrasonic GND Bridge (Q21-P21)', 'GND_ANALOG');
+
+                // Bridge Q15 - N15: TB1 5V to Row N +5V Bus!
+                createSolderBridgeBlob(targetLayer, ['Q15', 'N15'], '#f85149', isMirrored, 'Ultrasonic 5V Bridge (Q15-N15)', 'VBUS_5V');
+
+                // Bridge Q9 - O9: TB2 AOUT to C2 RF filter node!
+                createSolderBridgeBlob(targetLayer, ['Q9', 'O9'], '#3fb950', isMirrored, 'Soil AOUT Bridge (Q9-O9)', 'GPIO1_SOIL');
+
+                // 3. BENT COMPONENT LEADS (Physical wire leads bent down to bus pads)
+                // Q1 Source (C20) down to Row A Power GND (A20)
+                createBentLead(targetLayer, 'C20', 'A20', '#1f6feb', 3.5, isMirrored, 'Q1 Source Lead to Row A GND', 'GND_POWER');
+
+                // C3 Negative Lead (D23) down to Row A Power GND (A23)
+                createBentLead(targetLayer, 'D23', 'A23', '#1f6feb', 3.5, isMirrored, 'C3 (-) Lead to Row A GND', 'GND_POWER');
+
+                // R6 Gate Pull-down Resistor (C18) down to Row A Power GND (A18)
+                createBentLead(targetLayer, 'C18', 'A18', '#e3b341', 3, isMirrored, 'R6 Pull-down to Row A GND', 'GPIO7_GATE');
+
+                // 4. INSULATED HOOKUP JUMPERS (Explicitly drawn color-coded wires)
+                // Star Ground Tie: L4 (ESP32 GND) to A18 (Row A Power GND)
+                createCurvedJumper(targetLayer, 'L4', 'A18', '#388bfd', 3.5, isMirrored, 'Star GND Tie (24 AWG)', -32, 'GND_POWER');
+
+                // ESP32 GND Tap to Row P: L4 to P4
+                createCurvedJumper(targetLayer, 'L4', 'P4', '#4493f8', 3, isMirrored, 'GND to Row P Bus', -16, 'GND_ANALOG');
+
+                // ESP32 5V Tap to Row N: L3 to N3
+                createCurvedJumper(targetLayer, 'L3', 'N3', '#f85149', 3, isMirrored, '5V to Row N Bus', -16, 'VBUS_5V');
+
+                // Heavy +5V Power Feed: L3 (ESP32 5V) to D21 (C3 + / TB3 +5V)
+                createCurvedJumper(targetLayer, 'L3', 'D21', '#ff7b72', 4, isMirrored, '+5V Heavy Feed (24 AWG)', 40, 'PUMP_5V');
+
+                // Pump Gate Drive: F8 (ESP32 GPIO 7) to C14 (R5 Left)
+                createCurvedJumper(targetLayer, 'F8', 'C14', '#f0883e', 3, isMirrored, 'GPIO 7 Gate Drive', 24, 'GPIO7_GATE');
+
+                // Soil Switched VCC: L8 (ESP32 GPIO 2) to Q7 (TB2 Pin 1)
+                createCurvedJumper(targetLayer, 'L8', 'Q7', '#a371f7', 3, isMirrored, 'GPIO 2 Soil Switched VCC', -26, 'GPIO2_VCC');
+
+                // Soil Analog AOUT: O9 (Filter Node) to L7 (ESP32 GPIO 1)
+                createCurvedJumper(targetLayer, 'O9', 'L7', '#3fb950', 3, isMirrored, 'GPIO 1 Soil AOUT', 20, 'GPIO1_SOIL');
+
+                // Ultrasonic TRIG: L9 (ESP32 GPIO 3) to Q17 (TB1 Pin 2)
+                createCurvedJumper(targetLayer, 'L9', 'Q17', '#39c5cf', 3, isMirrored, 'GPIO 3 Ultrasonic TRIG', -24, 'GPIO3_TRIG');
+
+                // Ultrasonic ECHO: O17 (3.3V Divider Node) to L10 (ESP32 GPIO 4)
+                createCurvedJumper(targetLayer, 'O17', 'L10', '#56d364', 3, isMirrored, 'GPIO 4 Stepped ECHO 3.3V', 20, 'GPIO4_ECHO');
+            }
+
+            // Conductor Bus Generator
+            function createBusConductor(layer, p1, p2, color, strokeW, isMirrored, desc, tappedPads, netKey) {
+                const pt1 = getCoord(p1, isMirrored);
+                const pt2 = getCoord(p2, isMirrored);
+
+                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                g.setAttribute('class', `conn-element conn-${netKey}`);
+
+                // Outer solder sheen
+                const busOuter = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                busOuter.setAttribute('x1', pt1.x);
+                busOuter.setAttribute('y1', pt1.y);
+                busOuter.setAttribute('x2', pt2.x);
+                busOuter.setAttribute('y2', pt2.y);
+                busOuter.setAttribute('stroke', '#d0d7de');
+                busOuter.setAttribute('stroke-width', strokeW + 2.5);
+                busOuter.setAttribute('stroke-linecap', 'round');
+                busOuter.setAttribute('filter', 'url(#shadow)');
+                g.appendChild(busOuter);
+
+                // Core conductive line
+                const busCore = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                busCore.setAttribute('x1', pt1.x);
+                busCore.setAttribute('y1', pt1.y);
+                busCore.setAttribute('x2', pt2.x);
+                busCore.setAttribute('y2', pt2.y);
+                busCore.setAttribute('stroke', color);
+                busCore.setAttribute('stroke-width', strokeW);
+                busCore.setAttribute('stroke-linecap', 'round');
+                g.appendChild(busCore);
+
+                // Solder fillets on all tapped pads
+                for (const padId of tappedPads) {
+                    const padPt = getCoord(padId, isMirrored);
+                    const fillet = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    fillet.setAttribute('cx', padPt.x);
+                    fillet.setAttribute('cy', padPt.y);
+                    fillet.setAttribute('r', '6');
+                    fillet.setAttribute('fill', 'url(#solder-grad)');
+                    fillet.setAttribute('stroke', color);
+                    fillet.setAttribute('stroke-width', '1.5');
+                    g.appendChild(fillet);
+                }
+
+                layer.appendChild(g);
+            }
+
+            // Solder Bridge Blob Generator
+            function createSolderBridgeBlob(layer, pads, color, isMirrored, desc, netKey) {
+                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                g.setAttribute('class', `conn-element conn-${netKey}`);
+
+                for (let i = 0; i < pads.length - 1; i++) {
+                    const pt1 = getCoord(pads[i], isMirrored);
+                    const pt2 = getCoord(pads[i+1], isMirrored);
+
+                    // Solder bridge outer blob
+                    const blob = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    blob.setAttribute('x1', pt1.x);
+                    blob.setAttribute('y1', pt1.y);
+                    blob.setAttribute('x2', pt2.x);
+                    blob.setAttribute('y2', pt2.y);
+                    blob.setAttribute('stroke', '#d0d7de');
+                    blob.setAttribute('stroke-width', '9');
+                    blob.setAttribute('stroke-linecap', 'round');
+                    blob.setAttribute('filter', 'url(#shadow)');
+                    g.appendChild(blob);
+
+                    // Shiny core
+                    const core = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    core.setAttribute('x1', pt1.x);
+                    core.setAttribute('y1', pt1.y);
+                    core.setAttribute('x2', pt2.x);
+                    core.setAttribute('y2', pt2.y);
+                    core.setAttribute('stroke', color);
+                    core.setAttribute('stroke-width', '4');
+                    core.setAttribute('stroke-linecap', 'round');
+                    g.appendChild(core);
+                }
+
+                for (const p of pads) {
+                    const pt = getCoord(p, isMirrored);
+                    const ring = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    ring.setAttribute('cx', pt.x);
+                    ring.setAttribute('cy', pt.y);
+                    ring.setAttribute('r', '6');
+                    ring.setAttribute('fill', 'url(#solder-grad)');
+                    ring.setAttribute('stroke', color);
+                    ring.setAttribute('stroke-width', '1.5');
+                    g.appendChild(ring);
+                }
+
+                layer.appendChild(g);
+            }
+
+            // Bent Lead Generator
+            function createBentLead(layer, p1, p2, color, strokeW, isMirrored, desc, netKey) {
+                const pt1 = getCoord(p1, isMirrored);
+                const pt2 = getCoord(p2, isMirrored);
+
+                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                g.setAttribute('class', `conn-element conn-${netKey}`);
+
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', pt1.x);
+                line.setAttribute('y1', pt1.y);
+                line.setAttribute('x2', pt2.x);
+                line.setAttribute('y2', pt2.y);
+                line.setAttribute('stroke', color);
+                line.setAttribute('stroke-width', strokeW);
+                line.setAttribute('stroke-linecap', 'round');
+                line.setAttribute('filter', 'url(#shadow)');
+                g.appendChild(line);
+
+                const fillet = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                fillet.setAttribute('cx', pt2.x);
+                fillet.setAttribute('cy', pt2.y);
+                fillet.setAttribute('r', '5.5');
+                fillet.setAttribute('fill', 'url(#solder-grad)');
+                fillet.setAttribute('stroke', color);
+                fillet.setAttribute('stroke-width', '1.5');
+                g.appendChild(fillet);
+
+                layer.appendChild(g);
+            }
+
+            // Curved Insulated Jumper Generator
+            function createCurvedJumper(layer, p1, p2, color, strokeW, isMirrored, desc, curveOffset, netKey) {
+                const pt1 = getCoord(p1, isMirrored);
+                const pt2 = getCoord(p2, isMirrored);
+
+                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                g.setAttribute('class', `conn-element conn-${netKey}`);
+
+                const dx = pt2.x - pt1.x;
+                const dy = pt2.y - pt1.y;
+                const cx1 = pt1.x + dx * 0.25;
+                const cy1 = pt1.y + dy * 0.25 + curveOffset;
+                const cx2 = pt1.x + dx * 0.75;
+                const cy2 = pt1.y + dy * 0.75 + curveOffset;
+
+                // Wire outer shadow/border
+                const pathBorder = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                pathBorder.setAttribute('d', `M ${pt1.x} ${pt1.y} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${pt2.x} ${pt2.y}`);
+                pathBorder.setAttribute('fill', 'none');
+                pathBorder.setAttribute('stroke', '#0d1117');
+                pathBorder.setAttribute('stroke-width', strokeW + 2);
+                pathBorder.setAttribute('stroke-linecap', 'round');
+                pathBorder.setAttribute('filter', 'url(#shadow)');
+                g.appendChild(pathBorder);
+
+                // Wire insulation body
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('d', `M ${pt1.x} ${pt1.y} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${pt2.x} ${pt2.y}`);
+                path.setAttribute('fill', 'none');
+                path.setAttribute('stroke', color);
+                path.setAttribute('stroke-width', strokeW);
+                path.setAttribute('stroke-linecap', 'round');
+                path.setAttribute('opacity', '0.95');
+                g.appendChild(path);
+
+                // Terminal eyelets on both ends
+                for (const pt of [pt1, pt2]) {
+                    const term = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    term.setAttribute('cx', pt.x);
+                    term.setAttribute('cy', pt.y);
+                    term.setAttribute('r', '4');
+                    term.setAttribute('fill', 'url(#solder-grad)');
+                    term.setAttribute('stroke', color);
+                    term.setAttribute('stroke-width', '1.5');
+                    g.appendChild(term);
+                }
+
+                layer.appendChild(g);
+            }
+
+            // Top Components (ESP32, Terminals, MOSFET, Passives)
             function renderTopComponents() {
                 layerComponents.innerHTML = '';
 
                 // 1. ESP32-C3 SuperMini Socket & Outline
-                // Top Header in Row L (Cols 3–10), Bottom Header in Row F (Cols 3–10)
                 const pL3 = getCoord('L3');
                 const pF10 = getCoord('F10');
                 
@@ -987,8 +1180,7 @@
                 ant.setAttribute('stroke-dasharray', '3,3');
                 espGroup.appendChild(ant);
 
-                // Female Header Sockets
-                // Row L header: Cols 3 to 10
+                // Female Header Sockets (Row L & Row F)
                 const hdrL = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
                 hdrL.setAttribute('x', pL3.x - 14);
                 hdrL.setAttribute('y', pL3.y - 12);
@@ -1000,7 +1192,6 @@
                 hdrL.setAttribute('stroke-width', '1.5');
                 espGroup.appendChild(hdrL);
 
-                // Row F header: Cols 3 to 10
                 const hdrF = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
                 hdrF.setAttribute('x', pL3.x - 14);
                 hdrF.setAttribute('y', pF10.y - 12);
@@ -1012,7 +1203,6 @@
                 hdrF.setAttribute('stroke-width', '1.5');
                 espGroup.appendChild(hdrF);
 
-                // Pin socket entry squares
                 for (let c = 3; c <= 10; c++) {
                     const ptL = getCoord(`L${c}`);
                     const ptF = getCoord(`F${c}`);
@@ -1038,11 +1228,11 @@
 
                 layerComponents.appendChild(espGroup);
 
-                // 2. Terminal Blocks on Row Q (Facing UPWARDS off Row R)
+                // 2. Terminal Blocks on Row Q (Entries UPWARDS)
                 renderTerminalBlock('TB2 (Soil Moisture)', ['Q7','Q9','Q11'], 'UP');
                 renderTerminalBlock('TB1 (Ultrasonic)', ['Q15','Q17','Q19','Q21'], 'UP');
 
-                // 3. Terminal Block TB3 on Row B (Facing DOWNWARDS off Row A)
+                // 3. Terminal Block TB3 on Row B (Entries DOWNWARDS)
                 renderTerminalBlock('TB3 (DC Pump)', ['B19','B21'], 'DOWN');
 
                 // 4. Q1: FQP30N06L TO-220 MOSFET in Row C (Cols 18, 19, 20)
@@ -1054,18 +1244,17 @@
                 // 6. C3: 470µF Bulk Reservoir Capacitor in Row D (Cols 21 to 23)
                 renderCapacitorElectrolytic('C3 (470µF)', 'D21', 'D23');
 
-                // 7. Passives: Resistors & Ceramic Capacitors
-                renderResistor('R1 (10k)', 'N6', 'M6', '#e3b341'); // Brown-Black-Orange
+                // 7. Resistors & Ceramic Capacitors
+                renderResistor('R1 (10k)', 'N6', 'M6', '#e3b341');
                 renderResistor('R2 (10k)', 'M6', 'P6', '#e3b341');
                 renderCapacitorCeramic('C1 (100nF)', 'M5', 'P5');
                 renderCapacitorCeramic('C2 (100nF)', 'O9', 'O11');
-                renderResistor('R3 (1k)', 'O19', 'O17', '#936337');  // Brown-Black-Red
-                renderResistor('R4 (2k)', 'O17', 'P17', '#f85149');  // Red-Black-Red
+                renderResistor('R3 (1k)', 'O19', 'O17', '#936337');
+                renderResistor('R4 (2k)', 'O17', 'P17', '#f85149');
                 renderResistor('R5 (1k)', 'C14', 'C17', '#936337');
-                renderResistor('R6 (100k)', 'C18', 'A18', '#e3b341'); // Brown-Black-Yellow
+                renderResistor('R6 (100k)', 'C18', 'A18', '#e3b341');
             }
 
-            // Terminal Block Helper
             function renderTerminalBlock(label, pads, direction) {
                 const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
                 group.setAttribute('class', 'comp-terminal');
@@ -1135,7 +1324,6 @@
                 layerComponents.appendChild(group);
             }
 
-            // MOSFET Helper (Row C)
             function renderMosfet(label, pGate, pDrain, pSource) {
                 const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
                 const ptG = getCoord(pGate);
@@ -1146,7 +1334,6 @@
                 const x = ptG.x - 16;
                 const y = ptG.y - 20;
 
-                // Metal heatsink tab (North / Inward)
                 const tab = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
                 tab.setAttribute('x', x + 4);
                 tab.setAttribute('y', y - 8);
@@ -1157,7 +1344,6 @@
                 tab.setAttribute('stroke-width', '1');
                 group.appendChild(tab);
 
-                // Black Epoxy Body
                 const body = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
                 body.setAttribute('x', x);
                 body.setAttribute('y', y);
@@ -1198,12 +1384,10 @@
                 layerComponents.appendChild(group);
             }
 
-            // Diode Helper (Row B)
             function renderDiode(label, pAnode, pCathode) {
                 const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
                 const ptA = getCoord(pAnode);
                 const ptK = getCoord(pCathode);
-
                 const midX = (ptA.x + ptK.x) / 2;
                 const midY = (ptA.y + ptK.y) / 2;
 
@@ -1249,7 +1433,6 @@
                 layerComponents.appendChild(group);
             }
 
-            // Electrolytic Cap (Row D)
             function renderCapacitorElectrolytic(label, pPos, pNeg) {
                 const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
                 const ptP = getCoord(pPos);
@@ -1287,12 +1470,10 @@
                 layerComponents.appendChild(group);
             }
 
-            // Resistor Helper
             function renderResistor(label, p1, p2, bandColor) {
                 const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
                 const pt1 = getCoord(p1);
                 const pt2 = getCoord(p2);
-
                 const midX = (pt1.x + pt2.x) / 2;
                 const midY = (pt1.y + pt2.y) / 2;
 
@@ -1353,7 +1534,6 @@
                 layerComponents.appendChild(group);
             }
 
-            // Ceramic Cap
             function renderCapacitorCeramic(label, p1, p2) {
                 const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
                 const pt1 = getCoord(p1);
@@ -1393,153 +1573,6 @@
                 layerComponents.appendChild(group);
             }
 
-            // Render Visible Connections (Solder Side / Underside)
-            function renderSolderSide(isMirrored) {
-                layerSolderSide.innerHTML = '';
-
-                // 1. Bare Bus Wires (Rows P, A, N)
-                renderBusWire('P4', 'P21', '#4493f8', 4.5, isMirrored, 'Row P Analog GND Bus');
-                renderBusWire('A18', 'A24', '#1f6feb', 5.5, isMirrored, 'Row A Power GND Bus');
-                renderBusWire('N3', 'N15', '#f85149', 4.5, isMirrored, 'Row N +5V Bus');
-
-                // 2. Direct Solder Bridges
-                renderSolderBridge(['C19', 'B19'], '#ec6547', isMirrored, 'Q1 Drain to TB3 Drain / D1 Anode');
-                renderSolderBridge(['D21', 'B21'], '#ff7b72', isMirrored, 'C3 (+) to TB3 +5V / D1 Cathode');
-                renderSolderBridge(['C17', 'C18'], '#f0883e', isMirrored, 'R5 to Q1 Gate');
-                renderSolderBridge(['M5', 'M6'], '#d29922', isMirrored, 'C1 to R1/R2 Node');
-                renderSolderBridge(['M6', 'L6'], '#d29922', isMirrored, 'Divider Node to GPIO 0');
-                renderSolderBridge(['Q19', 'O19'], '#56d364', isMirrored, 'TB1 Echo to R3');
-                renderSolderBridge(['Q11', 'P11'], '#4493f8', isMirrored, 'TB2 GND to Row P');
-                renderSolderBridge(['Q21', 'P21'], '#4493f8', isMirrored, 'TB1 GND to Row P');
-                renderSolderBridge(['Q9', 'O9'], '#3fb950', isMirrored, 'TB2 AOUT to C2');
-
-                // 3. Component Lead Bends down to Row A Power GND
-                renderBusWire('C20', 'A20', '#1f6feb', 3, isMirrored, 'Q1 Source Lead to Row A GND');
-                renderBusWire('D23', 'A23', '#1f6feb', 3, isMirrored, 'C3 (-) Lead to Row A GND');
-                renderBusWire('C18', 'A18', '#e3b341', 2.5, isMirrored, 'R6 Pull-Down Lead to Row A GND');
-
-                // 4. Insulated Jumper Wires
-                renderInsulatedJumper('L4', 'A18', '#388bfd', isMirrored, 'Star Ground Tie (24 AWG)');
-                renderInsulatedJumper('L3', 'D21', '#f85149', isMirrored, '+5V Heavy Feed (24 AWG)');
-                renderInsulatedJumper('F8', 'C14', '#f0883e', isMirrored, 'GPIO 7 to R5 Left');
-                renderInsulatedJumper('Q7', 'L8', '#a371f7', isMirrored, 'TB2 VCC to GPIO 2');
-                renderInsulatedJumper('O9', 'L7', '#3fb950', isMirrored, 'Soil AOUT to GPIO 1');
-                renderInsulatedJumper('Q17', 'L9', '#39c5cf', isMirrored, 'TB1 TRIG to GPIO 3');
-                renderInsulatedJumper('O17', 'L10', '#56d364', isMirrored, 'Echo 3.3V to GPIO 4');
-            }
-
-            // Solder Bridge Generator
-            function renderSolderBridge(pads, color, isMirrored, desc) {
-                const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-                for (let i = 0; i < pads.length - 1; i++) {
-                    const pt1 = getCoord(pads[i], isMirrored);
-                    const pt2 = getCoord(pads[i+1], isMirrored);
-
-                    // Outer solder fillet
-                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                    line.setAttribute('x1', pt1.x);
-                    line.setAttribute('y1', pt1.y);
-                    line.setAttribute('x2', pt2.x);
-                    line.setAttribute('y2', pt2.y);
-                    line.setAttribute('stroke', '#d0d7de');
-                    line.setAttribute('stroke-width', '8');
-                    line.setAttribute('stroke-linecap', 'round');
-                    line.setAttribute('filter', 'url(#shadow)');
-                    group.appendChild(line);
-
-                    // Inner colored trace
-                    const core = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                    core.setAttribute('x1', pt1.x);
-                    core.setAttribute('y1', pt1.y);
-                    core.setAttribute('x2', pt2.x);
-                    core.setAttribute('y2', pt2.y);
-                    core.setAttribute('stroke', color);
-                    core.setAttribute('stroke-width', '4');
-                    core.setAttribute('stroke-linecap', 'round');
-                    group.appendChild(core);
-                }
-                layerSolderSide.appendChild(group);
-            }
-
-            // Bare Bus Wire Generator
-            function renderBusWire(p1, p2, color, strokeW, isMirrored, desc) {
-                const pt1 = getCoord(p1, isMirrored);
-                const pt2 = getCoord(p2, isMirrored);
-
-                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                line.setAttribute('x1', pt1.x);
-                line.setAttribute('y1', pt1.y);
-                line.setAttribute('x2', pt2.x);
-                line.setAttribute('y2', pt2.y);
-                line.setAttribute('stroke', color);
-                line.setAttribute('stroke-width', strokeW);
-                line.setAttribute('stroke-linecap', 'round');
-                line.setAttribute('opacity', '0.9');
-                layerSolderSide.appendChild(line);
-            }
-
-            // Insulated Hookup Jumper Wire Generator
-            function renderInsulatedJumper(p1, p2, color, isMirrored, desc) {
-                const pt1 = getCoord(p1, isMirrored);
-                const pt2 = getCoord(p2, isMirrored);
-
-                const dx = pt2.x - pt1.x;
-                const dy = pt2.y - pt1.y;
-                const cx1 = pt1.x + dx * 0.25;
-                const cy1 = pt1.y + dy * 0.25 + (dy === 0 ? -24 : 16);
-                const cx2 = pt1.x + dx * 0.75;
-                const cy2 = pt1.y + dy * 0.75 + (dy === 0 ? -24 : 16);
-
-                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                path.setAttribute('d', `M ${pt1.x} ${pt1.y} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${pt2.x} ${pt2.y}`);
-                path.setAttribute('fill', 'none');
-                path.setAttribute('stroke', color);
-                path.setAttribute('stroke-width', '3');
-                path.setAttribute('stroke-linecap', 'round');
-                path.setAttribute('opacity', '0.9');
-                path.setAttribute('filter', 'url(#shadow)');
-
-                layerSolderSide.appendChild(path);
-            }
-
-            // Render Top Wires Overlay (so user sees connections even in Component view!)
-            function renderTopWires() {
-                layerTopWires.innerHTML = '';
-                if (!chkShowOverlay.checked) return;
-
-                // Render subtle connection routes on top
-                const topJumpers = [
-                    ['L4', 'A18', '#388bfd', 'Star GND Link'],
-                    ['L3', 'D21', '#f85149', '+5V Power Feed'],
-                    ['F8', 'C14', '#f0883e', 'Pump Gate Drive'],
-                    ['Q7', 'L8', '#a371f7', 'Soil Switched VCC'],
-                    ['O9', 'L7', '#3fb950', 'Soil Analog AOUT'],
-                    ['Q17', 'L9', '#39c5cf', 'Ultrasonic TRIG'],
-                    ['O17', 'L10', '#56d364', 'Ultrasonic ECHO 3.3V']
-                ];
-
-                for (const [p1, p2, col, lbl] of topJumpers) {
-                    const pt1 = getCoord(p1);
-                    const pt2 = getCoord(p2);
-                    const dx = pt2.x - pt1.x;
-                    const dy = pt2.y - pt1.y;
-                    const cx1 = pt1.x + dx * 0.25;
-                    const cy1 = pt1.y + dy * 0.25 + (dy === 0 ? -20 : 16);
-                    const cx2 = pt1.x + dx * 0.75;
-                    const cy2 = pt1.y + dy * 0.75 + (dy === 0 ? -20 : 16);
-
-                    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                    path.setAttribute('d', `M ${pt1.x} ${pt1.y} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${pt2.x} ${pt2.y}`);
-                    path.setAttribute('fill', 'none');
-                    path.setAttribute('stroke', col);
-                    path.setAttribute('stroke-width', '2.5');
-                    path.setAttribute('stroke-dasharray', '5,3');
-                    path.setAttribute('opacity', '0.85');
-                    layerTopWires.appendChild(path);
-                }
-            }
-
-            // Switch View Modes
             function setViewMode(mode) {
                 currentView = mode;
                 document.getElementById('btn-view-top').classList.toggle('active', mode === 'top');
@@ -1550,33 +1583,34 @@
 
                 renderGridLabels(isMirrored);
                 renderPads(isMirrored);
-                renderSolderSide(isMirrored);
 
                 if (mode === 'top') {
                     layerComponents.style.display = 'inline';
                     layerComponents.style.opacity = '1';
-                    layerSolderSide.style.display = 'none';
-                    layerTopWires.style.display = 'inline';
+                    layerConnectionsBottom.style.display = 'none';
+                    layerConnectionsTop.style.display = 'inline';
+                    layerConnectionsTop.style.opacity = '1';
                     renderTopComponents();
-                    renderTopWires();
+                    renderAllConnections(layerConnectionsTop, false);
                 } else if (mode === 'bottom') {
                     layerComponents.style.display = 'none';
-                    layerSolderSide.style.display = 'inline';
-                    layerSolderSide.style.opacity = '1';
-                    layerTopWires.style.display = 'none';
+                    layerConnectionsTop.style.display = 'none';
+                    layerConnectionsBottom.style.display = 'inline';
+                    layerConnectionsBottom.style.opacity = '1';
+                    renderAllConnections(layerConnectionsBottom, true);
                 } else if (mode === 'xray') {
                     layerComponents.style.display = 'inline';
                     layerComponents.style.opacity = '0.35';
-                    layerSolderSide.style.display = 'inline';
-                    layerSolderSide.style.opacity = '1';
-                    layerTopWires.style.display = 'none';
+                    layerConnectionsBottom.style.display = 'none';
+                    layerConnectionsTop.style.display = 'inline';
+                    layerConnectionsTop.style.opacity = '1';
                     renderTopComponents();
+                    renderAllConnections(layerConnectionsTop, false);
                 }
 
                 highlightNet(activeNetKey);
             }
 
-            // Tooltip handler
             function onPadHover(e, coordStr) {
                 const nets = PAD_MAP[coordStr] || [];
                 let netNames = nets.map(n => NETS[n].name).join(', ') || 'Unassigned / Open';
@@ -1604,14 +1638,10 @@
 
             function onPadClick(coordStr) {
                 const nets = PAD_MAP[coordStr];
-                if (nets && nets.length > 0) {
-                    highlightNet(nets[0]);
-                } else {
-                    highlightNet(null);
-                }
+                if (nets && nets.length > 0) highlightNet(nets[0]);
+                else highlightNet(null);
             }
 
-            // Net Highlighting
             function highlightNet(netKey) {
                 activeNetKey = netKey;
 
@@ -1623,6 +1653,10 @@
                     el.classList.remove('net-highlight');
                 });
 
+                document.querySelectorAll('.conn-element').forEach(el => {
+                    el.classList.remove('wire-highlight', 'dimmed');
+                });
+
                 if (!netKey) return;
 
                 const netData = NETS[netKey];
@@ -1630,13 +1664,18 @@
 
                 for (const p of netData.pads) {
                     const padEl = document.getElementById(`pad-${p}`);
-                    if (padEl) {
-                        padEl.classList.add('net-highlight');
-                    }
+                    if (padEl) padEl.classList.add('net-highlight');
                 }
+
+                document.querySelectorAll('.conn-element').forEach(el => {
+                    if (el.classList.contains(`conn-${netKey}`)) {
+                        el.classList.add('wire-highlight');
+                    } else {
+                        el.classList.add('dimmed');
+                    }
+                });
             }
 
-            // Build Net Inspector List
             function buildNetList() {
                 netListContainer.innerHTML = '';
                 for (const [key, data] of Object.entries(NETS)) {
@@ -1649,15 +1688,12 @@
                             <span class="net-color-dot" style="background:${data.color};"></span>
                             <span>${data.name}</span>
                         </div>
-                        <span class="net-pins-count">${data.pads.length} pads</span>
+                        <span style="font-size:10px; color:var(--text-muted); background:#161b22; padding:2px 6px; border-radius:10px;">${data.pads.length} pads</span>
                     `;
 
                     item.addEventListener('click', () => {
-                        if (activeNetKey === key) {
-                            highlightNet(null);
-                        } else {
-                            highlightNet(key);
-                        }
+                        if (activeNetKey === key) highlightNet(null);
+                        else highlightNet(key);
                     });
 
                     netListContainer.appendChild(item);
@@ -1688,11 +1724,11 @@
                     svg.style.width = 'auto';
                     svg.style.height = 'auto';
                 } else if (currentScaleMode === 'native') {
-                    svg.style.width = '1140px';
-                    svg.style.height = '900px';
+                    svg.style.width = '1160px';
+                    svg.style.height = '920px';
                 } else if (currentScaleMode === 'custom') {
-                    svg.style.width = Math.round(1140 * customScale) + 'px';
-                    svg.style.height = Math.round(900 * customScale) + 'px';
+                    svg.style.width = Math.round(1160 * customScale) + 'px';
+                    svg.style.height = Math.round(920 * customScale) + 'px';
                 } else {
                     svg.style.width = '100%';
                     svg.style.height = 'auto';
@@ -1700,7 +1736,7 @@
 
                 requestAnimationFrame(() => {
                     const rect = svg.getBoundingClientRect();
-                    const pct = Math.round((rect.width / 1140) * 100);
+                    const pct = Math.round((rect.width / 1160) * 100);
                     zoomLabel.textContent = pct + '%';
                 });
             }
@@ -1711,14 +1747,14 @@
 
             btnZoomIn.addEventListener('click', () => {
                 const currentWidth = svg.getBoundingClientRect().width;
-                customScale = Math.min(3.0, (currentWidth / 1140) + 0.15);
+                customScale = Math.min(3.0, (currentWidth / 1160) + 0.15);
                 currentScaleMode = 'custom';
                 updateZoom();
             });
 
             btnZoomOut.addEventListener('click', () => {
                 const currentWidth = svg.getBoundingClientRect().width;
-                customScale = Math.max(0.35, (currentWidth / 1140) - 0.15);
+                customScale = Math.max(0.35, (currentWidth / 1160) - 0.15);
                 currentScaleMode = 'custom';
                 updateZoom();
             });
@@ -1730,10 +1766,6 @@
 
             window.addEventListener('resize', () => {
                 if (currentScaleMode === 'fit-width' || currentScaleMode === 'fit-screen') updateZoom();
-            });
-
-            chkShowOverlay.addEventListener('change', () => {
-                if (currentView === 'top') renderTopWires();
             });
 
             document.getElementById('btn-view-top').addEventListener('click', () => setViewMode('top'));
@@ -1760,7 +1792,6 @@
                 }
             });
 
-            // Initialize
             buildNetList();
             setViewMode('top');
             updateZoom();
