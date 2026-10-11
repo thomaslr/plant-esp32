@@ -929,36 +929,36 @@
             }
 
             // 1. TOP LAYER CONNECTIONS (Component Side - Insulated Hookup Wires)
-            function renderTopConnections(targetLayer) {
+            function renderTopConnections(targetLayer, isMirrored = false) {
                 targetLayer.innerHTML = '';
 
                 // TOP-SIDE INSULATED HOOKUP WIRES (All cross-rail and long connections run here to eliminate shorts!)
                 // 1. GND Bus to Driver Feed: P14 to D14 (24 AWG Blue)
-                createCurvedJumper(targetLayer, 'P14', 'D14', '#388bfd', 4, false, '[TOP WIRE] GND Bus to Driver Feed (P14-D14)', 0, 'GND_POWER');
+                createCurvedJumper(targetLayer, 'P14', 'D14', '#388bfd', 4, isMirrored, '[TOP WIRE] GND Bus to Driver Feed (P14-D14)', 0, 'GND_POWER');
 
                 // 2. +5V Bus to Pump Feed: N15 to E15 (24 AWG Red)
-                createCurvedJumper(targetLayer, 'N15', 'E15', '#ff7b72', 4, false, '[TOP WIRE] +5V Bus to Pump Feed (N15-E15)', 0, 'PUMP_5V');
+                createCurvedJumper(targetLayer, 'N15', 'E15', '#ff7b72', 4, isMirrored, '[TOP WIRE] +5V Bus to Pump Feed (N15-E15)', 0, 'PUMP_5V');
 
                 // 3. Sensor GND Bus Tap: J4 to P11 (24 AWG Blue - Arches safely over Row N +5V on top!)
-                createCurvedJumper(targetLayer, 'J4', 'P11', '#4493f8', 3.5, false, '[TOP WIRE] Sensor GND Bus Tap (J4 to P11)', -20, 'GND_ANALOG');
+                createCurvedJumper(targetLayer, 'J4', 'P11', '#4493f8', 3.5, isMirrored, '[TOP WIRE] Sensor GND Bus Tap (J4 to P11)', -20, 'GND_ANALOG');
 
                 // 4. Ultrasonic +5V Feed: N15 to Q15 (26 AWG Red - Arches safely over Row P GND on top!)
-                createCurvedJumper(targetLayer, 'N15', 'Q15', '#f85149', 3.5, false, '[TOP WIRE] Ultrasonic 5V Feed (N15 to Q15)', 20, 'VBUS_5V');
+                createCurvedJumper(targetLayer, 'N15', 'Q15', '#f85149', 3.5, isMirrored, '[TOP WIRE] Ultrasonic 5V Feed (N15 to Q15)', 20, 'VBUS_5V');
 
                 // 5. Ultrasonic ECHO Input Link: Q19 to O19 (26 AWG Green - Arches safely over Row P GND on top!)
-                createCurvedJumper(targetLayer, 'Q19', 'O19', '#56d364', 3.5, false, '[TOP WIRE] Echo In Jumper (Q19 to O19)', 0, 'GPIO4_ECHO');
+                createCurvedJumper(targetLayer, 'Q19', 'O19', '#56d364', 3.5, isMirrored, '[TOP WIRE] Echo In Jumper (Q19 to O19)', 0, 'GPIO4_ECHO');
 
                 // 6. Soil DATA (AOUT): O7 to J7 (26 AWG Green - Straight down Col 7 from C2/Data track to GPIO 1)
-                createCurvedJumper(targetLayer, 'O7', 'J7', '#3fb950', 3.5, false, '[TOP WIRE] Soil DATA (O7 to J7)', 0, 'GPIO1_SOIL');
+                createCurvedJumper(targetLayer, 'O7', 'J7', '#3fb950', 3.5, isMirrored, '[TOP WIRE] Soil DATA (O7 to J7)', 0, 'GPIO1_SOIL');
 
                 // 7. Soil VCC (Switched): Q9 to J8 (26 AWG Purple - Parallel down Col 9/8)
-                createCurvedJumper(targetLayer, 'Q9', 'J8', '#a371f7', 3.5, false, '[TOP WIRE] Soil VCC (Q9 to J8)', 0, 'GPIO2_VCC');
+                createCurvedJumper(targetLayer, 'Q9', 'J8', '#a371f7', 3.5, isMirrored, '[TOP WIRE] Soil VCC (Q9 to J8)', 0, 'GPIO2_VCC');
 
                 // 8. Ultrasonic TRIG: J9 to Q17 (26 AWG Cyan)
-                createCurvedJumper(targetLayer, 'J9', 'Q17', '#39c5cf', 3.5, false, '[TOP WIRE] Ultrasonic TRIG (J9 to Q17)', -24, 'GPIO3_TRIG');
+                createCurvedJumper(targetLayer, 'J9', 'Q17', '#39c5cf', 3.5, isMirrored, '[TOP WIRE] Ultrasonic TRIG (J9 to Q17)', -24, 'GPIO3_TRIG');
 
                 // 9. Ultrasonic ECHO Stepped 3.3V: O17 to J10 (26 AWG Green)
-                createCurvedJumper(targetLayer, 'O17', 'J10', '#56d364', 3.5, false, '[TOP WIRE] Echo 3.3V (O17 to J10)', 20, 'GPIO4_ECHO');
+                createCurvedJumper(targetLayer, 'O17', 'J10', '#56d364', 3.5, isMirrored, '[TOP WIRE] Echo 3.3V (O17 to J10)', 20, 'GPIO4_ECHO');
             }
 
             // 2. BOTTOM LAYER CONNECTIONS (Solder Side - Buses & Solder Bridges)
@@ -1295,19 +1295,21 @@
             }
 
             // Top Components
-            function renderTopComponents() {
+            function renderTopComponents(isMirrored = false) {
                 layerComponents.innerHTML = '';
 
                 // 1. ESP32-C3 SuperMini Socket & Outline (Row J to Row D)
-                const pJ3 = getCoord('J3');
-                const pD10 = getCoord('D10');
+                const pJ3 = getCoord('J3', isMirrored);
+                const pD10 = getCoord('D10', isMirrored);
                 
                 const espGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
                 espGroup.setAttribute('id', 'comp-esp32');
 
-                const espX = pJ3.x - 18;
+                const minX = Math.min(pJ3.x, pD10.x);
+                const maxX = Math.max(pJ3.x, pD10.x);
+                const espX = minX - 18;
                 const espY = pJ3.y - 16;
-                const espW = (pD10.x - pJ3.x) + 36;
+                const espW = (maxX - minX) + 36;
                 const espH = (pD10.y - pJ3.y) + 32;
 
                 const espPcb = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
@@ -1322,8 +1324,10 @@
                 espPcb.setAttribute('filter', 'url(#shadow)');
                 espGroup.appendChild(espPcb);
 
+                // USB connector: extends past Col 1-2 edge of the ESP board
+                const usbX = isMirrored ? (espX + espW - 4) : (espX - 32);
                 const usbRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-                usbRect.setAttribute('x', espX - 32);
+                usbRect.setAttribute('x', usbX);
                 usbRect.setAttribute('y', espY + (espH / 2) - 18);
                 usbRect.setAttribute('width', '36');
                 usbRect.setAttribute('height', '36');
@@ -1334,7 +1338,7 @@
                 espGroup.appendChild(usbRect);
 
                 const usbSlot = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-                usbSlot.setAttribute('x', espX - 30);
+                usbSlot.setAttribute('x', isMirrored ? (espX + espW + 20) : (espX - 30));
                 usbSlot.setAttribute('y', espY + (espH / 2) - 10);
                 usbSlot.setAttribute('width', '10');
                 usbSlot.setAttribute('height', '20');
@@ -1342,8 +1346,10 @@
                 usbSlot.setAttribute('fill', '#21262d');
                 espGroup.appendChild(usbSlot);
 
+                // RF Shield
+                const shieldX = isMirrored ? (espX + espW - 45 - 140) : (espX + 45);
                 const shield = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-                shield.setAttribute('x', espX + 45);
+                shield.setAttribute('x', shieldX);
                 shield.setAttribute('y', espY + 22);
                 shield.setAttribute('width', '140');
                 shield.setAttribute('height', espH - 44);
@@ -1354,7 +1360,7 @@
                 espGroup.appendChild(shield);
 
                 const shieldText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                shieldText.setAttribute('x', espX + 115);
+                shieldText.setAttribute('x', shieldX + 70);
                 shieldText.setAttribute('y', espY + (espH / 2) + 4);
                 shieldText.setAttribute('fill', '#c9d1d9');
                 shieldText.setAttribute('font-family', 'monospace');
@@ -1364,8 +1370,10 @@
                 shieldText.textContent = 'ESP32-C3 SuperMini';
                 espGroup.appendChild(shieldText);
 
+                // Ceramic / PCB Antenna
+                const antX = isMirrored ? (espX + 16) : (espX + espW - 40);
                 const ant = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-                ant.setAttribute('x', espX + espW - 40);
+                ant.setAttribute('x', antX);
                 ant.setAttribute('y', espY + 20);
                 ant.setAttribute('width', '24');
                 ant.setAttribute('height', espH - 40);
@@ -1378,9 +1386,9 @@
                 espGroup.appendChild(ant);
 
                 const hdrJ = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-                hdrJ.setAttribute('x', pJ3.x - 14);
+                hdrJ.setAttribute('x', minX - 14);
                 hdrJ.setAttribute('y', pJ3.y - 12);
-                hdrJ.setAttribute('width', (pD10.x - pJ3.x) + 28);
+                hdrJ.setAttribute('width', (maxX - minX) + 28);
                 hdrJ.setAttribute('height', '24');
                 hdrJ.setAttribute('rx', '3');
                 hdrJ.setAttribute('fill', '#0d1117');
@@ -1389,9 +1397,9 @@
                 espGroup.appendChild(hdrJ);
 
                 const hdrD = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-                hdrD.setAttribute('x', pJ3.x - 14);
+                hdrD.setAttribute('x', minX - 14);
                 hdrD.setAttribute('y', pD10.y - 12);
-                hdrD.setAttribute('width', (pD10.x - pJ3.x) + 28);
+                hdrD.setAttribute('width', (maxX - minX) + 28);
                 hdrD.setAttribute('height', '24');
                 hdrD.setAttribute('rx', '3');
                 hdrD.setAttribute('fill', '#0d1117');
@@ -1400,8 +1408,8 @@
                 espGroup.appendChild(hdrD);
 
                 for (let c = 3; c <= 10; c++) {
-                    const ptJ = getCoord(`J${c}`);
-                    const ptD = getCoord(`D${c}`);
+                    const ptJ = getCoord(`J${c}`, isMirrored);
+                    const ptD = getCoord(`D${c}`, isMirrored);
 
                     const sqJ = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
                     sqJ.setAttribute('x', ptJ.x - 5);
@@ -1425,54 +1433,56 @@
                 layerComponents.appendChild(espGroup);
 
                 // 2. Terminal Blocks on Row Q: TB2 Pin 1=Data (Q7), Pin 2=VCC (Q9), Pin 3=GND (Q11)
-                renderTerminalBlock('TB2 (Soil Sensor)', ['Q7','Q9','Q11'], 'UP', ['Data','VCC','GND']);
-                renderTerminalBlock('TB1 (Ultrasonic)', ['Q15','Q17','Q19','Q21'], 'UP', ['5V','TRIG','ECHO','GND']);
+                renderTerminalBlock('TB2 (Soil Sensor)', ['Q7','Q9','Q11'], 'UP', ['Data','VCC','GND'], isMirrored);
+                renderTerminalBlock('TB1 (Ultrasonic)', ['Q15','Q17','Q19','Q21'], 'UP', ['5V','TRIG','ECHO','GND'], isMirrored);
 
                 // 3. Terminal Block TB3 on Row B (Entries DOWNWARDS)
-                renderTerminalBlock('TB3 (DC Pump)', ['B13','B15'], 'DOWN', ['Drain(-)','+5V']);
+                renderTerminalBlock('TB3 (DC Pump)', ['B13','B15'], 'DOWN', ['Drain(-)','+5V'], isMirrored);
 
                 // 4. Q1: FQP30N06L TO-220 MOSFET in Row C (Cols 12, 13, 14)
-                renderMosfet('Q1', 'C12', 'C13', 'C14');
+                renderMosfet('Q1', 'C12', 'C13', 'C14', isMirrored);
 
                 // 5. D1: 1N5819 Schottky Diode in Row E (Cols 13 to 15) - RIGHT SIDE AT E15!
-                renderDiode('D1 (1N5819)', 'E13', 'E15');
+                renderDiode('D1 (1N5819)', 'E13', 'E15', isMirrored);
 
                 // 6. C3: 100µF Bulk Reservoir Capacitor in Row L (Cols 3 & 4) - JOINED BETWEEN VCC AND GND!
-                renderCapacitorElectrolytic('C3 (100µF)', 'L3', 'L4');
+                renderCapacitorElectrolytic('C3 (100µF)', 'L3', 'L4', isMirrored);
 
                 // 7. Supply Divider Passives (CLEAN, ZERO-CROSSOVER CONFIGURATION ALONG ROW K & L!)
                 // R1 (10k): Vertical between N6 (+5V) and K6 (Node)
-                renderResistor('R1 (10k)', 'N6', 'K6', '#e3b341');
+                renderResistor('R1 (10k)', 'N6', 'K6', '#e3b341', isMirrored);
 
                 // R2 (10k): Horizontal along Row K between K6 (Node) and K4 (GND)
-                renderResistor('R2 (10k)', 'K6', 'K4', '#e3b341');
+                renderResistor('R2 (10k)', 'K6', 'K4', '#e3b341', isMirrored);
 
                 // C1 (100nF): Ceramic filter spanning between L4 (GND) and K6 (Node)
-                renderCapacitorCeramic('C1 (100nF)', 'L4', 'K6');
+                renderCapacitorCeramic('C1 (100nF)', 'L4', 'K6', isMirrored);
 
                 // C2 (100nF): Soil RF filter across Q7 (AOUT) and P11 (GND) via O7/O11
-                renderCapacitorCeramic('C2 (100nF)', 'O7', 'O11');
+                renderCapacitorCeramic('C2 (100nF)', 'O7', 'O11', isMirrored);
 
                 // Ultrasonic Stepper: R3 (O19 to O17), R4 (O17 to P17)
-                renderResistor('R3 (1k)', 'O19', 'O17', '#936337');
-                renderResistor('R4 (2k)', 'O17', 'P17', '#f85149');
+                renderResistor('R3 (1k)', 'O19', 'O17', '#936337', isMirrored);
+                renderResistor('R4 (2k)', 'O17', 'P17', '#f85149', isMirrored);
 
                 // Pump Gate: R5 (C8 to C11), R6 (C12 to A12)
-                renderResistor('R5 (1k)', 'C8', 'C11', '#936337');
-                renderResistor('R6 (100k)', 'C12', 'A12', '#e3b341');
+                renderResistor('R5 (1k)', 'C8', 'C11', '#936337', isMirrored);
+                renderResistor('R6 (100k)', 'C12', 'A12', '#e3b341', isMirrored);
             }
 
-            function renderTerminalBlock(label, pads, direction, pinSubLabels) {
+            function renderTerminalBlock(label, pads, direction, pinSubLabels, isMirrored = false) {
                 const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
                 group.setAttribute('class', 'comp-terminal');
 
-                const pStart = getCoord(pads[0]);
-                const pEnd = getCoord(pads[pads.length - 1]);
+                const coords = pads.map(p => getCoord(p, isMirrored));
+                const minX = Math.min(...coords.map(pt => pt.x));
+                const maxX = Math.max(...coords.map(pt => pt.x));
 
-                const blockX = pStart.x - 18;
-                const blockW = (pEnd.x - pStart.x) + 36;
+                const blockX = minX - 18;
+                const blockW = (maxX - minX) + 36;
                 const blockH = 44;
-                const blockY = direction === 'UP' ? (pStart.y - 30) : (pStart.y - 14);
+                const pY = coords[0].y;
+                const blockY = direction === 'UP' ? (pY - 30) : (pY - 14);
 
                 const body = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
                 body.setAttribute('x', blockX);
@@ -1487,7 +1497,7 @@
                 group.appendChild(body);
 
                 for (let i = 0; i < pads.length; i++) {
-                    const pt = getCoord(pads[i]);
+                    const pt = coords[i];
                     const screw = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                     screw.setAttribute('cx', pt.x);
                     screw.setAttribute('cy', blockY + (direction === 'UP' ? 26 : 18));
@@ -1544,14 +1554,16 @@
                 layerComponents.appendChild(group);
             }
 
-            function renderMosfet(label, pGate, pDrain, pSource) {
+            function renderMosfet(label, pGate, pDrain, pSource, isMirrored = false) {
                 const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-                const ptG = getCoord(pGate);
-                const ptD = getCoord(pDrain);
-                const ptS = getCoord(pSource);
+                const ptG = getCoord(pGate, isMirrored);
+                const ptD = getCoord(pDrain, isMirrored);
+                const ptS = getCoord(pSource, isMirrored);
 
-                const width = (ptS.x - ptG.x) + 32;
-                const x = ptG.x - 16;
+                const minX = Math.min(ptG.x, ptD.x, ptS.x);
+                const maxX = Math.max(ptG.x, ptD.x, ptS.x);
+                const width = (maxX - minX) + 32;
+                const x = minX - 16;
                 const y = ptG.y - 20;
 
                 const tab = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
@@ -1604,10 +1616,10 @@
                 layerComponents.appendChild(group);
             }
 
-            function renderDiode(label, pAnode, pCathode) {
+            function renderDiode(label, pAnode, pCathode, isMirrored = false) {
                 const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-                const ptA = getCoord(pAnode);
-                const ptK = getCoord(pCathode);
+                const ptA = getCoord(pAnode, isMirrored);
+                const ptK = getCoord(pCathode, isMirrored);
                 const midX = (ptA.x + ptK.x) / 2;
                 const midY = (ptA.y + ptK.y) / 2;
 
@@ -1632,7 +1644,8 @@
                 group.appendChild(body);
 
                 const band = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-                band.setAttribute('x', midX + 12);
+                const bandX = ptK.x >= ptA.x ? (midX + 12) : (midX - 20);
+                band.setAttribute('x', bandX);
                 band.setAttribute('y', midY - 8);
                 band.setAttribute('width', '8');
                 band.setAttribute('height', '16');
@@ -1640,7 +1653,7 @@
                 group.appendChild(band);
 
                 const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                txt.setAttribute('x', midX - 4);
+                txt.setAttribute('x', ptK.x >= ptA.x ? (midX - 4) : (midX + 4));
                 txt.setAttribute('y', midY + 4);
                 txt.setAttribute('fill', '#fff');
                 txt.setAttribute('font-family', 'monospace');
@@ -1653,10 +1666,10 @@
                 layerComponents.appendChild(group);
             }
 
-            function renderCapacitorElectrolytic(label, pPos, pNeg) {
+            function renderCapacitorElectrolytic(label, pPos, pNeg, isMirrored = false) {
                 const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-                const ptP = getCoord(pPos);
-                const ptN = getCoord(pNeg);
+                const ptP = getCoord(pPos, isMirrored);
+                const ptN = getCoord(pNeg, isMirrored);
                 const midX = (ptP.x + ptN.x) / 2;
                 const midY = (ptP.y + ptN.y) / 2;
 
@@ -1671,13 +1684,16 @@
                 group.appendChild(can);
 
                 const stripe = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                stripe.setAttribute('d', `M ${midX + 4} ${midY - 14} A 15 15 0 0 1 ${midX + 15} ${midY} A 15 15 0 0 1 ${midX + 4} ${midY + 14} Z`);
+                const stripePath = ptN.x >= ptP.x
+                    ? `M ${midX + 4} ${midY - 14} A 15 15 0 0 1 ${midX + 15} ${midY} A 15 15 0 0 1 ${midX + 4} ${midY + 14} Z`
+                    : `M ${midX - 4} ${midY - 14} A 15 15 0 0 0 ${midX - 15} ${midY} A 15 15 0 0 0 ${midX - 4} ${midY + 14} Z`;
+                stripe.setAttribute('d', stripePath);
                 stripe.setAttribute('fill', '#d0d7de');
                 stripe.setAttribute('opacity', '0.7');
                 group.appendChild(stripe);
 
                 const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                txt.setAttribute('x', midX - 3);
+                txt.setAttribute('x', ptN.x >= ptP.x ? (midX - 3) : (midX + 3));
                 txt.setAttribute('y', midY + 3);
                 txt.setAttribute('fill', '#fff');
                 txt.setAttribute('font-family', 'monospace');
@@ -1690,10 +1706,10 @@
                 layerComponents.appendChild(group);
             }
 
-            function renderResistor(label, p1, p2, bandColor) {
+            function renderResistor(label, p1, p2, bandColor, isMirrored = false) {
                 const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-                const pt1 = getCoord(p1);
-                const pt2 = getCoord(p2);
+                const pt1 = getCoord(p1, isMirrored);
+                const pt2 = getCoord(p2, isMirrored);
 
                 const midX = (pt1.x + pt2.x) / 2;
                 const midY = (pt1.y + pt2.y) / 2;
@@ -1755,10 +1771,10 @@
                 layerComponents.appendChild(group);
             }
 
-            function renderCapacitorCeramic(label, p1, p2) {
+            function renderCapacitorCeramic(label, p1, p2, isMirrored = false) {
                 const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-                const pt1 = getCoord(p1);
-                const pt2 = getCoord(p2);
+                const pt1 = getCoord(p1, isMirrored);
+                const pt2 = getCoord(p2, isMirrored);
                 const midX = (pt1.x + pt2.x) / 2;
                 const midY = (pt1.y + pt2.y) / 2;
 
@@ -1817,8 +1833,9 @@
                     layerConnectionsBottom.style.display = 'none';
                     layerConnectionsTop.style.display = 'inline';
                     layerConnectionsTop.style.opacity = '1';
-                    renderTopComponents();
-                    renderTopConnections(layerConnectionsTop);
+                    renderTopComponents(false);
+                    renderTopConnections(layerConnectionsTop, false);
+                    renderBottomConnections(layerConnectionsBottom, false);
 
                     if (chkTopWires) chkTopWires.checked = true;
                     if (chkTopComps) chkTopComps.checked = true;
@@ -1831,11 +1848,12 @@
                     layerConnectionsTop.style.display = 'none';
                     layerConnectionsBottom.style.display = 'inline';
                     layerConnectionsBottom.style.opacity = '1';
-                    renderTopComponents();
+                    renderTopComponents(true);
+                    renderTopConnections(layerConnectionsTop, true);
                     renderBottomConnections(layerConnectionsBottom, true);
 
                     if (chkTopWires) chkTopWires.checked = false;
-                    if (chkTopComps) chkTopComps.checked = false;
+                    if (chkTopComps) chkTopComps.checked = true;
                     if (chkBotBridges) chkBotBridges.checked = true;
                     if (chkBotBuses) chkBotBuses.checked = true;
                 } else if (mode === 'xray') {
@@ -1846,9 +1864,9 @@
                     layerConnectionsBottom.style.opacity = '0.9';
                     layerConnectionsTop.style.display = 'inline';
                     layerConnectionsTop.style.opacity = '1';
-                    renderTopComponents();
+                    renderTopComponents(false);
                     renderBottomConnections(layerConnectionsBottom, false);
-                    renderTopConnections(layerConnectionsTop);
+                    renderTopConnections(layerConnectionsTop, false);
 
                     if (chkTopWires) chkTopWires.checked = true;
                     if (chkTopComps) chkTopComps.checked = true;
