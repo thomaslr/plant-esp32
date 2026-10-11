@@ -94,7 +94,7 @@ For a permanent soldered build in an enclosure, an **18-row by 24-column 0.1" (2
   * **C3 (100µF Bulk Capacitor):** Row L, Cols 3 (+) to 4 (-), directly joined between VCC (+5V at J3) and GND (J4) via vertical solder bridges L3 $\to$ K3 $\to$ J3 and L4 $\to$ K4 $\to$ J4.
 * **Noise Immunity Dual Star-Ground Buses:**
   * **Analog / Sensor GND (Row P):** Bare bus wire along Row P (Cols 4–21) providing an ultra-quiet ground reference for ADC supply monitor (GPIO 0), capacitive soil sensor (GPIO 1), and ultrasonic echo divider.
-  * **Power / Motor GND (Row A):** Bare bus wire along Row A (Cols 18–24) sinking high-current pump inrush transients ($0.8\text{A}\text{--}1.2\text{A}$) from Q1 Source without inducing ground bounce in Row P.
+  * **Power / Motor GND (Row A):** Solder bridge or bus wire along Row A (Cols 18–20) sinking high-current pump inrush transients ($0.8\text{A}\text{--}1.2\text{A}$) from Q1 Source (C20) and Star Ground (A18) without inducing ground bounce in Row P.
   * **Star Ground Tie:** Heavy 24 AWG insulated jumper linking ESP32 GND (J4) directly to Row A (A18).
 * **Full Assembly Guide & Visualizer:**
   * Guide: [`perfboard_circuit_guide.md`](file:///Users/robertlongbottom/dev/plant-esp32/perfboard_circuit_guide.md)

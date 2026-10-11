@@ -534,7 +534,7 @@
                         </thead>
                         <tbody>
                             <tr><td><b>Row P GND</b></td><td>P4 → P21</td><td><span class="method-badge method-bus">Bare Bus Wire</span></td></tr>
-                            <tr><td><b>Row A GND</b></td><td>A18 → A24</td><td><span class="method-badge method-bus">Bare Bus Wire</span></td></tr>
+                            <tr><td><b>Power GND</b></td><td>A18 → A20</td><td><span class="method-badge method-bridge">Bridge / Bus</span></td></tr>
                             <tr><td><b>Row N 5V</b></td><td>N3 → N15</td><td><span class="method-badge method-bus">Bare Bus Wire</span></td></tr>
                             <tr><td><b>Star GND</b></td><td>J4 → A18</td><td><span class="method-badge method-wire">24 AWG Wire</span></td></tr>
                             <tr><td><b>5V Feed</b></td><td>J3 → E21</td><td><span class="method-badge method-wire">24 AWG Wire</span></td></tr>
@@ -626,8 +626,8 @@
                 'GND_POWER': {
                     name: 'GND (Row A Power Motor Bus)',
                     color: '#1f6feb',
-                    desc: 'Row A heavy-duty ground bus for MOSFET Source and pull-down resistor.',
-                    pads: ['A18','A19','A20','A21','A22','A23','A24','C20']
+                    desc: 'Row A power ground bus (A18-A20) linking Star GND from J4, R6 pull-down, and Q1 MOSFET Source (C20).',
+                    pads: ['A18','A19','A20','C20']
                 },
                 'VBUS_5V': {
                     name: '+5V (Row N Sensor Supply Bus)',
@@ -721,13 +721,14 @@
                 'B21': 'TB3 Pin 2 (Pump +5V) -> Solder bridge up Col 21 to E21 (D1 Cathode) and +5V feed from J3',
                 'C18': 'Q1 Gate -> Solder bridge to C17 (R5 output) and top lead of R6 (100k pull-down)',
                 'C19': 'Q1 Drain -> Solder bridge to E19 (D1 Anode) and B19 (TB3 Pin 1 Drain)!',
-                'C20': 'Q1 Source -> Lead bend down Column 20 into Row A Power GND Bus (A20)',
+                'C20': 'Q1 Source -> Lead bend down Column 20 into Row A Power GND (A20)',
                 'O17': 'Echo Divider 3.3V Node -> Hookup jumper to J10 (GPIO 4)',
                 'O19': 'R3 Top Leg -> Bridged from Q19 (TB1 ECHO)',
                 'P17': 'R4 Bottom Leg -> Soldered directly into Row P Analog GND Bus',
                 'C14': 'R5 Left Leg -> Hookup jumper from D8 (GPIO 7)',
                 'C17': 'R5 Right Leg -> Solder bridge to C18 (Q1 Gate)',
-                'A18': 'Power GND Star Tie -> Receives Star Tie from J4, ties R6 bottom to Row A Bus'
+                'A18': 'Power GND Star Tie -> Receives Star Tie from J4, ties R6 bottom to Row A (bridged A18-A20 to Q1 Source)',
+                'A20': 'Power GND Source Pad -> Connects Q1 Source (C20 bent lead) to Row A (bridged to A18 Star GND)'
             };
 
             function getCoord(coordStr, isMirrored = false) {
@@ -845,7 +846,7 @@
 
                 // 1. POWER & GROUND BUSES
                 createBusConductor(targetLayer, 'P4', 'P21', '#4493f8', 6, isMirrored, 'Row P Analog GND Bus', ['P4','P11','P17','P21'], 'GND_ANALOG');
-                createBusConductor(targetLayer, 'A18', 'A24', '#1f6feb', 7, isMirrored, 'Row A Power GND Bus', ['A18','A19','A20','A21','A22','A23','A24'], 'GND_POWER');
+                createBusConductor(targetLayer, 'A18', 'A20', '#1f6feb', 7, isMirrored, 'Row A Power GND Bus (A18-A20)', ['A18','A19','A20'], 'GND_POWER');
                 createBusConductor(targetLayer, 'N3', 'N15', '#f85149', 6, isMirrored, 'Row N +5V Bus', ['N3','N4','N5','N6','N15'], 'VBUS_5V');
 
                 // 2. SOLDER BRIDGES
@@ -1010,6 +1011,16 @@
                 const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
                 g.setAttribute('class', `conn-element conn-${netKey}`);
 
+                const border = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                border.setAttribute('x1', pt1.x);
+                border.setAttribute('y1', pt1.y);
+                border.setAttribute('x2', pt2.x);
+                border.setAttribute('y2', pt2.y);
+                border.setAttribute('stroke', '#0d1117');
+                border.setAttribute('stroke-width', strokeW + 2);
+                border.setAttribute('stroke-linecap', 'round');
+                g.appendChild(border);
+
                 const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
                 line.setAttribute('x1', pt1.x);
                 line.setAttribute('y1', pt1.y);
@@ -1018,17 +1029,18 @@
                 line.setAttribute('stroke', color);
                 line.setAttribute('stroke-width', strokeW);
                 line.setAttribute('stroke-linecap', 'round');
-                line.setAttribute('filter', 'url(#shadow)');
                 g.appendChild(line);
 
-                const fillet = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                fillet.setAttribute('cx', pt2.x);
-                fillet.setAttribute('cy', pt2.y);
-                fillet.setAttribute('r', '5.5');
-                fillet.setAttribute('fill', 'url(#solder-grad)');
-                fillet.setAttribute('stroke', color);
-                fillet.setAttribute('stroke-width', '1.5');
-                g.appendChild(fillet);
+                for (const pt of [pt1, pt2]) {
+                    const fillet = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    fillet.setAttribute('cx', pt.x);
+                    fillet.setAttribute('cy', pt.y);
+                    fillet.setAttribute('r', '5.5');
+                    fillet.setAttribute('fill', 'url(#solder-grad)');
+                    fillet.setAttribute('stroke', color);
+                    fillet.setAttribute('stroke-width', '1.5');
+                    g.appendChild(fillet);
+                }
 
                 layer.appendChild(g);
             }

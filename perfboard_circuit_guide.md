@@ -51,7 +51,7 @@ Every electrical connection in this build is explicitly realized using one of fo
     ROW D: [·] [·] [ G21 G20 G10 G9  G8  G7  G6  G5 ]  (ESP32-C3 SuperMini Header 2)        [·] [·] [·] [·]
     ROW C: [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [R5] [·] [·] [R5] [Q1G Q1D Q1S] [·] [·] [·]
     ROW B: [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [TB3-] [·] [TB3+] [·] [·] [·]
-    ROW A: [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [=== POWER GND BUS ===] [·] (BOTTOM EDGE)
+    ROW A: [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [ POWER GND (A18-A20) ] [·] [·] [·] [·] (BOTTOM EDGE)
 ```
 
 ---
@@ -110,7 +110,7 @@ Because **perfboard holes are isolated**, every net requires a deliberate physic
 | Net Name | Start Pad | End Pad | Physical Connection Method | How It Is Made |
 | :--- | :---: | :---: | :--- | :--- |
 | **Analog GND Bus** | **P4** | **P21** | **Bare Solid Bus Wire** | Lay 22 AWG bare tinned wire along Row P (Cols 4–21). Solder pads P4, P11, P17, P21. |
-| **Power GND Bus** | **A18** | **A24** | **Bare Solid Bus Wire** | Lay 22 AWG bare tinned wire along Row A (Cols 18–24). Solder pads A18, A20, A24. |
+| **Power GND Bus** | **A18** | **A20** | **Bare Wire / 3-Pad Bridge** | Solder bridge or bare wire along Row A (Cols 18–20). Connects Star GND (A18), R6 (A18), and Q1 Source (A20). Cols 21–24 are clear. |
 | **Star Ground Link** | **J4** (ESP32 GND) | **A18** (Power GND) | **24 AWG Insulated Wire** | Heavy insulated wire routed around left margin linking system ground to power ground bus. |
 | **Top +5V Bus** | **N3** | **N15** | **Bare Solid Bus Wire** | Lay 22 AWG bare tinned wire along Row N (Cols 3–15). Solder pads N3, N6, N15. |
 | **+5V Power Feed** | **J3** (ESP32 5V) | **E21** (TB3 + / D1 Cathode) | **24 AWG Insulated Wire** | Heavy insulated wire feeding USB 5V directly to pump terminal and flyback diode. |
@@ -160,7 +160,7 @@ This layout guarantees **complete galvanic isolation** between noisy motor surge
    • TB1 Ultrasonic 5V (Q15)             │
        │                                 │
        ▼                                 ▼
- [ Row P Analog GND Bus ]          [ Row A Power GND Bus ]
+ [ Row P Analog GND Bus ]          [ Row A Power GND (A18-A20) ]
    • ESP32 GND (J4)                  • Q1 MOSFET Source (C20)
    • Supply Filter C1 & R2 (L4/K4)   • R6 Pull-Down Resistor (A18)
    • Soil Sensor GND & C2                │
@@ -183,7 +183,7 @@ This layout guarantees **complete galvanic isolation** between noisy motor surge
    * Tack-solder corner pins, verify perpendicular alignment, then finish all 16 pins.
 2. **Ground & Power Bus Rails**:
    * Lay bare tinned wire along **Row P (Cols 4–21)** for Analog GND. Solder at P4, P11, P17, P21.
-   * Lay bare tinned wire along **Row A (Cols 18–24)** for Power GND. Solder at A18, A20, A24.
+   * Solder bridge or lay tinned wire along **Row A (Cols 18–20)** for Power GND. Solder at A18, A19, A20. (Cols 21–24 remain completely open).
    * Lay bare tinned wire along **Row N (Cols 3–15)** for +5V Bus. Solder at N3, N6, N15.
    * Solder the **Star Ground Link** (24 AWG insulated) from **J4** to **A18**.
    * Solder the **+5V Power Feed** (24 AWG insulated) from **J3** to **E21**.
