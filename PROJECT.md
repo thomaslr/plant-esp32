@@ -67,7 +67,7 @@ All terminal blocks are mounted with screw openings facing **100% OUTWARDS** off
 * **R6 (100 kΩ):** Gate pull-down (Col 12 Row D to GND) ensuring pump stays completely OFF during boot and reset.
 * **Q1 (FQP30N06L Logic-Level N-MOSFET, TO-220):** Low-side switch controlling 5V pump motor across 3 adjacent breadboard holes (Gate: Col 12, Drain: Col 13, Source: Col 14). Threshold $V_{GS(th)} = 1.0\text{–}2.5\text{V}$, $R_{DS(on)} = 0.045\,\Omega$ max at 5V ($< 0.05\,\Omega$ at 3.3V gate drive), $V_{DSS} = 60\text{V}$, $I_D = 32\text{A}$. Standard 0.1" (2.54mm) pin pitch drops straight into adjacent Cols 12, 13, 14 with zero lead bending (Pin 1 = Gate in Col 12, Pin 2 = Drain in Col 13, Pin 3 = Source in Col 14).
 * **D1 (1N5819 Schottky Diode):** Flyback protection diode across TB3 (Cathode to +5V Col 15, Anode to Drain Col 13).
-* **C3 (470 µF electrolytic):** Bulk power reservoir across +5V and GND to suppress motor startup dips.
+* **C3 (100 µF electrolytic):** Bulk power reservoir across +5V and GND to suppress motor startup dips (can also use 470 µF if available).
 
 ### 2.5 Permanent Soldered Perfboard Layout (18 Rows R $\to$ A Descending × 24 Columns 1–24)
 For a permanent soldered build in an enclosure, an **18-row by 24-column 0.1" (2.54 mm) pitch through-hole perfboard** layout is fully designed and documented:
@@ -83,15 +83,17 @@ For a permanent soldered build in an enclosure, an **18-row by 24-column 0.1" (2
   * **R1 (10kΩ):** Vertically spans N6 (+5V bus) to K6 (Divider Node).
   * **R2 (10kΩ) & C1 (100nF):** Run horizontally along Row K from K6/K5 to K4 (GND). Solder bridged at K4 $\to$ J4 (ESP32 GND) and K6 $\to$ J6 (GPIO 0 ADC). Completely avoids crossing over the uninsulated Row N +5V bus!
 * **Outward Pump Terminal (Bottom Edge / Row B):**
-  * **TB3 (2-Pin Pump):** Row B, Cols 19 (Drain -), 21 (+5V); wire entries face **DOWNWARDS** off Row A.
-* **Actuators & Direct Solder Bridges:**
+  * **TB3 (2-Pin Pump):** Row B, Cols 19 (Drain -), 21 (+5V); wire entries face **DOWNWARDS** off Row A. Dedicated holes, completely separated from flyback diode D1.
+* **Actuators & Direct Solder Bridges (Separated D1 & TB3):**
   * **Q1 (FQP30N06L TO-220 MOSFET):** Row C, Cols 18 (Gate), 19 (Drain), 20 (Source).
-  * **Direct 2-Pad Solder Bridge:** Q1 Drain (Col 19 Row C) $\to$ TB3 Pin 1 Drain (Col 19 Row B) & D1 Anode — **zero hookup wire required for high-current switch!**
-  * **D1 (1N5819 Schottky Diode):** Row B, Cols 19 (Anode) to 21 (Cathode).
-  * **C3 (470µF Bulk Capacitor):** Row D, Cols 21 (+) to 23 (-).
+  * **D1 (1N5819 Schottky Diode):** Row D, Cols 19 (Anode) to 21 (Cathode). Cathode silver stripe faces Col 21 (+5V). Mounted 2 rows away from TB3 to eliminate pin hole sharing.
+  * **Direct Underside Solder Bridges:** 
+    * 3-pad bridge along Col 19: **D19 (Anode) $\to$ C19 (Q1 Drain) $\to$ B19 (TB3 Pin 1 Drain)**.
+    * 2-pad bridge along Col 21: **D21 (D1 Cathode) $\to$ B21 (TB3 Pin 2 +5V)**. Zero hookup wire required for high-current switch!
+  * **C3 (100µF Bulk Capacitor):** Row L, Cols 3 (+) to 4 (-), directly joined between VCC (+5V at J3) and GND (J4) via vertical solder bridges L3 $\to$ K3 $\to$ J3 and L4 $\to$ K4 $\to$ J4.
 * **Noise Immunity Dual Star-Ground Buses:**
   * **Analog / Sensor GND (Row P):** Bare bus wire along Row P (Cols 4–21) providing an ultra-quiet ground reference for ADC supply monitor (GPIO 0), capacitive soil sensor (GPIO 1), and ultrasonic echo divider.
-  * **Power / Motor GND (Row A):** Bare bus wire along Row A (Cols 18–24) sinking high-current pump inrush transients ($0.8\text{A}\text{--}1.2\text{A}$) from Q1 Source and C3 without inducing ground bounce in Row P.
+  * **Power / Motor GND (Row A):** Bare bus wire along Row A (Cols 18–24) sinking high-current pump inrush transients ($0.8\text{A}\text{--}1.2\text{A}$) from Q1 Source without inducing ground bounce in Row P.
   * **Star Ground Tie:** Heavy 24 AWG insulated jumper linking ESP32 GND (J4) directly to Row A (A18).
 * **Full Assembly Guide & Visualizer:**
   * Guide: [`perfboard_circuit_guide.md`](file:///Users/robertlongbottom/dev/plant-esp32/perfboard_circuit_guide.md)

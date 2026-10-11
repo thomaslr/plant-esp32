@@ -29,6 +29,8 @@ Every electrical connection in this build is explicitly realized using one of fo
 * **USB-C Port**: Extends off the **Left Edge** (Cols 1–2 clearance) for unobstructed cable insertion.
 * **Top Sensor Terminals**: **TB2 (Soil)** & **TB1 (Ultrasonic)** on **Row Q**, with wire entries facing **UPWARDS** (North off top edge).
 * **Bottom Pump Terminal**: **TB3 (DC Pump)** on **Row B**, with wire entries facing **DOWNWARDS** (South off bottom edge).
+* **Flyback Diode Separation**: **D1 (1N5819)** is mounted in **Row D (Cols 19 & 21)**, completely separated from **TB3** in **Row B (Cols 19 & 21)**—no hole sharing!
+* **100µF Bulk Capacitor**: **C3 (100µF)** is joined directly between **VCC and GND** in **Row L (Cols 3 & 4)** right at the ESP32 power pins.
 
 ```
        COL:  1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18  19  20  21  22  23  24
@@ -38,7 +40,7 @@ Every electrical connection in this build is explicitly realized using one of fo
     ROW O: [·] [·] [·] [·] [·] [·] [C2] [·] [·] [·] [C2] [·] [·] [·] [·] [·] [R4] [·] [R3] [·] [·] [·] [·] [·]
     ROW N: [·] [·] [==== +5V SENSOR BUS ===] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·]
     ROW M: [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] (CLEAR)
-    ROW L: [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] (CLEAR)
+    ROW L: [·] [·] [C3+][C3-][·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] (100µF VCC-GND)
     ROW K: [·] [·] [·] [GND][C1][Node][·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·]
     ROW J: [·] [·] [ 5V GND 3V3  G0  G1  G2  G3  G4 ]  (ESP32-C3 SuperMini Header 1)        [·] [·] [·] [·]
     ROW I: [·] [·] |                                |                                      [·] [·] [·] [·]
@@ -46,15 +48,11 @@ Every electrical connection in this build is explicitly realized using one of fo
     ROW G: [·] [·] |      (CLEAR UNDERNEATH)        |                                      [·] [·] [·] [·]
     ROW F: [·] [·] |                                |                                      [·] [·] [·] [·]
     ROW E: [·] [·] |                                |                                      [·] [·] [·] [·]
-    ROW D: [·] [·] [ G21 G20 G10 G9  G8  G7  G6  G5 ]  (ESP32-C3 SuperMini Header 2)  [C3+] [·] [C3-] [·]
+    ROW D: [·] [·] [ G21 G20 G10 G9  G8  G7  G6  G5 ]  (ESP32-C3 SuperMini Header 2)  [D1A] [·] [D1K] [·]
     ROW C: [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [R5] [·] [·] [R5] [Q1G Q1D Q1S] [·] [·] [·]
     ROW B: [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [TB3-] [·] [TB3+] [·] [·] [·]
     ROW A: [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [=== POWER GND BUS ===] [·] (BOTTOM EDGE)
 ```
-
-> [!TIP]
-> **Capacitor C3 Selection ($470\,\mu\text{F}$ vs. $100\,\mu\text{F}$)**:
-> While a $470\,\mu\text{F}$ capacitor provides maximum headroom for large submersible motors, a standard **$100\,\mu\text{F}$ (16V–25V) electrolytic capacitor** is completely adequate for standard 5V USB fountain pumps ($< 2.5\,\text{W}$). It must remain physically placed in **Row D (Cols 21 & 23)** right next to TB3 and Q1 so motor start surges are arrested locally before reaching the ESP32.
 
 ---
 
@@ -65,12 +63,12 @@ Every electrical connection in this build is explicitly realized using one of fo
 | **U1** | **ESP32-C3 SuperMini** | RISC-V 160MHz, Wi-Fi | 2× 1×8 Female Sockets | Top Header: **Row J, Cols 3–10**<br>Bottom Header: **Row D, Cols 3–10** |
 | **TB1** | **Screw Terminal (4-Pin)** | 5.08 mm Pitch (Ultrasonic) | 4P Through-Hole | **Row Q, Cols 15 (5V), 17 (TRIG), 19 (ECHO), 21 (GND)** |
 | **TB2** | **Screw Terminal (3-Pin)** | 5.08 mm Pitch (Soil Sensor) | 3P Through-Hole | **Row Q, Cols 7 (Data), 9 (VCC), 11 (GND)** |
-| **TB3** | **Screw Terminal (2-Pin)** | 5.08 mm Pitch (DC Pump) | 2P Through-Hole | **Row B, Cols 19 (Drain -), 21 (+5V)** |
+| **TB3** | **Screw Terminal (2-Pin)** | 5.08 mm Pitch (DC Pump) | 2P Through-Hole | **Row B, Cols 19 (Drain -), 21 (+5V)** (Dedicated pads!) |
 | **Q1** | **N-MOSFET (Logic-Level)** | **FQP30N06L** (60V, 32A) | TO-220 (Vertical) | **Row C, Cols 18 (G), 19 (D), 20 (S)** |
-| **D1** | **Schottky Diode** | **1N5819** (40V, 1A) | DO-41 Axial | **Row B, Col 19 (Anode) $\to$ Col 21 (Cathode)** |
+| **D1** | **Schottky Diode** | **1N5819** (40V, 1A) | DO-41 Axial | **Row D, Col 19 (Anode) $\to$ Col 21 (Cathode)** (Separated from TB3!) |
+| **C3** | **Electrolytic Capacitor** | **$100\,\mu\text{F}$** (16V/25V) | Radial Can (2.5mm pitch) | **Row L, Col 3 (+) $\to$ Col 4 (-)** (Joined between VCC & GND!) |
 | **C1** | **Ceramic Capacitor** | $100\,\text{nF}$ (50V, "104") | Radial Disc (0.1" pitch) | **Row K, Col 5 (Node) $\to$ Col 4 (GND)** |
 | **C2** | **Ceramic Capacitor** | $100\,\text{nF}$ (50V, "104") | Radial Disc (0.2" pitch) | **Row O, Col 7 (Data) $\to$ Col 11 (GND)** |
-| **C3** | **Electrolytic Capacitor** | $470\,\mu\text{F}$ or $100\,\mu\text{F}$ (16V/25V) | Radial Can (5mm pitch) | **Row D, Col 21 (+) $\to$ Col 23 (-)** |
 | **R1** | **Metal Film Resistor** | $10\,\text{k}\Omega$ ($0.25\,\text{W}, 1\%$) | Axial | **Col 6, Row N (+5V) $\to$ Row K (Node)** |
 | **R2** | **Metal Film Resistor** | $10\,\text{k}\Omega$ ($0.25\,\text{W}, 1\%$) | Axial | **Row K, Col 6 (Node) $\to$ Col 4 (GND)** |
 | **R3** | **Metal Film Resistor** | $1\,\text{k}\Omega$ ($0.25\,\text{W}, 1\%$) | Axial | **Row O, Col 19 (Echo) $\to$ Col 17 (Node)** |
@@ -86,12 +84,12 @@ Every electrical connection in this build is explicitly realized using one of fo
 | :--- | :--- | :---: | :--- |
 | **ESP32 Socket 1** | Pin 1 (5V In)<br>Pin 2 (GND)<br>Pin 3 (3V3 Out)<br>Pin 4 (GPIO 0 / Supply ADC)<br>Pin 5 (GPIO 1 / Soil ADC)<br>Pin 6 (GPIO 2 / Soil VCC)<br>Pin 7 (GPIO 3 / TRIG)<br>Pin 8 (GPIO 4 / ECHO) | **J3**<br>**J4**<br>**J5**<br>**J6**<br>**J7**<br>**J8**<br>**J9**<br>**J10** | 1×8 Female Header in Row J.<br>USB-C points **LEFT** into Cols 1–2.<br>Header spacing is standard 0.600" DIP pitch to Row D. |
 | **ESP32 Socket 2** | Pin 16 (GPIO 21)<br>Pin 15 (GPIO 20)<br>Pin 14 (GPIO 10)<br>Pin 13 (GPIO 9)<br>Pin 12 (GPIO 8 / Blue LED)<br>Pin 11 (GPIO 7 / Pump Gate)<br>Pin 10 (GPIO 6)<br>Pin 9 (GPIO 5) | **D3**<br>**D4**<br>**D5**<br>**D6**<br>**D7**<br>**D8**<br>**D9**<br>**D10** | 1×8 Female Header in Row D.<br>Rows I, H, G, F, E underneath remain clear for underside routing. |
+| **C3 (100µF Bulk Cap)** | Positive (+)<br>Negative (- stripe) | **L3**<br>**L4** | Radial electrolytic capacitor ($100\,\mu\text{F}$, 16V/25V).<br>**Joined directly between VCC & GND** across ESP32 pins J3 and J4. |
 | **TB2 (Soil)** | Pin 1 (AOUT / Data)<br>Pin 2 (Switched VCC)<br>Pin 3 (GND) | **Q7**<br>**Q9**<br>**Q11** | 3-Pin 5.08 mm terminal block.<br>Wire entry slots face **UPWARDS** (North off Row R).<br>**Zero wire crossovers**: Pin 1 aligns with Col 7 (GPIO 1), Pin 2 aligns with Col 8/9 (GPIO 2). |
 | **TB1 (Ultrasonic)** | Pin 1 (+5V Power)<br>Pin 2 (TRIG Pulse)<br>Pin 3 (ECHO Return)<br>Pin 4 (GND) | **Q15**<br>**Q17**<br>**Q19**<br>**Q21** | 4-Pin 5.08 mm terminal block.<br>Wire entry slots face **UPWARDS** (North off Row R).<br>Cols 12–14 leave 7.62 mm spacing between TB2 and TB1. |
-| **TB3 (Pump)** | Pin 1 (Drain / Pump -)<br>Pin 2 (+5V / Pump +) | **B19**<br>**B21** | 2-Pin 5.08 mm terminal block.<br>Wire entry slots face **DOWNWARDS** (South off Row A). |
+| **TB3 (Pump)** | Pin 1 (Drain / Pump -)<br>Pin 2 (+5V / Pump +) | **B19**<br>**B21** | 2-Pin 5.08 mm terminal block.<br>Wire entry slots face **DOWNWARDS** (South off Row A).<br>**Dedicated holes**: Not shared with the flyback diode! |
+| **D1 (1N5819)** | Anode (+)<br>Cathode (- stripe) | **D19**<br>**D21** | Axial flyback diode mounted in **Row D**.<br>Silver cathode stripe faces **RIGHT** (Col 21 / +5V).<br>**Completely separated from TB3** (2 rows away). |
 | **Q1 (FQP30N06L)** | Pin 1 (Gate)<br>Pin 2 (Drain)<br>Pin 3 (Source) | **C18**<br>**C19**<br>**C20** | TO-220 package across 3 adjacent holes.<br>Metal heatsink tab faces **NORTH** (inward toward Row D).<br>Plastic labeled front faces **SOUTH** (toward Row B). |
-| **D1 (1N5819)** | Anode (+)<br>Cathode (- stripe) | **B19**<br>**B21** | Axial flyback diode spanning Cols 19 to 21 directly across TB3.<br>Silver cathode stripe faces **RIGHT** (Col 21 / +5V). |
-| **C3 (470µF / 100µF)** | Positive (+)<br>Negative (- stripe) | **D21**<br>**D23** | Radial electrolytic capacitor.<br>Positive lead in Col 21 (+5V pump rail).<br>Negative lead in Col 23 (tied to Row A Power GND). |
 | **R1 (10kΩ)** | Top (+5V)<br>Bottom (Divider Node) | **N6**<br>**K6** | 5V supply divider top leg. Spans vertically from Row N (+5V Bus) to Row K (Node). |
 | **R2 (10kΩ)** | Right (Divider Node)<br>Left (GND) | **K6**<br>**K4** | 5V supply divider bottom leg. Spans horizontally along Row K from Col 6 (Node) to Col 4 (GND). |
 | **C1 (100nF)** | Right (Divider Node)<br>Left (GND) | **K5**<br>**K4** | ADC ripple filter. Spans horizontally along Row K from Col 5 to Col 4. Solder bridged: K5 $\to$ K6 (Node) and K4 $\to$ J4 (GND). **Zero bus crossing!** |
@@ -112,19 +110,20 @@ Because **perfboard holes are isolated**, every net requires a deliberate physic
 | Net Name | Start Pad | End Pad | Physical Connection Method | How It Is Made |
 | :--- | :---: | :---: | :--- | :--- |
 | **Analog GND Bus** | **P4** | **P21** | **Bare Solid Bus Wire** | Lay 22 AWG bare tinned wire along Row P (Cols 4–21). Solder pads P4, P11, P17, P21. |
-| **Power GND Bus** | **A18** | **A24** | **Bare Solid Bus Wire** | Lay 22 AWG bare tinned wire along Row A (Cols 18–24). Solder pads A18, A20, A23, A24. |
+| **Power GND Bus** | **A18** | **A24** | **Bare Solid Bus Wire** | Lay 22 AWG bare tinned wire along Row A (Cols 18–24). Solder pads A18, A20, A24. |
 | **Star Ground Link** | **J4** (ESP32 GND) | **A18** (Power GND) | **24 AWG Insulated Wire** | Heavy insulated wire routed around left margin linking system ground to power ground bus. |
 | **Top +5V Bus** | **N3** | **N15** | **Bare Solid Bus Wire** | Lay 22 AWG bare tinned wire along Row N (Cols 3–15). Solder pads N3, N6, N15. |
-| **+5V Power Feed** | **J3** (ESP32 5V) | **D21** (C3 +) | **24 AWG Insulated Wire** | Heavy insulated wire feeding USB 5V directly to reservoir capacitor C3 and TB3 Pin 2. |
+| **+5V Power Feed** | **J3** (ESP32 5V) | **D21** (TB3 + / D1 Cathode) | **24 AWG Insulated Wire** | Heavy insulated wire feeding USB 5V directly to pump terminal and flyback diode. |
+| **C3 (+) 5V Bridge** | **L3** (C3 +) | **J3** (ESP32 5V) | **Lead Bend / Solder Bridge**| Direct vertical solder bridge down Column 3 ties C3 (+) directly to ESP32 5V In (VCC). |
+| **C3 (-) GND Bridge**| **L4** (C3 -) | **J4** (ESP32 GND) | **Lead Bend / Solder Bridge**| Direct vertical solder bridge down Column 4 ties C3 (-) directly to ESP32 GND. |
 
-### B. High-Current Actuator Connections (Direct Solder Bridges)
+### B. High-Current Actuator Connections (Separated D1 & TB3 Bridges)
 
 | Connection | Pads Involved | Physical Method | Detailed Assembly Instruction |
 | :--- | :---: | :--- | :--- |
-| **Q1 Drain $\to$ TB3 Drain $\to$ Diode Anode** | **C19 $\to$ B19** | **2-Pad Solder Bridge** | Solder bridge directly connects Q1 Drain (C19) to TB3 Pin 1 / D1 Anode (B19). **Zero wire needed!** |
-| **C3 (+) $\to$ TB3 (+5V) $\to$ Diode Cathode** | **D21 $\to$ B21** | **Bridge / Lead Trace** | Run C3 (+) lead down Column 21 from Row D to Row B to tie into TB3 Pin 2 and D1 Cathode. |
+| **D1 Anode $\to$ Q1 Drain $\to$ TB3 Drain** | **D19 $\to$ C19 $\to$ B19** | **3-Pad Solder Bridge** | Straight vertical solder bridge along Column 19 links D1 Anode (D19), Q1 Drain (C19), and TB3 Pin 1 (B19). **Zero wire needed!** |
+| **D1 Cathode $\to$ TB3 (+5V)** | **D21 $\to$ B21** | **2-Pad Solder Bridge** | Straight vertical solder bridge along Column 21 connects D1 Cathode (D21) to TB3 Pin 2 (B21) and the +5V feed wire from J3. |
 | **Q1 Source $\to$ Power GND** | **C20 $\to$ A20** | **Lead Bend** | Bend Q1 Source lead down Column 20 from Row C to Row A; solder directly onto Row A GND bus. |
-| **C3 (-) $\to$ Power GND** | **D23 $\to$ A23** | **Lead Bend** | Bend C3 negative lead down Column 23 from Row D to Row A; solder directly onto Row A GND bus. |
 | **R5 Right $\to$ Q1 Gate** | **C17 $\to$ C18** | **2-Pad Solder Bridge** | Solder bridge connects output of R5 (C17) directly to Q1 Gate pin (C18). |
 | **Q1 Gate $\to$ R6 Top** | **C18** | **Shared Hole / Pad** | R6 top lead and Q1 Gate share pad C18 (or bridge C18 to D18). |
 
@@ -134,7 +133,7 @@ Because **perfboard holes are isolated**, every net requires a deliberate physic
 | :--- | :---: | :---: | :--- | :--- |
 | **5V Supply Sense** | **K6** (Divider Node) | **J6** (ESP32 GPIO 0) | **1-Pad Solder Bridge** | Direct solder bridge between Row K and Row J on Col 6 feeds 2.5V into ADC. |
 | **C1 Filter Bridge** | **K5** (C1 Node) | **K6** (Divider Node) | **1-Pad Solder Bridge** | Solder bridge on Row K links C1 filter cap directly in parallel with R2. |
-| **R2/C1 GND Bridge** | **K4** (R2/C1 GND) | **J4** (ESP32 GND) | **1-Pad Solder Bridge** | Direct solder bridge between Row K and Row J on Col 4 ties divider ground to ESP32 ground without crossing Row N. |
+| **R2/C1 GND Bridge** | **K4** (R2/C1 GND) | **J4** (ESP32 GND) | **1-Pad Solder Bridge** | Direct solder bridge between Row K and Row J on Col 4 ties divider ground to ESP32 ground. |
 | **Soil Analog Sense** | **Q7** (TB2 Pin 1 Data) | **J7** (ESP32 GPIO 1) | **Straight Insulated Wire** | Runs straight down Column 7 with **zero wire crossovers** into ADC1_CH1. |
 | **Soil Switched VCC** | **Q9** (TB2 Pin 2 VCC) | **J8** (ESP32 GPIO 2) | **Parallel Insulated Wire** | Runs parallel down Column 9/8 with **zero wire crossovers** from GPIO 2. |
 | **Soil GND & RF Filter**| **Q11 $\to$ P11 $\to$ O11** | — | **Solder Bridge** | Links TB2 GND to Row P GND and C2 bypass capacitor. |
@@ -155,15 +154,16 @@ This layout guarantees **complete galvanic isolation** between noisy motor surge
        ├─────────────────────────────────┐
        ▼                                 ▼
  [ Row N +5V Bus (Clean) ]         [ High-Current Feed (Pump) ]
-   • ESP32 SuperMini (J3)            • C3 Bulk Capacitor (470µF / 100µF)
-   • 10k/10k Supply Divider (R1)     • TB3 Pin 2 (Pump +5V)
-   • TB1 Ultrasonic 5V (Q15)         • D1 Flyback Diode (Cathode)
+   • ESP32 SuperMini (J3)            • D1 Cathode (D21)
+   • 100µF Bulk Reservoir (L3/L4)    • TB3 Pin 2 (Pump +5V, B21)
+   • 10k/10k Supply Divider (R1)         │
+   • TB1 Ultrasonic 5V (Q15)             │
        │                                 │
        ▼                                 ▼
  [ Row P Analog GND Bus ]          [ Row A Power GND Bus ]
    • ESP32 GND (J4)                  • Q1 MOSFET Source (C20)
-   • Supply Filter C1 & R2 (via K4)  • C3 Negative Lead (D23)
-   • Soil Sensor GND & C2            • R6 Pull-Down Resistor (A18)
+   • Supply Filter C1 & R2 (via K4)  • R6 Pull-Down Resistor (A18)
+   • Soil Sensor GND & C2                │
    • Echo Divider R4 (P17)               │
    • Ultrasonic GND (Q21)                │
        ▲                                 │
@@ -171,8 +171,8 @@ This layout guarantees **complete galvanic isolation** between noisy motor surge
        └──────── [ Star Ground Tie ] ────┘
 ```
 
-1. **Pump Inrush Separation**: The motor startup spike is handled exclusively by **Row A Power GND** and the bulk reservoir cap (C3). This current never flows through the Row P sensor ground bus.
-2. **ADC Stability**: ADC1 channels (`GPIO 0` on pin J6 and `GPIO 1` on pin J7) reference clean ground without ground bounce, ensuring stable, jitter-free sensor readings.
+1. **Local Microcontroller Decoupling**: The $100\,\mu\text{F}$ capacitor is joined directly across **J3 (5V/VCC)** and **J4 (GND)**, providing low-impedance energy reservoir right at the ESP32 module.
+2. **Dedicated Actuator Pads**: Flyback diode D1 in Row D absorbs inductive turn-off energy right across Column 19 (Drain) and Column 21 (+5V), with zero mechanical strain or crammed terminal pins.
 
 ---
 
@@ -183,34 +183,35 @@ This layout guarantees **complete galvanic isolation** between noisy motor surge
    * Tack-solder corner pins, verify perpendicular alignment, then finish all 16 pins.
 2. **Ground & Power Bus Rails**:
    * Lay bare tinned wire along **Row P (Cols 4–21)** for Analog GND. Solder at P4, P11, P17, P21.
-   * Lay bare tinned wire along **Row A (Cols 18–24)** for Power GND. Solder at A18, A20, A23, A24.
+   * Lay bare tinned wire along **Row A (Cols 18–24)** for Power GND. Solder at A18, A20, A24.
    * Lay bare tinned wire along **Row N (Cols 3–15)** for +5V Bus. Solder at N3, N6, N15.
    * Solder the **Star Ground Link** (24 AWG insulated) from **J4** to **A18**.
    * Solder the **+5V Power Feed** (24 AWG insulated) from **J3** to **D21**.
-3. **Passive Resistors & Capacitors (Zero-Crossover Layout along Row K)**:
+3. **Passive Resistors & Capacitors (Row K and Row L)**:
+   * Insert **C3 ($100\,\mu\text{F}$)** into **Row L (Cols 3 $\to$ 4)** with positive lead in L3 and negative stripe in L4.
+   * On solder side, bridge **L3 $\to$ K3 $\to$ J3** (to 5V) and **L4 $\to$ K4 $\to$ J4** (to GND).
    * Insert **R1 (10kΩ)** vertically into **N6 $\to$ K6**.
    * Insert **R2 (10kΩ)** horizontally along Row K into **K6 $\to$ K4**.
    * Insert **C1 (100nF)** horizontally along Row K into **K5 $\to$ K4**.
    * On underside (solder side):
      * Create solder bridge across **K5 $\to$ K6 $\to$ J6** (connecting divider node and C1 directly to ESP32 GPIO 0).
-     * Create solder bridge across **K4 $\to$ J4** (connecting R2 and C1 ground directly to ESP32 GND).
+     * Solder bridge **K4 $\to$ J4** ties R2 and C1 ground to ESP32 GND.
    * Insert **R3 (1kΩ)** into O19 $\to$ O17; insert **R4 (2kΩ)** into O17 $\to$ P17. Solder and tie P17 to Row P GND.
    * Insert **C2 (100nF)** into O7 $\to$ O11.
    * Insert **R5 (1kΩ)** into C14 $\to$ C17; insert **R6 (100kΩ)** into C18 $\to$ A18.
-4. **Screw Terminal Blocks**:
+4. **Screw Terminal Blocks & Separated Flyback Diode**:
    * Insert **TB2 (Soil)** into **Row Q (Cols 7, 9, 11)** facing UPWARDS.
    * Insert **TB1 (Ultrasonic)** into **Row Q (Cols 15, 17, 19, 21)** facing UPWARDS.
    * Insert **TB3 (Pump)** into **Row B (Cols 19, 21)** facing DOWNWARDS.
-   * Solder all terminal block pins securely.
-5. **Actuator Switching (MOSFET, Diode, Reservoir Cap)**:
+   * Insert **D1 (1N5819)** into **Row D (Cols 19 $\to$ 21)** with silver cathode stripe facing Col 21. **(Completely separate from TB3!)**
+   * Solder all terminal block and diode pins securely.
+5. **Actuator Switching (MOSFET & Underside Solder Bridges)**:
    * Insert **Q1 (FQP30N06L)** into **Row C (Cols 18, 19, 20)** with metal tab facing North.
-   * Insert **D1 (1N5819)** into **Row B (Cols 19 $\to$ 21)**. Cathode stripe faces Col 21.
-   * Insert **C3 ($470\,\mu\text{F}$ or $100\,\mu\text{F}$)** into **Row D (Cols 21 $\to$ 23)**. Negative stripe faces Col 23.
    * On solder side:
-     * Solder bridge **C19 $\to$ B19** (Q1 Drain to TB3 Pin 1 / D1 Anode).
-     * Connect C3 (+) at D21 to TB3 (+) at B21.
+     * Create 3-pad solder bridge along Col 19: **D19 $\to$ C19 $\to$ B19** (D1 Anode to Q1 Drain to TB3 Pin 1).
+     * Create 2-pad solder bridge along Col 21: **D21 $\to$ B21** (D1 Cathode to TB3 Pin 2 +5V).
      * Solder bridge **C17 $\to$ C18** (R5 to Gate).
-     * Bend Q1 Source (C20) down to A20; bend C3 (-) (D23) down to A23.
+     * Bend Q1 Source (C20) down to A20 on Row A Power GND bus.
 6. **Insulated Signal Jumpers**:
    * Jumper from **D8 (GPIO 7)** to **C14 (R5 Left)**.
    * Straight jumper from **Q7 (TB2 Pin 1 Data)** to **J7 (GPIO 1 ADC)**.
@@ -226,7 +227,7 @@ This layout guarantees **complete galvanic isolation** between noisy motor surge
 
 | Test ID | Multimeter Probes | Expected Value | What It Verifies |
 | :---: | :--- | :---: | :--- |
-| **T1** | Socket J3 (5V) to Socket J4 (GND) | **$> 10\,\text{k}\Omega$** (Rising) | **No power short!** C3 charging curve confirms clean 5V rail. |
+| **T1** | Socket J3 (5V) to Socket J4 (GND) | **$> 10\,\text{k}\Omega$** (Rising) | **No power short!** C3 ($100\,\mu\text{F}$) charging curve confirms clean 5V rail. |
 | **T2** | Socket J4 (GND) to Socket J5 (3V3) | **Open circuit ($\infty$)** | No 3.3V rail shorts. |
 | **T3** | Socket J4 (GND) to TB1 Pin 4, TB2 Pin 3 | **$< 0.5\,\Omega$** | Sensor ground continuity through Row P bus. |
 | **T4** | Socket J4 (GND) to Q1 Source (C20) | **$< 0.5\,\Omega$** | Power ground continuity through Star Link. |
@@ -236,4 +237,4 @@ This layout guarantees **complete galvanic isolation** between noisy motor surge
 | **T8** | Socket D8 (GPIO 7) to Socket J4 (GND) | **$\approx 101\,\text{k}\Omega$** | Series R5 ($1\,\text{k}\Omega$) + R6 ($100\,\text{k}\Omega$) pull-down path. |
 | **T9** | TB1 Pin 3 (Echo) to Socket J10 (GPIO 4)| **$\approx 1.0\,\text{k}\Omega$** | Upper Echo resistor R3. |
 | **T10** | Socket J10 (GPIO 4) to Socket J4 (GND)| **$\approx 2.0\,\text{k}\Omega$** | Lower Echo resistor R4 to ground. |
-| **T11** | TB3 Pin 1 (Drain) to TB3 Pin 2 (+5V) | **Diode Drop ($\sim 0.35\text{V}$)** | Diode D1 polarity check (red probe on TB3 Pin 1, black on Pin 2). |
+| **T11** | Pad D19 (Anode) to Pad D21 (Cathode) | **Diode Drop ($\sim 0.35\text{V}$)** | Diode D1 polarity check (red probe on D19, black on D21). |
