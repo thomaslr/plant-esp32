@@ -90,13 +90,15 @@ For a permanent soldered build in an enclosure, an **18-row by 24-column 0.1" (2
   * **D1 (1N5819 Schottky Diode):** Row E, Cols 13 (Anode) to 15 (Cathode). Cathode silver stripe faces Col 15 (+5V). Right side positioned at E15.
   * **Direct Underside Solder Bridges:** 
     * 4-pad bridge along Col 13: **E13 (Anode) $\to$ D13 $\to$ C13 (Q1 Drain) $\to$ B13 (TB3 Pin 1 Drain)**.
-    * 4-pad bridge / lead bend along Col 15: **E15 (D1 Cathode) $\to$ D15 $\to$ C15 $\to$ B15 (TB3 Pin 2 +5V)**, fed directly from Row N +5V bus via straight insulated wire from **N15 to E15**. Zero cross-board power wiring required!
+    * 4-pad bridge along Col 14: **D14 $\to$ C14 (Q1 Source) $\to$ B14 $\to$ A14 (Row A GND)**, fed directly from Row P GND bus via straight insulated wire from **P14 to D14**.
+    * 4-pad bridge / lead bend along Col 15: **E15 (D1 Cathode) $\to$ D15 $\to$ C15 $\to$ B15 (TB3 Pin 2 +5V)**, fed directly from Row N +5V bus via straight insulated wire from **N15 to E15**.
+    * Creates three symmetrical, parallel vertical tracks along Columns 13, 14, and 15 with zero diagonal cross-board wiring!
   * **Gate Drive:** R5 (1kΩ damping) across C8 $\to$ C11, bridged C11 $\to$ C12 to Gate; R6 (100kΩ pull-down) from C12 down to A12.
   * **C3 (100µF Bulk Capacitor):** Row L, Cols 3 (+) to 4 (-), directly joined between VCC (+5V at J3) and GND (J4) via vertical solder bridges L3 $\to$ K3 $\to$ J3 and L4 $\to$ K4 $\to$ J4.
-* **Noise Immunity Dual Star-Ground Buses:**
+* **Ground Distribution Architecture:**
   * **Analog / Sensor GND (Row P):** Bare bus wire along Row P (Cols 4–21) providing an ultra-quiet ground reference for ADC supply monitor (GPIO 0), capacitive soil sensor (GPIO 1), and ultrasonic echo divider.
-  * **Power / Motor GND (Row A):** Solder bridge or bus wire along Row A (Cols 12–14) sinking high-current pump inrush transients ($0.8\text{A}\text{--}1.2\text{A}$) from Q1 Source (C14) and Star Ground (A12) without inducing ground bounce in Row P. Cols 15–24 are completely clear.
-  * **Star Ground Tie:** Heavy 24 AWG insulated jumper linking ESP32 GND (J4) directly to Row A (A12).
+  * **Power / Motor GND (Row A):** Solder bridge or bus wire along Row A (Cols 12–14) sinking high-current pump transients from Q1 Source (C14) and R6 pull-down (A12) via the Col 14 ground bridge.
+  * **Ground Feed:** Straight vertical 24 AWG insulated wire from Row P at **P14 down to D14**, joining into the 4-pad solder bridge down to A14. Eliminates diagonal cross-board star wiring!
 * **Full Assembly Guide & Visualizer:**
   * Guide: [`perfboard_circuit_guide.md`](file:///Users/robertlongbottom/dev/plant-esp32/perfboard_circuit_guide.md)
   * Interactive SVG Visualizer: [`perfboard_diagram.html`](file:///Users/robertlongbottom/dev/plant-esp32/perfboard_diagram.html) (Top, Bottom Mirrored, and X-Ray composite views with connection overlay toggles and fluid wide-screen zoom).

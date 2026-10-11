@@ -518,7 +518,7 @@
             <!-- Tabs: Wiring Schedule & BOM -->
             <div class="panel-card">
                 <div class="tab-headers">
-                    <button class="tab-btn active" data-tab="tab-wiring">Wiring Schedule (17 Conns)</button>
+                    <button class="tab-btn active" data-tab="tab-wiring">Wiring Schedule (20 Conns)</button>
                     <button class="tab-btn" data-tab="tab-bom">BOM (11 Parts)</button>
                     <button class="tab-btn" data-tab="tab-tests">Cold Tests</button>
                 </div>
@@ -536,7 +536,7 @@
                             <tr><td><b>Row P GND</b></td><td>P4 → P21</td><td><span class="method-badge method-bus">Bare Bus Wire</span></td></tr>
                             <tr><td><b>Power GND</b></td><td>A12 → A14</td><td><span class="method-badge method-bridge">Bridge / Bus</span></td></tr>
                             <tr><td><b>Row N 5V</b></td><td>N3 → N15</td><td><span class="method-badge method-bus">Bare Bus Wire</span></td></tr>
-                            <tr><td><b>Star GND</b></td><td>J4 → A12</td><td><span class="method-badge method-wire">24 AWG Wire</span></td></tr>
+                            <tr><td><b>GND Feed</b></td><td>P14 → D14</td><td><span class="method-badge method-wire">24 AWG Wire</span></td></tr>
                             <tr><td><b>5V Feed</b></td><td>N15 → E15</td><td><span class="method-badge method-wire">24 AWG Wire</span></td></tr>
                             <tr><td><b>5V Bus Tap</b></td><td>J3 → N3</td><td><span class="method-badge method-wire">Jumper Wire</span></td></tr>
                             <tr><td><b>Analog GND Tap</b></td><td>J4 → P4</td><td><span class="method-badge method-wire">Jumper Wire</span></td></tr>
@@ -545,9 +545,9 @@
                             <tr><td><b>Divider Node</b></td><td>K6 → J6</td><td><span class="method-badge method-bridge">Solder Bridge</span></td></tr>
                             <tr><td><b>Divider GND</b></td><td>K4 → J4</td><td><span class="method-badge method-bridge">Solder Bridge</span></td></tr>
                             <tr><td><b>Pump Drain</b></td><td>E13 → D13 → C13 → B13</td><td><span class="method-badge method-bridge">4-Pad Solder Bridge</span></td></tr>
+                            <tr><td><b>Pump GND</b></td><td>D14 → C14 → B14 → A14</td><td><span class="method-badge method-bridge">4-Pad Solder Bridge</span></td></tr>
                             <tr><td><b>Pump +5V</b></td><td>E15 → D15 → C15 → B15</td><td><span class="method-badge method-bridge">4-Pad Bridge / Lead Bend</span></td></tr>
                             <tr><td><b>Gate Node</b></td><td>C11 → C12</td><td><span class="method-badge method-bridge">2-Pad Solder Bridge</span></td></tr>
-                            <tr><td><b>Q1 Source GND</b></td><td>C14 → A14</td><td><span class="method-badge method-lead">Lead Bend</span></td></tr>
                             <tr><td><b>Echo Stepper In</b></td><td>Q19 → O19</td><td><span class="method-badge method-bridge">Solder Bridge</span></td></tr>
                             <tr><td><b>Echo 3.3V Out</b></td><td>O17 → J10</td><td><span class="method-badge method-wire">Hookup Wire</span></td></tr>
                             <tr><td><b>Soil AOUT</b></td><td>Q7 → J7</td><td><span class="method-badge method-wire">Straight Jumper</span></td></tr>
@@ -620,14 +620,14 @@
                 'GND_ANALOG': {
                     name: 'GND (Row P & J4 Sensor GND)',
                     color: '#4493f8',
-                    desc: 'Row P quiet ground bus and J4/K4/L4 ground reference.',
-                    pads: ['P4','P5','P6','P11','P17','P21','J4','K4','L4','Q11','Q21','O11']
+                    desc: 'Row P ground bus and J4/K4/L4 ground reference.',
+                    pads: ['P4','P5','P6','P11','P14','P17','P21','J4','K4','L4','Q11','Q21','O11']
                 },
                 'GND_POWER': {
                     name: 'GND (Row A Power Motor Bus)',
                     color: '#1f6feb',
-                    desc: 'Row A power ground bus (A12-A14) linking Star GND from J4, R6 pull-down, and Q1 MOSFET Source (C14).',
-                    pads: ['A12','A13','A14','C14','J4']
+                    desc: 'Row A power ground bus (A12-A14) tied to Row P GND bus via P14 -> D14 wire and D14-A14 solder bridge.',
+                    pads: ['A12','A13','A14','B14','C14','D14','P14']
                 },
                 'VBUS_5V': {
                     name: '+5V (Row N Sensor Supply Bus)',
@@ -695,19 +695,21 @@
 
             const CONNECTION_NOTES = {
                 'J3': 'ESP32 5V In -> (1) Jumper to N3 (+5V Bus), (2) Solder bridge to C3 (+) at L3',
-                'J4': 'ESP32 GND -> (1) Solder bridge up to K4/L4 (C3 (-) & R2/C1 GND), (2) Jumper to P4 (Analog GND Bus), (3) Star GND to A12',
+                'J4': 'ESP32 GND -> (1) Solder bridge up to K4/L4 (C3 (-) & R2/C1 GND), (2) Jumper to P4 (Row P GND Bus)',
                 'J6': 'ESP32 GPIO 0 -> Solder bridge directly up to K6 (R1/R2/C1 Divider Node)',
                 'J7': 'ESP32 GPIO 1 (Soil ADC) -> Straight jumper wire up to Q7 (TB2 Pin 1 Soil DATA)',
                 'J8': 'ESP32 GPIO 2 (Soil VCC) -> Parallel jumper wire up to Q9 (TB2 Pin 2 Soil VCC)',
                 'J9': 'ESP32 GPIO 3 -> Hookup jumper to Q17 (Ultrasonic TRIG)',
                 'J10': 'ESP32 GPIO 4 -> Hookup jumper from O17 (Echo 3.33V Node)',
                 'D8': 'ESP32 GPIO 7 -> Hookup jumper to C8 (R5 1k Gate resistor)',
+                'D14': 'Driver GND Pad -> (1) Receives wire from P14, (2) 4-pad solder bridge down Col 14 through C14 and B14 to A14 (Row A GND)',
                 'L3': 'C3 Bulk Cap (+) 100µF -> Solder bridge down Col 3 to J3 (ESP32 5V In / VCC)',
                 'L4': 'C3 Bulk Cap (-) 100µF & C1 GND -> Solder bridge down Col 4 to K4 (R2 GND) and J4 (ESP32 GND)',
                 'K4': 'R2 Ground Pad -> Solder bridge down to J4 (ESP32 GND) and up to L4 (C1 / C3 GND)',
                 'K6': 'Supply Divider Node -> Solder bridge down to J6 (GPIO 0), connects R1 bottom, R2 top, and C1 Node lead',
                 'N6': 'R1 Top Lead (+5V) -> Soldered directly into Row N +5V Bus',
                 'N15': 'Row N +5V Bus End -> (1) Solder bridge to Q15 (TB1 5V), (2) Insulated wire down Col 15 to E15 (Pump 5V / D1 Cathode)',
+                'P14': 'Row P GND Bus Tap -> Insulated wire down Col 14 to D14 (Driver GND feed)',
                 'Q7': 'TB2 Pin 1 (Soil DATA) -> Straight jumper down to J7 (ESP32 GPIO 1)',
                 'Q9': 'TB2 Pin 2 (Soil VCC) -> Parallel jumper down to J8 (ESP32 GPIO 2)',
                 'Q11': 'TB2 Pin 3 (Soil GND) -> Solder bridge to Row P Analog GND Bus (P11)',
@@ -721,14 +723,14 @@
                 'B15': 'TB3 Pin 2 (Pump +5V) -> Solder bridge up Col 15 to E15 (D1 Cathode) and +5V feed from N15',
                 'C12': 'Q1 Gate -> Solder bridge to C11 (R5 output) and top lead of R6 (100k pull-down)',
                 'C13': 'Q1 Drain -> Solder bridge to E13 (D1 Anode) and B13 (TB3 Pin 1 Drain)!',
-                'C14': 'Q1 Source -> Lead bend down Column 14 into Row A Power GND (A14)',
+                'C14': 'Q1 Source -> Part of Col 14 4-pad GND solder bridge (D14-C14-B14-A14), tying Source directly to GND',
                 'O17': 'Echo Divider 3.3V Node -> Hookup jumper to J10 (GPIO 4)',
                 'O19': 'R3 Top Leg -> Bridged from Q19 (TB1 ECHO)',
                 'P17': 'R4 Bottom Leg -> Soldered directly into Row P Analog GND Bus',
                 'C8': 'R5 Left Leg -> Hookup jumper from D8 (GPIO 7)',
                 'C11': 'R5 Right Leg -> Solder bridge to C12 (Q1 Gate)',
-                'A12': 'Power GND Star Tie -> Receives Star Tie from J4, ties R6 bottom to Row A (bridged A12-A14 to Q1 Source)',
-                'A14': 'Power GND Source Pad -> Connects Q1 Source (C14 bent lead) to Row A (bridged to A12 Star GND)'
+                'A12': 'Power GND Bus -> Ties R6 bottom lead to Row A GND (bridged A12-A14 to Col 14 GND bridge)',
+                'A14': 'Power GND Bus End -> Solder bridged up Col 14 through B14 and C14 (Q1 Source) to D14 (fed from P14)'
             };
 
             function getCoord(coordStr, isMirrored = false) {
@@ -845,7 +847,7 @@
                 targetLayer.innerHTML = '';
 
                 // 1. POWER & GROUND BUSES
-                createBusConductor(targetLayer, 'P4', 'P21', '#4493f8', 6, isMirrored, 'Row P Analog GND Bus', ['P4','P11','P17','P21'], 'GND_ANALOG');
+                createBusConductor(targetLayer, 'P4', 'P21', '#4493f8', 6, isMirrored, 'Row P Analog GND Bus', ['P4','P11','P14','P17','P21'], 'GND_ANALOG');
                 createBusConductor(targetLayer, 'A12', 'A14', '#1f6feb', 7, isMirrored, 'Row A Power GND Bus (A12-A14)', ['A12','A13','A14'], 'GND_POWER');
                 createBusConductor(targetLayer, 'N3', 'N15', '#f85149', 6, isMirrored, 'Row N +5V Bus', ['N3','N4','N5','N6','N15'], 'VBUS_5V');
 
@@ -858,6 +860,9 @@
 
                 // Pump Drain Bridge: E13 to D13 to C13 to B13 (D1 Anode -> Q1 Drain -> TB3 Pin 1)
                 createSolderBridgeBlob(targetLayer, ['E13', 'D13', 'C13', 'B13'], '#ec6547', isMirrored, 'Pump Drain Bridge (E13-D13-C13-B13)', 'PUMP_DRAIN');
+
+                // Pump GND Bridge: D14 to C14 to B14 to A14 (P14 Feed -> Q1 Source -> Row A GND Bus)
+                createSolderBridgeBlob(targetLayer, ['D14', 'C14', 'B14', 'A14'], '#1f6feb', isMirrored, 'Pump GND Bridge (D14-C14-B14-A14)', 'GND_POWER');
 
                 // Gate Resistor Bridge: C11 to C12
                 createSolderBridgeBlob(targetLayer, ['C11', 'C12'], '#f0883e', isMirrored, 'Gate Resistor Bridge (C11-C12)', 'GPIO7_GATE');
@@ -884,12 +889,11 @@
                 createSolderBridgeBlob(targetLayer, ['Q15', 'N15'], '#f85149', isMirrored, 'Ultrasonic 5V Bridge (Q15-N15)', 'VBUS_5V');
 
                 // 3. BENT COMPONENT LEADS
-                createBentLead(targetLayer, 'C14', 'A14', '#1f6feb', 3.5, isMirrored, 'Q1 Source Lead to Row A GND', 'GND_POWER');
                 createBentLead(targetLayer, 'C12', 'A12', '#e3b341', 3, isMirrored, 'R6 Pull-down to Row A GND', 'GPIO7_GATE');
 
                 // 4. INSULATED HOOKUP JUMPERS
-                // Star GND Tie: J4 to A12
-                createCurvedJumper(targetLayer, 'J4', 'A12', '#388bfd', 3.5, isMirrored, 'Star GND Tie (24 AWG)', -28, 'GND_POWER');
+                // GND Bus to Driver Feed: P14 to D14
+                createCurvedJumper(targetLayer, 'P14', 'D14', '#388bfd', 3.5, isMirrored, 'GND Bus to Driver Feed (P14-D14)', 0, 'GND_POWER');
 
                 // Analog GND Bus Tap: J4 to P4
                 createCurvedJumper(targetLayer, 'J4', 'P4', '#4493f8', 3, isMirrored, 'GND to Row P Bus', -16, 'GND_ANALOG');

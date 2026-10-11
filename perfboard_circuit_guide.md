@@ -31,6 +31,8 @@ Every electrical connection in this build is explicitly realized using one of fo
 * **Bottom Pump Terminal**: **TB3 (DC Pump)** on **Row B (Cols 13 & 15)**, with wire entries facing **DOWNWARDS** (South off bottom edge).
 * **Actuator Driver & Flyback Diode**: **D1 (1N5819)** is mounted in **Row E (Cols 13 & 15)** (right side at E15), directly above **Q1 (Row C, Cols 12–14)** and **TB3 (Row B, Cols 13 & 15)**, leaving Columns 16–24 completely clear!
 * **Straight +5V Column 15 Power Feed**: An insulated jumper runs straight down Column 15 from **N15** (+5V bus) to **E15** (D1 Cathode / TB3 +5V), eliminating diagonal cross-board power wiring!
+* **Straight GND Column 14 Feed & 4-Pad Solder Bridge**: An insulated jumper runs straight down Column 14 from **P14** (Row P GND bus) to **D14**. On the underside (solder side), a 4-pad vertical solder bridge along Column 14 connects **D14 $\to$ C14 (Q1 Source) $\to$ B14 $\to$ A14 (Row A GND)**, directly grounding Q1 Source and R6 pull-down (at A12) while eliminating diagonal cross-board star ground wiring!
+* **Three Symmetrical Vertical Actuator Tracks**: Columns 13, 14, and 15 form three parallel underside tracks: Col 13 (Drain / Diode Anode / Pump -), Col 14 (GND / Q1 Source / Row A), Col 15 (+5V / Diode Cathode / Pump +).
 * **100µF Bulk Capacitor & C1 Filter Ground**: **C3 (100µF)** is joined directly between **VCC and GND** in **Row L (Cols 3 & 4)** right at the ESP32 power pins. **C1 (100nF)** has its left leg in **L4** (grounded with C3) and right leg in **K6** (Node), avoiding crowding hole K4.
 
 ```
@@ -49,9 +51,9 @@ Every electrical connection in this build is explicitly realized using one of fo
     ROW G: [·] [·] |      (CLEAR UNDERNEATH)        |                                      [·] [·] [·] [·]
     ROW F: [·] [·] |                                |                                      [·] [·] [·] [·]
     ROW E: [·] [·] |                                | [·] [·] [D1A] [·] [D1K] [·] [·] [·] [·] [·] [·] [·] [·] [·] (FLYBACK DIODE)
-    ROW D: [·] [·] [ G21 G20 G10 G9  G8  G7  G6  G5 ]  (ESP32-C3 SuperMini Header 2)        [·] [·] [·] [·]
+    ROW D: [·] [·] [ G21 G20 G10 G9  G8  G7  G6  G5 ]  (ESP32-C3 SuperMini Header 2) [GND] [·] [·] [·] [·] [·] [·] [·]
     ROW C: [·] [·] [·] [·] [·] [·] [·] [R5] [·] [·] [R5] [Q1G Q1D Q1S] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·]
-    ROW B: [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [TB3-] [·] [TB3+] [·] [·] [·] [·] [·] [·] [·] [·] [·]
+    ROW B: [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [TB3-] [GND] [TB3+] [·] [·] [·] [·] [·] [·] [·] [·] [·]
     ROW A: [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [ POWER GND (A12-A14) ] [·] [·] [·] [·] [·] [·] [·] [·] (BOTTOM EDGE)
 ```
 
@@ -110,9 +112,9 @@ Because **perfboard holes are isolated**, every net requires a deliberate physic
 
 | Net Name | Start Pad | End Pad | Physical Connection Method | How It Is Made |
 | :--- | :---: | :---: | :--- | :--- |
-| **Analog GND Bus** | **P4** | **P21** | **Bare Solid Bus Wire** | Lay 22 AWG bare tinned wire along Row P (Cols 4–21). Solder pads P4, P11, P17, P21. |
-| **Power GND Bus** | **A12** | **A14** | **Bare Wire / 3-Pad Bridge** | Solder bridge or bare wire along Row A (Cols 12–14). Connects Star GND (A12), R6 (A12), and Q1 Source (A14). Cols 15–24 are clear. |
-| **Star Ground Link** | **J4** (ESP32 GND) | **A12** (Power GND) | **24 AWG Insulated Wire** | Heavy insulated wire routed around left margin linking system ground to power ground bus. |
+| **Analog GND Bus** | **P4** | **P21** | **Bare Solid Bus Wire** | Lay 22 AWG bare tinned wire along Row P (Cols 4–21). Solder pads P4, P11, P14, P17, P21. |
+| **Power GND Bus** | **A12** | **A14** | **Bare Wire / 3-Pad Bridge** | Solder bridge or bare wire along Row A (Cols 12–14). Connects R6 pull-down (A12) to Col 14 GND bridge (A14). Cols 15–24 are clear. |
+| **GND Power Feed** | **P14** (Row P GND) | **D14** (Driver GND) | **24 AWG Insulated Wire** | Straight vertical insulated jumper down Column 14 linking Row P GND bus to actuator ground at D14. |
 | **Top +5V Bus** | **N3** | **N15** | **Bare Solid Bus Wire** | Lay 22 AWG bare tinned wire along Row N (Cols 3–15). Solder pads N3, N6, N15. |
 | **+5V Power Feed** | **N15** (Row N 5V) | **E15** (TB3 + / D1 Cathode) | **24 AWG Insulated Wire** | Runs straight down Column 15 linking the +5V bus to the pump terminal and flyback diode. |
 | **C3 (+) 5V Bridge** | **L3** (C3 +) | **J3** (ESP32 5V) | **Lead Bend / Solder Bridge**| Direct vertical solder bridge down Column 3 ties C3 (+) directly to ESP32 5V In (VCC). |
@@ -124,7 +126,7 @@ Because **perfboard holes are isolated**, every net requires a deliberate physic
 | :--- | :---: | :--- | :--- |
 | **D1 Anode $\to$ Q1 Drain $\to$ TB3 Drain** | **E13 $\to$ D13 $\to$ C13 $\to$ B13** | **4-Pad Solder Bridge** | Straight vertical solder bridge along Column 13 links D1 Anode (E13), Q1 Drain (C13), and TB3 Pin 1 (B13) via pad D13. **Zero wire needed!** |
 | **D1 Cathode $\to$ TB3 (+5V)** | **E15 $\to$ D15 $\to$ C15 $\to$ B15** | **4-Pad Bridge / Lead Bend** | Straight vertical solder bridge or D1 lead bend along Column 15 connects D1 Cathode (E15) to TB3 Pin 2 (B15) and the +5V feed wire from N15. |
-| **Q1 Source $\to$ Power GND** | **C14 $\to$ A14** | **Lead Bend** | Bend Q1 Source lead down Column 14 from Row C to Row A; solder directly onto Row A GND bus. |
+| **Q1 Source & Power GND Bridge** | **D14 $\to$ C14 $\to$ B14 $\to$ A14** | **4-Pad Solder Bridge** | Straight vertical solder bridge along Column 14 connects D14 (fed from P14) to Q1 Source (C14), pad B14, and Row A GND bus (A14). Ties Q1 Source directly to GND! |
 | **R5 Right $\to$ Q1 Gate** | **C11 $\to$ C12** | **2-Pad Solder Bridge** | Solder bridge connects output of R5 (C11) directly to Q1 Gate pin (C12). |
 | **Q1 Gate $\to$ R6 Top** | **C12** | **Shared Hole / Pad** | R6 top lead and Q1 Gate share pad C12 (or bridge C12 to D12). |
 
@@ -154,25 +156,25 @@ This layout guarantees **complete galvanic isolation** between noisy motor surge
        ├─────────────────────────────────┐
        ▼                                 ▼
  [ Row N +5V Bus (Clean) ]         [ High-Current Feed (Pump) ]
-   • ESP32 SuperMini (J3)            • D1 Cathode (E21)
-   • 100µF Bulk Reservoir (L3/L4)    • TB3 Pin 2 (Pump +5V, B21)
+   • ESP32 SuperMini (J3)            • D1 Cathode (E15)
+   • 100µF Bulk Reservoir (L3/L4)    • TB3 Pin 2 (Pump +5V, B15)
    • 10k/10k Supply Divider (R1)         │
    • TB1 Ultrasonic 5V (Q15)             │
        │                                 │
        ▼                                 ▼
- [ Row P Analog GND Bus ]          [ Row A Power GND (A18-A20) ]
-   • ESP32 GND (J4)                  • Q1 MOSFET Source (C20)
-   • Supply Filter C1 & R2 (L4/K4)   • R6 Pull-Down Resistor (A18)
+ [ Row P Analog GND Bus ]          [ Row A Power GND (A12-A14) ]
+   • ESP32 GND (J4)                  • Q1 MOSFET Source (C14)
+   • Supply Filter C1 & R2 (L4/K4)   • R6 Pull-Down Resistor (A12)
    • Soil Sensor GND & C2                │
    • Echo Divider R4 (P17)               │
    • Ultrasonic GND (Q21)                │
        ▲                                 │
        │                                 │
-       └──────── [ Star Ground Tie ] ────┘
+       └──── [ Col 14 Feed: P14→D14→A14 ]┘
 ```
 
 1. **Local Microcontroller Decoupling**: The $100\,\mu\text{F}$ capacitor is joined directly across **J3 (5V/VCC)** and **J4 (GND)**, providing low-impedance energy reservoir right at the ESP32 module.
-2. **Dedicated Actuator Pads**: Flyback diode D1 in Row E absorbs inductive turn-off energy right across Column 19 (Drain) and Column 21 (+5V), with zero mechanical strain or crammed terminal pins.
+2. **Dedicated Actuator Pads**: Flyback diode D1 in Row E absorbs inductive turn-off energy right across Column 13 (Drain) and Column 15 (+5V), with zero mechanical strain or crammed terminal pins.
 
 ---
 
@@ -182,10 +184,10 @@ This layout guarantees **complete galvanic isolation** between noisy motor surge
    * Insert two 1×8 female headers into **Row J (Cols 3–10)** and **Row D (Cols 3–10)**.
    * Tack-solder corner pins, verify perpendicular alignment, then finish all 16 pins.
 2. **Ground & Power Bus Rails**:
-   * Lay bare tinned wire along **Row P (Cols 4–21)** for Analog GND. Solder at P4, P11, P17, P21.
+   * Lay bare tinned wire along **Row P (Cols 4–21)** for Analog GND. Solder at P4, P11, P14, P17, P21.
    * Solder bridge or lay tinned wire along **Row A (Cols 12–14)** for Power GND. Solder at A12, A13, A14. (Cols 15–24 remain completely open).
    * Lay bare tinned wire along **Row N (Cols 3–15)** for +5V Bus. Solder at N3, N6, N15.
-   * Solder the **Star Ground Link** (24 AWG insulated) from **J4** to **A12**.
+   * Solder the **GND Power Feed** (24 AWG insulated) from **P14** to **D14** (running straight down Column 14).
    * Solder the **+5V Power Feed** (24 AWG insulated) from **N15** to **E15** (running straight down Column 15).
 3. **Passive Resistors & Capacitors (Row K and Row L)**:
    * Insert **C3 ($100\,\mu\text{F}$)** into **Row L (Cols 3 $\to$ 4)** with positive lead in L3 and negative stripe in L4.
@@ -209,9 +211,9 @@ This layout guarantees **complete galvanic isolation** between noisy motor surge
    * Insert **Q1 (FQP30N06L)** into **Row C (Cols 12, 13, 14)** with metal tab facing North.
    * On solder side:
      * Create 4-pad solder bridge along Col 13: **E13 $\to$ D13 $\to$ C13 $\to$ B13** (D1 Anode to Q1 Drain to TB3 Pin 1 via D13).
+     * Create 4-pad solder bridge along Col 14: **D14 $\to$ C14 $\to$ B14 $\to$ A14** (GND Feed from P14 $\to$ Q1 Source $\to$ Row A GND).
      * Create 4-pad solder bridge / lead bend along Col 15: **E15 $\to$ D15 $\to$ C15 $\to$ B15** (D1 Cathode to TB3 Pin 2 +5V).
      * Solder bridge **C11 $\to$ C12** (R5 to Gate).
-     * Bend Q1 Source (C14) down to A14 on Row A Power GND bus.
 6. **Insulated Signal Jumpers**:
    * Jumper from **D8 (GPIO 7)** to **C8 (R5 Left)**.
    * Straight jumper from **Q7 (TB2 Pin 1 Data)** to **J7 (GPIO 1 ADC)**.
@@ -230,7 +232,7 @@ This layout guarantees **complete galvanic isolation** between noisy motor surge
 | **T1** | Socket J3 (5V) to Socket J4 (GND) | **$> 10\,\text{k}\Omega$** (Rising) | **No power short!** C3 ($100\,\mu\text{F}$) charging curve confirms clean 5V rail. |
 | **T2** | Socket J4 (GND) to Socket J5 (3V3) | **Open circuit ($\infty$)** | No 3.3V rail shorts. |
 | **T3** | Socket J4 (GND) to TB1 Pin 4, TB2 Pin 3 | **$< 0.5\,\Omega$** | Sensor ground continuity through Row P bus. |
-| **T4** | Socket J4 (GND) to Q1 Source (C14) | **$< 0.5\,\Omega$** | Power ground continuity through Star Link. |
+| **T4** | Socket J4 (GND) to Q1 Source (C14) | **$< 0.5\,\Omega$** | Power ground continuity through Row P bus and Col 14 GND track. |
 | **T5** | Socket J3 (5V) to TB1 Pin 1, TB3 Pin 2 | **$< 0.5\,\Omega$** | 5V power distribution continuity. |
 | **T6** | Socket J6 (GPIO 0) to Socket J4 (GND) | **$\approx 10.0\,\text{k}\Omega$** | Exact R2 resistance to ground (via K4-J4 bridge). |
 | **T7** | Socket J6 (GPIO 0) to Socket J3 (5V) | **$\approx 10.0\,\text{k}\Omega$** | Exact R1 resistance to 5V rail (via N6). |
