@@ -76,9 +76,12 @@ For a permanent soldered build in an enclosure, an **18-row by 24-column 0.1" (2
 * **Microcontroller Mounting:** 2× 1×8 female header sockets mounted across Columns 3–10 in **Row L** (Top Header) and **Row F** (Bottom Header) with standard 0.600" DIP pitch (6 rows).
 * **USB-C Clearance:** USB-C connector faces **LEFT** into Columns 1–2, allowing flush cable connection with zero board interference.
 * **Outward Sensor Terminals (Top Edge / Row Q):**
-  * **TB2 (3-Pin Soil):** Row Q, Cols 7 (VCC), 9 (AOUT), 11 (GND); wire entries face **UPWARDS** off Row R.
+  * **TB2 (3-Pin Soil):** Row Q, Cols 7 (AOUT / Data), 9 (Switched VCC), 11 (GND); wire entries face **UPWARDS** off Row R. Pinout routes straight/parallel down into ESP32 GPIO 1 (L7) and GPIO 2 (L8) with **zero wire crossovers**.
   * **TB1 (4-Pin Ultrasonic):** Row Q, Cols 15 (5V), 17 (TRIG), 19 (ECHO), 21 (GND); wire entries face **UPWARDS** off Row R.
   * Spacer between TB2 and TB1: Cols 12–14 (7.62 mm spacing for unobstructed screwdriver access).
+* **Supply Monitor Divider (Row M Zero-Crossing):**
+  * **R1 (10kΩ):** Vertically spans N6 (+5V bus) to M6 (Divider Node).
+  * **R2 (10kΩ) & C1 (100nF):** Run horizontally along Row M from M6/M5 to M4 (GND). Solder bridged at M4 $\to$ L4 (ESP32 GND) and M6 $\to$ L6 (GPIO 0 ADC). Completely avoids crossing over the uninsulated Row N +5V bus!
 * **Outward Pump Terminal (Bottom Edge / Row B):**
   * **TB3 (2-Pin Pump):** Row B, Cols 19 (Drain -), 21 (+5V); wire entries face **DOWNWARDS** off Row A.
 * **Actuators & Direct Solder Bridges:**
