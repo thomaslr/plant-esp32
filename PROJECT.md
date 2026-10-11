@@ -84,18 +84,19 @@ For a permanent soldered build in an enclosure, an **18-row by 24-column 0.1" (2
   * **R2 (10kΩ):** Runs horizontally along Row K from K6 (Node) to K4 (GND). Solder bridged at K4 $\to$ J4 (ESP32 GND) and K6 $\to$ J6 (GPIO 0 ADC).
   * **C1 (100nF):** Ceramic filter with left leg in L4 (GND) and right leg in K6 (Node). Avoids crowding hole K4; directly grounded via Col 4 vertical bridge L4 $\to$ K4 $\to$ J4, and node directly bridged K6 $\to$ J6!
 * **Outward Pump Terminal (Bottom Edge / Row B):**
-  * **TB3 (2-Pin Pump):** Row B, Cols 19 (Drain -), 21 (+5V); wire entries face **DOWNWARDS** off Row A. Dedicated holes, completely separated from flyback diode D1.
+  * **TB3 (2-Pin Pump):** Row B, Cols 13 (Drain -), 15 (+5V); wire entries face **DOWNWARDS** off Row A. Dedicated holes, completely separated from flyback diode D1.
 * **Actuators & Direct Solder Bridges (Separated D1 & TB3):**
-  * **Q1 (FQP30N06L TO-220 MOSFET):** Row C, Cols 18 (Gate), 19 (Drain), 20 (Source).
-  * **D1 (1N5819 Schottky Diode):** Row E, Cols 19 (Anode) to 21 (Cathode). Cathode silver stripe faces Col 21 (+5V). Moved up to Row E, providing two full rows of clearance from TB3.
+  * **Q1 (FQP30N06L TO-220 MOSFET):** Row C, Cols 12 (Gate), 13 (Drain), 14 (Source).
+  * **D1 (1N5819 Schottky Diode):** Row E, Cols 13 (Anode) to 15 (Cathode). Cathode silver stripe faces Col 15 (+5V). Right side positioned at E15.
   * **Direct Underside Solder Bridges:** 
-    * 4-pad bridge along Col 19: **E19 (Anode) $\to$ D19 $\to$ C19 (Q1 Drain) $\to$ B19 (TB3 Pin 1 Drain)**.
-    * 4-pad bridge / lead bend along Col 21: **E21 (D1 Cathode) $\to$ D21 $\to$ C21 $\to$ B21 (TB3 Pin 2 +5V)**. Zero hookup wire required for high-current switch!
+    * 4-pad bridge along Col 13: **E13 (Anode) $\to$ D13 $\to$ C13 (Q1 Drain) $\to$ B13 (TB3 Pin 1 Drain)**.
+    * 4-pad bridge / lead bend along Col 15: **E15 (D1 Cathode) $\to$ D15 $\to$ C15 $\to$ B15 (TB3 Pin 2 +5V)**. Zero hookup wire required for high-current switch!
+  * **Gate Drive:** R5 (1kΩ damping) across C8 $\to$ C11, bridged C11 $\to$ C12 to Gate; R6 (100kΩ pull-down) from C12 down to A12.
   * **C3 (100µF Bulk Capacitor):** Row L, Cols 3 (+) to 4 (-), directly joined between VCC (+5V at J3) and GND (J4) via vertical solder bridges L3 $\to$ K3 $\to$ J3 and L4 $\to$ K4 $\to$ J4.
 * **Noise Immunity Dual Star-Ground Buses:**
   * **Analog / Sensor GND (Row P):** Bare bus wire along Row P (Cols 4–21) providing an ultra-quiet ground reference for ADC supply monitor (GPIO 0), capacitive soil sensor (GPIO 1), and ultrasonic echo divider.
-  * **Power / Motor GND (Row A):** Solder bridge or bus wire along Row A (Cols 18–20) sinking high-current pump inrush transients ($0.8\text{A}\text{--}1.2\text{A}$) from Q1 Source (C20) and Star Ground (A18) without inducing ground bounce in Row P.
-  * **Star Ground Tie:** Heavy 24 AWG insulated jumper linking ESP32 GND (J4) directly to Row A (A18).
+  * **Power / Motor GND (Row A):** Solder bridge or bus wire along Row A (Cols 12–14) sinking high-current pump inrush transients ($0.8\text{A}\text{--}1.2\text{A}$) from Q1 Source (C14) and Star Ground (A12) without inducing ground bounce in Row P. Cols 15–24 are completely clear.
+  * **Star Ground Tie:** Heavy 24 AWG insulated jumper linking ESP32 GND (J4) directly to Row A (A12).
 * **Full Assembly Guide & Visualizer:**
   * Guide: [`perfboard_circuit_guide.md`](file:///Users/robertlongbottom/dev/plant-esp32/perfboard_circuit_guide.md)
   * Interactive SVG Visualizer: [`perfboard_diagram.html`](file:///Users/robertlongbottom/dev/plant-esp32/perfboard_diagram.html) (Top, Bottom Mirrored, and X-Ray composite views with connection overlay toggles and fluid wide-screen zoom).
