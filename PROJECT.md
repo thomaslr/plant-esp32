@@ -73,15 +73,15 @@ All terminal blocks are mounted with screw openings facing **100% OUTWARDS** off
 For a permanent soldered build in an enclosure, an **18-row by 24-column 0.1" (2.54 mm) pitch through-hole perfboard** layout is fully designed and documented:
 * **Board Dimensions:** 18 Rows descending vertically from **Row R (Top Edge)** to **Row A (Bottom Edge)** $\times$ 24 Columns ($1 \dots 24$, horizontal), 432 electrically isolated plated donut pads.
 * **Isolated Pads Rule:** Perfboard holes have **no internal traces**. Every connection is explicitly made via bare solid bus wires, component lead bends, solder bridges, or insulated hookup jumpers.
-* **Microcontroller Mounting:** 2× 1×8 female header sockets mounted across Columns 3–10 in **Row L** (Top Header) and **Row F** (Bottom Header) with standard 0.600" DIP pitch (6 rows).
+* **Microcontroller Mounting:** 2× 1×8 female header sockets mounted across Columns 3–10 in **Row J** (Top Header) and **Row D** (Bottom Header) with standard 0.600" DIP pitch (6 rows).
 * **USB-C Clearance:** USB-C connector faces **LEFT** into Columns 1–2, allowing flush cable connection with zero board interference.
 * **Outward Sensor Terminals (Top Edge / Row Q):**
-  * **TB2 (3-Pin Soil):** Row Q, Cols 7 (AOUT / Data), 9 (Switched VCC), 11 (GND); wire entries face **UPWARDS** off Row R. Pinout routes straight/parallel down into ESP32 GPIO 1 (L7) and GPIO 2 (L8) with **zero wire crossovers**.
+  * **TB2 (3-Pin Soil):** Row Q, Cols 7 (AOUT / Data), 9 (Switched VCC), 11 (GND); wire entries face **UPWARDS** off Row R. Pinout routes straight/parallel down into ESP32 GPIO 1 (J7) and GPIO 2 (J8) with **zero wire crossovers**.
   * **TB1 (4-Pin Ultrasonic):** Row Q, Cols 15 (5V), 17 (TRIG), 19 (ECHO), 21 (GND); wire entries face **UPWARDS** off Row R.
   * Spacer between TB2 and TB1: Cols 12–14 (7.62 mm spacing for unobstructed screwdriver access).
-* **Supply Monitor Divider (Row M Zero-Crossing):**
-  * **R1 (10kΩ):** Vertically spans N6 (+5V bus) to M6 (Divider Node).
-  * **R2 (10kΩ) & C1 (100nF):** Run horizontally along Row M from M6/M5 to M4 (GND). Solder bridged at M4 $\to$ L4 (ESP32 GND) and M6 $\to$ L6 (GPIO 0 ADC). Completely avoids crossing over the uninsulated Row N +5V bus!
+* **Supply Monitor Divider (Row K Zero-Crossing):**
+  * **R1 (10kΩ):** Vertically spans N6 (+5V bus) to K6 (Divider Node).
+  * **R2 (10kΩ) & C1 (100nF):** Run horizontally along Row K from K6/K5 to K4 (GND). Solder bridged at K4 $\to$ J4 (ESP32 GND) and K6 $\to$ J6 (GPIO 0 ADC). Completely avoids crossing over the uninsulated Row N +5V bus!
 * **Outward Pump Terminal (Bottom Edge / Row B):**
   * **TB3 (2-Pin Pump):** Row B, Cols 19 (Drain -), 21 (+5V); wire entries face **DOWNWARDS** off Row A.
 * **Actuators & Direct Solder Bridges:**
@@ -92,7 +92,7 @@ For a permanent soldered build in an enclosure, an **18-row by 24-column 0.1" (2
 * **Noise Immunity Dual Star-Ground Buses:**
   * **Analog / Sensor GND (Row P):** Bare bus wire along Row P (Cols 4–21) providing an ultra-quiet ground reference for ADC supply monitor (GPIO 0), capacitive soil sensor (GPIO 1), and ultrasonic echo divider.
   * **Power / Motor GND (Row A):** Bare bus wire along Row A (Cols 18–24) sinking high-current pump inrush transients ($0.8\text{A}\text{--}1.2\text{A}$) from Q1 Source and C3 without inducing ground bounce in Row P.
-  * **Star Ground Tie:** Heavy 24 AWG insulated jumper linking ESP32 GND (L4) directly to Row A (A18).
+  * **Star Ground Tie:** Heavy 24 AWG insulated jumper linking ESP32 GND (J4) directly to Row A (A18).
 * **Full Assembly Guide & Visualizer:**
   * Guide: [`perfboard_circuit_guide.md`](file:///Users/robertlongbottom/dev/plant-esp32/perfboard_circuit_guide.md)
   * Interactive SVG Visualizer: [`perfboard_diagram.html`](file:///Users/robertlongbottom/dev/plant-esp32/perfboard_diagram.html) (Top, Bottom Mirrored, and X-Ray composite views with connection overlay toggles and fluid wide-screen zoom).
