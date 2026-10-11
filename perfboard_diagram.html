@@ -537,7 +537,7 @@
                             <tr><td><b>Power GND</b></td><td>A12 → A14</td><td><span class="method-badge method-bridge">Bridge / Bus</span></td></tr>
                             <tr><td><b>Row N 5V</b></td><td>N3 → N15</td><td><span class="method-badge method-bus">Bare Bus Wire</span></td></tr>
                             <tr><td><b>Star GND</b></td><td>J4 → A12</td><td><span class="method-badge method-wire">24 AWG Wire</span></td></tr>
-                            <tr><td><b>5V Feed</b></td><td>J3 → E15</td><td><span class="method-badge method-wire">24 AWG Wire</span></td></tr>
+                            <tr><td><b>5V Feed</b></td><td>N15 → E15</td><td><span class="method-badge method-wire">24 AWG Wire</span></td></tr>
                             <tr><td><b>5V Bus Tap</b></td><td>J3 → N3</td><td><span class="method-badge method-wire">Jumper Wire</span></td></tr>
                             <tr><td><b>Analog GND Tap</b></td><td>J4 → P4</td><td><span class="method-badge method-wire">Jumper Wire</span></td></tr>
                             <tr><td><b>C3 (+) 5V</b></td><td>L3 → J3</td><td><span class="method-badge method-bridge">Lead / Bridge</span></td></tr>
@@ -638,8 +638,8 @@
                 'PUMP_5V': {
                     name: '+5V (Pump Power Feed)',
                     color: '#ff7b72',
-                    desc: 'Dedicated heavy 5V feed line from J3 buffering motor power at D1 Cathode (E15) and TB3 Pin 2 (B15).',
-                    pads: ['E15','D15','C15','B15','J3']
+                    desc: 'Dedicated 5V motor power feed from Row N +5V bus at N15 down Column 15 to D1 Cathode (E15) and TB3 Pin 2 (B15).',
+                    pads: ['E15','D15','C15','B15','N15']
                 },
                 'GPIO0_ADC': {
                     name: 'GPIO 0 (5V Rail Monitor ADC)',
@@ -694,7 +694,7 @@
             }
 
             const CONNECTION_NOTES = {
-                'J3': 'ESP32 5V In -> (1) Jumper to N3 (+5V Bus), (2) Heavy wire to E15 (TB3 +5V & D1 Cathode), (3) Solder bridge to C3 (+) at L3',
+                'J3': 'ESP32 5V In -> (1) Jumper to N3 (+5V Bus), (2) Solder bridge to C3 (+) at L3',
                 'J4': 'ESP32 GND -> (1) Solder bridge up to K4/L4 (C3 (-) & R2/C1 GND), (2) Jumper to P4 (Analog GND Bus), (3) Star GND to A12',
                 'J6': 'ESP32 GPIO 0 -> Solder bridge directly up to K6 (R1/R2/C1 Divider Node)',
                 'J7': 'ESP32 GPIO 1 (Soil ADC) -> Straight jumper wire up to Q7 (TB2 Pin 1 Soil DATA)',
@@ -707,6 +707,7 @@
                 'K4': 'R2 Ground Pad -> Solder bridge down to J4 (ESP32 GND) and up to L4 (C1 / C3 GND)',
                 'K6': 'Supply Divider Node -> Solder bridge down to J6 (GPIO 0), connects R1 bottom, R2 top, and C1 Node lead',
                 'N6': 'R1 Top Lead (+5V) -> Soldered directly into Row N +5V Bus',
+                'N15': 'Row N +5V Bus End -> (1) Solder bridge to Q15 (TB1 5V), (2) Insulated wire down Col 15 to E15 (Pump 5V / D1 Cathode)',
                 'Q7': 'TB2 Pin 1 (Soil DATA) -> Straight jumper down to J7 (ESP32 GPIO 1)',
                 'Q9': 'TB2 Pin 2 (Soil VCC) -> Parallel jumper down to J8 (ESP32 GPIO 2)',
                 'Q11': 'TB2 Pin 3 (Soil GND) -> Solder bridge to Row P Analog GND Bus (P11)',
@@ -715,9 +716,9 @@
                 'Q19': 'TB1 Pin 3 (Ultrasonic ECHO) -> Solder bridge to O19 (R3 1k divider top)',
                 'Q21': 'TB1 Pin 4 (Ultrasonic GND) -> Solder bridge to Row P Analog GND Bus (P21)',
                 'E13': 'D1 Flyback Diode (Anode) -> Solder bridge / lead bend down Col 13 to D13, C13 (Q1 Drain) & B13 (TB3 Pin 1 Drain)',
-                'E15': 'D1 Flyback Diode (Cathode) -> Heavy 5V feed from J3, solder bridge / lead bend down Col 15 to B15 (TB3 Pin 2 +5V)',
+                'E15': 'D1 Flyback Diode (Cathode) -> 5V feed from N15 down Col 15, solder bridge / lead bend down Col 15 to B15 (TB3 Pin 2 +5V)',
                 'B13': 'TB3 Pin 1 (Pump -) -> Solder bridge up Col 13 to C13 (Q1 Drain) and E13 (D1 Anode)',
-                'B15': 'TB3 Pin 2 (Pump +5V) -> Solder bridge up Col 15 to E15 (D1 Cathode) and +5V feed from J3',
+                'B15': 'TB3 Pin 2 (Pump +5V) -> Solder bridge up Col 15 to E15 (D1 Cathode) and +5V feed from N15',
                 'C12': 'Q1 Gate -> Solder bridge to C11 (R5 output) and top lead of R6 (100k pull-down)',
                 'C13': 'Q1 Drain -> Solder bridge to E13 (D1 Anode) and B13 (TB3 Pin 1 Drain)!',
                 'C14': 'Q1 Source -> Lead bend down Column 14 into Row A Power GND (A14)',
@@ -896,8 +897,8 @@
                 // 5V Bus Tap: J3 to N3
                 createCurvedJumper(targetLayer, 'J3', 'N3', '#f85149', 3, isMirrored, '5V to Row N Bus', -16, 'VBUS_5V');
 
-                // Heavy +5V Power Feed: J3 to E15
-                createCurvedJumper(targetLayer, 'J3', 'E15', '#ff7b72', 4, isMirrored, '+5V Heavy Feed (24 AWG)', 30, 'PUMP_5V');
+                // +5V Bus to Pump Power Feed: N15 to E15
+                createCurvedJumper(targetLayer, 'N15', 'E15', '#ff7b72', 4, isMirrored, '+5V Bus to Pump Feed (N15-E15)', 0, 'PUMP_5V');
 
                 // Pump Gate Drive: D8 to C8
                 createCurvedJumper(targetLayer, 'D8', 'C8', '#f0883e', 3, isMirrored, 'GPIO 7 Gate Drive', 0, 'GPIO7_GATE');
