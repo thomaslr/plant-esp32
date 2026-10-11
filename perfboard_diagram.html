@@ -569,21 +569,21 @@
             <!-- Tabs: Wiring Schedule & BOM -->
             <div class="panel-card">
                 <div class="tab-headers">
-                    <button class="tab-btn active" data-tab="tab-wiring">Wiring Schedule (24 Conns: Top 11 / Bot 13)</button>
+                    <button class="tab-btn active" data-tab="tab-wiring">Wiring Schedule (24 Conns: Top 9 / Bot 15)</button>
                     <button class="tab-btn" data-tab="tab-bom">BOM (11 Parts)</button>
                     <button class="tab-btn" data-tab="tab-tests">Cold Tests</button>
                 </div>
 
                 <div class="tab-content active" id="tab-wiring">
                     <div style="margin-bottom: 10px; padding: 7px 9px; background: rgba(56, 139, 253, 0.1); border: 1px solid rgba(56, 139, 253, 0.3); border-radius: 4px; font-size: 11px; color: #79c0ff; line-height: 1.5;">
-                        ⚡ <b>ANTI-SHORT PHYSICAL ISOLATION:</b><br>
-                        • <b>TOP (Component Side):</b> 11 insulated hookup wires run elevated above board.<br>
-                        • <b>BOTTOM (Solder Side):</b> 13 rigid buses & adjacent solder bridges. Zero crossings!
+                        ⚡ <b>ANTI-SHORT OPTIMAL DUAL-LAYER:</b><br>
+                        • <b>TOP (Component Side):</b> 9 insulated hookup wires run elevated above board.<br>
+                        • <b>BOTTOM (Solder Side):</b> 15 rigid buses & adjacent solder bridges. Zero crossings!
                     </div>
 
                     <h4 style="color:#bc8cff; font-size:11px; margin:8px 0 5px; display:flex; align-items:center; gap:6px;">
                         <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#bc8cff;"></span>
-                        TOP LAYER: Insulated Hookup Wires (11 Wires)
+                        TOP LAYER: Insulated Hookup Wires (9 Wires)
                     </h4>
                     <table class="mini-table">
                         <thead>
@@ -596,21 +596,19 @@
                         <tbody>
                             <tr><td><b>GND Feed</b></td><td>P14 → D14</td><td><span class="method-badge method-wire">24 AWG Blue (Down Col 14)</span></td></tr>
                             <tr><td><b>5V Feed</b></td><td>N15 → E15</td><td><span class="method-badge method-wire">24 AWG Red (Down Col 15)</span></td></tr>
-                            <tr><td><b>5V Bus Tap</b></td><td>J3 → N3</td><td><span class="method-badge method-wire">24 AWG Red (Col 3 Tap)</span></td></tr>
-                            <tr><td><b>GND Bus Tap</b></td><td>J4 → P4</td><td><span class="method-badge method-wire">24 AWG Blue (Col 4 Tap)</span></td></tr>
+                            <tr><td><b>Sensor GND Tap</b></td><td>J4 → P11</td><td><span class="method-badge method-wire">24 AWG Blue (Arches Row N)</span></td></tr>
                             <tr><td><b>Ultrasonic 5V</b></td><td>N15 → Q15</td><td><span class="method-badge method-wire">26 AWG Red (Arches Row P)</span></td></tr>
                             <tr><td><b>Echo In Link</b></td><td>Q19 → O19</td><td><span class="method-badge method-wire">26 AWG Grn (Arches Row P)</span></td></tr>
-                            <tr><td><b>Soil AOUT</b></td><td>Q7 → J7</td><td><span class="method-badge method-wire">26 AWG Green (Straight Col 7)</span></td></tr>
+                            <tr><td><b>Soil AOUT</b></td><td>O7 → J7</td><td><span class="method-badge method-wire">26 AWG Green (Straight Col 7)</span></td></tr>
                             <tr><td><b>Soil VCC</b></td><td>Q9 → J8</td><td><span class="method-badge method-wire">26 AWG Purple (Parallel Col 9/8)</span></td></tr>
                             <tr><td><b>Ultrasonic TRIG</b></td><td>J9 → Q17</td><td><span class="method-badge method-wire">26 AWG Cyan</span></td></tr>
                             <tr><td><b>Echo 3.3V Out</b></td><td>O17 → J10</td><td><span class="method-badge method-wire">26 AWG Green</span></td></tr>
-                            <tr><td><b>Pump Gate</b></td><td>D8 → C8</td><td><span class="method-badge method-wire">26 AWG Orange</span></td></tr>
                         </tbody>
                     </table>
 
                     <h4 style="color:#f0883e; font-size:11px; margin:12px 0 5px; display:flex; align-items:center; gap:6px;">
                         <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#f0883e;"></span>
-                        BOTTOM LAYER: Solder Bridges & Bare Buses (13 Conns)
+                        BOTTOM LAYER: Solder Bridges & Bare Buses (15 Conns)
                     </h4>
                     <table class="mini-table">
                         <thead>
@@ -621,17 +619,19 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr><td><b>Row P GND Bus</b></td><td>P4 → P21</td><td><span class="method-badge method-bus">22 AWG Bare Bus Wire</span></td></tr>
+                            <tr><td><b>Row P GND Bus</b></td><td>P11 → P21</td><td><span class="method-badge method-bus">22 AWG Bare Bus Wire</span></td></tr>
                             <tr><td><b>Row N 5V Bus</b></td><td>N3 → N15</td><td><span class="method-badge method-bus">22 AWG Bare Bus Wire</span></td></tr>
                             <tr><td><b>Power GND Bus</b></td><td>A12 → A14</td><td><span class="method-badge method-bridge">3-Pad Solder Bridge / Bus</span></td></tr>
                             <tr><td><b>Supply Node</b></td><td>K6 → J6</td><td><span class="method-badge method-bridge">2-Pad Solder Bridge</span></td></tr>
                             <tr><td><b>Supply GND</b></td><td>K4 → J4</td><td><span class="method-badge method-bridge">2-Pad Solder Bridge</span></td></tr>
-                            <tr><td><b>C3 (+) 5V</b></td><td>L3 → K3 → J3</td><td><span class="method-badge method-bridge">3-Pad Solder Bridge</span></td></tr>
+                            <tr><td><b>5V Track (C3/N3)</b></td><td>N3 → M3 → L3 → K3 → J3</td><td><span class="method-badge method-bridge">5-Pad Solder Track</span></td></tr>
                             <tr><td><b>C3/C1 (-) GND</b></td><td>L4 → K4 → J4</td><td><span class="method-badge method-bridge">3-Pad Solder Bridge</span></td></tr>
                             <tr><td><b>Pump Drain Track</b></td><td>E13 → D13 → C13 → B13</td><td><span class="method-badge method-bridge">4-Pad Solder Bridge</span></td></tr>
                             <tr><td><b>Pump GND Track</b></td><td>D14 → C14 → B14 → A14</td><td><span class="method-badge method-bridge">4-Pad Solder Bridge</span></td></tr>
                             <tr><td><b>Pump +5V Track</b></td><td>E15 → D15 → C15 → B15</td><td><span class="method-badge method-bridge">4-Pad Solder Bridge</span></td></tr>
                             <tr><td><b>Gate Resistor</b></td><td>C11 → C12</td><td><span class="method-badge method-bridge">2-Pad Solder Bridge</span></td></tr>
+                            <tr><td><b>Gate Drive Bridge</b></td><td>D8 → C8</td><td><span class="method-badge method-bridge">2-Pad Solder Bridge</span></td></tr>
+                            <tr><td><b>Soil Data Track</b></td><td>Q7 → P7 → O7</td><td><span class="method-badge method-bridge">3-Pad Solder Bridge</span></td></tr>
                             <tr><td><b>Soil GND Tie</b></td><td>Q11 → P11 → O11</td><td><span class="method-badge method-bridge">3-Pad Solder Bridge</span></td></tr>
                             <tr><td><b>Ultrasonic GND</b></td><td>Q21 → P21</td><td><span class="method-badge method-bridge">2-Pad Solder Bridge</span></td></tr>
                         </tbody>
@@ -701,8 +701,8 @@
                 'GND_ANALOG': {
                     name: 'GND (Row P & J4 Sensor GND)',
                     color: '#4493f8',
-                    desc: 'Row P ground bus and J4/K4/L4 ground reference.',
-                    pads: ['P4','P5','P6','P11','P14','P17','P21','J4','K4','L4','Q11','Q21','O11']
+                    desc: 'Row P ground bus (P11-P21) and J4/K4/L4 local analog ground reference.',
+                    pads: ['P11','P14','P17','P21','J4','K4','L4','Q11','Q21','O11']
                 },
                 'GND_POWER': {
                     name: 'GND (Row A Power Motor Bus)',
@@ -713,8 +713,8 @@
                 'VBUS_5V': {
                     name: '+5V (Row N Sensor Supply Bus)',
                     color: '#f85149',
-                    desc: 'USB 5V supply distributed via Row N to supply monitor divider R1, ultrasonic sensor TB1, and C3 (100µF).',
-                    pads: ['J3','N3','N4','N5','N6','N15','Q15','L3','K3']
+                    desc: 'USB 5V supply distributed via Col 3 solder track (J3-K3-L3-M3-N3) and Row N bus to R1, TB1, and C3 (100µF).',
+                    pads: ['J3','N3','N4','N5','N6','N15','Q15','L3','K3','M3']
                 },
                 'PUMP_5V': {
                     name: '+5V (Pump Power Feed)',
@@ -731,8 +731,8 @@
                 'GPIO1_SOIL': {
                     name: 'GPIO 1 (Soil Moisture Analog ADC)',
                     color: '#3fb950',
-                    desc: 'ADC1_CH1 input receiving conditioned analog voltage from TB2 Pin 1 (Col 7).',
-                    pads: ['J7','Q7','O7']
+                    desc: 'ADC1_CH1 input receiving conditioned analog voltage from TB2 Pin 1 via Col 7 track (Q7-P7-O7) and wire to J7.',
+                    pads: ['J7','Q7','P7','O7']
                 },
                 'GPIO2_VCC': {
                     name: 'GPIO 2 (Switched Soil VCC)',
@@ -755,7 +755,7 @@
                 'GPIO7_GATE': {
                     name: 'GPIO 7 (Pump MOSFET Gate)',
                     color: '#f0883e',
-                    desc: 'Digital output driving Q1 FQP30N06L Gate via R5 (1k damping) and R6 (100k pull-down).',
+                    desc: 'Digital output driving Q1 FQP30N06L Gate via direct D8-C8 bridge, R5 (1k damping) and R6 (100k pull-down).',
                     pads: ['D8','C8','C11','C12','A12']
                 },
                 'PUMP_DRAIN': {
@@ -775,41 +775,46 @@
             }
 
             const CONNECTION_NOTES = {
-                'J3': 'ESP32 5V In -> (1) Jumper to N3 (+5V Bus), (2) Solder bridge to C3 (+) at L3',
-                'J4': 'ESP32 GND -> (1) Solder bridge up to K4/L4 (C3 (-) & R2/C1 GND), (2) Jumper to P4 (Row P GND Bus)',
+                'J3': 'ESP32 5V In -> Solder bridged down Col 3 (J3-K3-L3-M3-N3) directly to C3 (+) at L3 and Row N +5V Bus at N3',
+                'J4': 'ESP32 GND -> (1) Solder bridge up to K4/L4 (C3 (-) & R2/C1 GND), (2) Top insulated wire to P11 (Row P Sensor GND Bus)',
                 'J6': 'ESP32 GPIO 0 -> Solder bridge directly up to K6 (R1/R2/C1 Divider Node)',
-                'J7': 'ESP32 GPIO 1 (Soil ADC) -> Straight jumper wire up to Q7 (TB2 Pin 1 Soil DATA)',
-                'J8': 'ESP32 GPIO 2 (Soil VCC) -> Parallel jumper wire up to Q9 (TB2 Pin 2 Soil VCC)',
-                'J9': 'ESP32 GPIO 3 -> Hookup jumper to Q17 (Ultrasonic TRIG)',
-                'J10': 'ESP32 GPIO 4 -> Hookup jumper from O17 (Echo 3.33V Node)',
-                'D8': 'ESP32 GPIO 7 -> Hookup jumper to C8 (R5 1k Gate resistor)',
-                'D14': 'Driver GND Pad -> (1) Receives wire from P14, (2) 4-pad solder bridge down Col 14 through C14 and B14 to A14 (Row A GND)',
-                'L3': 'C3 Bulk Cap (+) 100µF -> Solder bridge down Col 3 to J3 (ESP32 5V In / VCC)',
+                'J7': 'ESP32 GPIO 1 (Soil ADC) -> Straight top wire up Col 7 to O7 (Soil DATA / C2 filter)',
+                'J8': 'ESP32 GPIO 2 (Soil VCC) -> Parallel top wire up to Q9 (TB2 Pin 2 Soil VCC)',
+                'J9': 'ESP32 GPIO 3 -> Top hookup wire to Q17 (Ultrasonic TRIG)',
+                'J10': 'ESP32 GPIO 4 -> Top hookup wire from O17 (Echo 3.33V Node)',
+                'D8': 'ESP32 GPIO 7 -> Direct 2-pad solder bridge down Col 8 to C8 (R5 1k Gate resistor)',
+                'D14': 'Driver GND Pad -> (1) Receives top wire from P14, (2) 4-pad solder bridge down Col 14 through C14 and B14 to A14 (Row A GND)',
+                'L3': 'C3 Bulk Cap (+) 100µF -> Part of Col 3 5-pad 5V track (N3-M3-L3-K3-J3), tying C3 (+) directly to 5V bus and ESP32',
                 'L4': 'C3 Bulk Cap (-) 100µF & C1 GND -> Solder bridge down Col 4 to K4 (R2 GND) and J4 (ESP32 GND)',
                 'K4': 'R2 Ground Pad -> Solder bridge down to J4 (ESP32 GND) and up to L4 (C1 / C3 GND)',
                 'K6': 'Supply Divider Node -> Solder bridge down to J6 (GPIO 0), connects R1 bottom, R2 top, and C1 Node lead',
+                'N3': 'Row N +5V Bus Start -> Solder bridged down Col 3 (N3-M3-L3-K3-J3) directly to C3 (+) and ESP32 5V In (J3)',
                 'N6': 'R1 Top Lead (+5V) -> Soldered directly into Row N +5V Bus',
                 'N15': 'Row N +5V Bus End -> (1) Top insulated wire to Q15 (TB1 5V), (2) Top insulated wire down Col 15 to E15 (Pump 5V / D1 Cathode)',
-                'P14': 'Row P GND Bus Tap -> Insulated wire down Col 14 to D14 (Driver GND feed)',
-                'Q7': 'TB2 Pin 1 (Soil DATA) -> Straight jumper down to J7 (ESP32 GPIO 1)',
-                'Q9': 'TB2 Pin 2 (Soil VCC) -> Parallel jumper down to J8 (ESP32 GPIO 2)',
-                'Q11': 'TB2 Pin 3 (Soil GND) -> Solder bridge to Row P Analog GND Bus (P11)',
+                'P7': 'Soil Data Pad -> Solder bridged along Col 7: Q7 -> P7 -> O7 (ties TB2 Data to C2 filter)',
+                'P11': 'Row P Sensor GND Bus Start -> (1) Solder bridged to Q11 (TB2 GND) and O11 (C2 GND), (2) Receives top GND feed wire from J4',
+                'P14': 'Row P GND Bus Tap -> Insulated top wire down Col 14 to D14 (Driver GND feed)',
+                'Q7': 'TB2 Pin 1 (Soil DATA) -> Solder bridged down Col 7 (Q7-P7-O7) to C2 left leg (O7) and top wire to J7',
+                'Q9': 'TB2 Pin 2 (Soil VCC) -> Parallel top wire down to J8 (ESP32 GPIO 2)',
+                'Q11': 'TB2 Pin 3 (Soil GND) -> Solder bridge to Row P Sensor GND Bus (P11) and C2 right leg (O11)',
                 'Q15': 'TB1 Pin 1 (Ultrasonic 5V) -> Top insulated wire from Row N +5V Bus (N15), arches safely over Row P GND',
-                'Q17': 'TB1 Pin 2 (Ultrasonic TRIG) -> Hookup jumper to J9 (GPIO 3)',
+                'Q17': 'TB1 Pin 2 (Ultrasonic TRIG) -> Top hookup wire to J9 (GPIO 3)',
                 'Q19': 'TB1 Pin 3 (Ultrasonic ECHO) -> Top insulated wire to O19 (R3 1k divider top), arches safely over Row P GND',
-                'Q21': 'TB1 Pin 4 (Ultrasonic GND) -> Solder bridge to Row P Analog GND Bus (P21)',
-                'E13': 'D1 Flyback Diode (Anode) -> Solder bridge / lead bend down Col 13 to D13, C13 (Q1 Drain) & B13 (TB3 Pin 1 Drain)',
-                'E15': 'D1 Flyback Diode (Cathode) -> 5V feed from N15 down Col 15, solder bridge / lead bend down Col 15 to B15 (TB3 Pin 2 +5V)',
+                'Q21': 'TB1 Pin 4 (Ultrasonic GND) -> Solder bridge to Row P Sensor GND Bus (P21)',
+                'E13': 'D1 Flyback Diode (Anode) -> Solder bridge down Col 13 to D13, C13 (Q1 Drain) & B13 (TB3 Pin 1 Drain)',
+                'E15': 'D1 Flyback Diode (Cathode) -> 5V feed from N15 down Col 15, solder bridge down Col 15 to B15 (TB3 Pin 2 +5V)',
                 'B13': 'TB3 Pin 1 (Pump -) -> Solder bridge up Col 13 to C13 (Q1 Drain) and E13 (D1 Anode)',
                 'B15': 'TB3 Pin 2 (Pump +5V) -> Solder bridge up Col 15 to E15 (D1 Cathode) and +5V feed from N15',
+                'C8': 'R5 Left Leg -> Solder bridged directly to D8 (ESP32 GPIO 7 Gate Drive)',
+                'C11': 'R5 Right Leg -> Solder bridge to C12 (Q1 Gate)',
                 'C12': 'Q1 Gate -> Solder bridge to C11 (R5 output) and top lead of R6 (100k pull-down)',
                 'C13': 'Q1 Drain -> Solder bridge to E13 (D1 Anode) and B13 (TB3 Pin 1 Drain)!',
                 'C14': 'Q1 Source -> Part of Col 14 4-pad GND solder bridge (D14-C14-B14-A14), tying Source directly to GND',
-                'O17': 'Echo Divider 3.3V Node -> Hookup jumper to J10 (GPIO 4)',
+                'O7': 'C2 Left Leg (Soil Filter) -> Solder bridged up Col 7 from Q7/P7, top wire down Col 7 to J7 (GPIO 1)',
+                'O11': 'C2 Right Leg (Soil Filter) -> Solder bridged down Col 11 from Q11 and P11 (Row P GND Bus)',
+                'O17': 'Echo Divider 3.3V Node -> Top hookup wire to J10 (GPIO 4)',
                 'O19': 'R3 Top Leg -> Receives top insulated wire from Q19 (TB1 ECHO)',
-                'P17': 'R4 Bottom Leg -> Soldered directly into Row P Analog GND Bus',
-                'C8': 'R5 Left Leg -> Hookup jumper from D8 (GPIO 7)',
-                'C11': 'R5 Right Leg -> Solder bridge to C12 (Q1 Gate)',
+                'P17': 'R4 Bottom Leg -> Soldered directly into Row P Sensor GND Bus',
                 'A12': 'Power GND Bus -> Ties R6 bottom lead to Row A GND (bridged A12-A14 to Col 14 GND bridge)',
                 'A14': 'Power GND Bus End -> Solder bridged up Col 14 through B14 and C14 (Q1 Source) to D14 (fed from P14)'
             };
@@ -934,32 +939,26 @@
                 // 2. +5V Bus to Pump Feed: N15 to E15 (24 AWG Red)
                 createCurvedJumper(targetLayer, 'N15', 'E15', '#ff7b72', 4, false, '[TOP WIRE] +5V Bus to Pump Feed (N15-E15)', 0, 'PUMP_5V');
 
-                // 3. 5V Bus Tap: J3 to N3 (24 AWG Red)
-                createCurvedJumper(targetLayer, 'J3', 'N3', '#f85149', 3.5, false, '[TOP WIRE] 5V Bus Tap (J3 to N3)', -16, 'VBUS_5V');
+                // 3. Sensor GND Bus Tap: J4 to P11 (24 AWG Blue - Arches safely over Row N +5V on top!)
+                createCurvedJumper(targetLayer, 'J4', 'P11', '#4493f8', 3.5, false, '[TOP WIRE] Sensor GND Bus Tap (J4 to P11)', -20, 'GND_ANALOG');
 
-                // 4. Analog GND Bus Tap: J4 to P4 (24 AWG Blue)
-                createCurvedJumper(targetLayer, 'J4', 'P4', '#4493f8', 3.5, false, '[TOP WIRE] GND Bus Tap (J4 to P4)', -16, 'GND_ANALOG');
-
-                // 5. Ultrasonic +5V Feed: N15 to Q15 (26 AWG Red - Arches safely over Row P GND on top!)
+                // 4. Ultrasonic +5V Feed: N15 to Q15 (26 AWG Red - Arches safely over Row P GND on top!)
                 createCurvedJumper(targetLayer, 'N15', 'Q15', '#f85149', 3.5, false, '[TOP WIRE] Ultrasonic 5V Feed (N15 to Q15)', 20, 'VBUS_5V');
 
-                // 6. Ultrasonic ECHO Input Link: Q19 to O19 (26 AWG Green - Arches safely over Row P GND on top!)
+                // 5. Ultrasonic ECHO Input Link: Q19 to O19 (26 AWG Green - Arches safely over Row P GND on top!)
                 createCurvedJumper(targetLayer, 'Q19', 'O19', '#56d364', 3.5, false, '[TOP WIRE] Echo In Jumper (Q19 to O19)', 0, 'GPIO4_ECHO');
 
-                // 7. Soil DATA (AOUT): Q7 to J7 (26 AWG Green - Straight down Col 7)
-                createCurvedJumper(targetLayer, 'Q7', 'J7', '#3fb950', 3.5, false, '[TOP WIRE] Soil DATA (Q7 to J7)', 0, 'GPIO1_SOIL');
+                // 6. Soil DATA (AOUT): O7 to J7 (26 AWG Green - Straight down Col 7 from C2/Data track to GPIO 1)
+                createCurvedJumper(targetLayer, 'O7', 'J7', '#3fb950', 3.5, false, '[TOP WIRE] Soil DATA (O7 to J7)', 0, 'GPIO1_SOIL');
 
-                // 8. Soil VCC (Switched): Q9 to J8 (26 AWG Purple - Parallel down Col 9/8)
+                // 7. Soil VCC (Switched): Q9 to J8 (26 AWG Purple - Parallel down Col 9/8)
                 createCurvedJumper(targetLayer, 'Q9', 'J8', '#a371f7', 3.5, false, '[TOP WIRE] Soil VCC (Q9 to J8)', 0, 'GPIO2_VCC');
 
-                // 9. Ultrasonic TRIG: J9 to Q17 (26 AWG Cyan)
+                // 8. Ultrasonic TRIG: J9 to Q17 (26 AWG Cyan)
                 createCurvedJumper(targetLayer, 'J9', 'Q17', '#39c5cf', 3.5, false, '[TOP WIRE] Ultrasonic TRIG (J9 to Q17)', -24, 'GPIO3_TRIG');
 
-                // 10. Ultrasonic ECHO Stepped 3.3V: O17 to J10 (26 AWG Green)
+                // 9. Ultrasonic ECHO Stepped 3.3V: O17 to J10 (26 AWG Green)
                 createCurvedJumper(targetLayer, 'O17', 'J10', '#56d364', 3.5, false, '[TOP WIRE] Echo 3.3V (O17 to J10)', 20, 'GPIO4_ECHO');
-
-                // 11. Pump Gate Drive: D8 to C8 (26 AWG Orange)
-                createCurvedJumper(targetLayer, 'D8', 'C8', '#f0883e', 3.5, false, '[TOP WIRE] GPIO 7 Gate Drive (D8 to C8)', 0, 'GPIO7_GATE');
             }
 
             // 2. BOTTOM LAYER CONNECTIONS (Solder Side - Buses & Solder Bridges)
@@ -967,7 +966,7 @@
                 targetLayer.innerHTML = '';
 
                 // 1. POWER & GROUND BUSES (Bare Tinned Copper Wire Soldered on Underside)
-                createBusConductor(targetLayer, 'P4', 'P21', '#4493f8', 6, isMirrored, '[BOT BUS] Row P Analog GND Bus', ['P4','P11','P14','P17','P21'], 'GND_ANALOG');
+                createBusConductor(targetLayer, 'P11', 'P21', '#4493f8', 6, isMirrored, '[BOT BUS] Row P Sensor GND Bus', ['P11','P14','P17','P21'], 'GND_ANALOG');
                 createBusConductor(targetLayer, 'A12', 'A14', '#1f6feb', 7, isMirrored, '[BOT BUS] Row A Power GND Bus (A12-A14)', ['A12','A13','A14'], 'GND_POWER');
                 createBusConductor(targetLayer, 'N3', 'N15', '#f85149', 6, isMirrored, '[BOT BUS] Row N +5V Bus', ['N3','N4','N5','N6','N15'], 'VBUS_5V');
 
@@ -977,6 +976,12 @@
 
                 // Supply Divider Ground Bridge: K4 to J4 (R2/C1 GND to ESP32 GND)
                 createSolderBridgeBlob(targetLayer, ['K4', 'J4'], '#4493f8', isMirrored, '[BOT BRIDGE] Supply GND Bridge (K4-J4)', 'GND_ANALOG');
+
+                // 5V Track: N3 to M3 to L3 to K3 to J3 (Row N 5V Bus -> C3 (+) -> ESP32 5V In)
+                createSolderBridgeBlob(targetLayer, ['N3', 'M3', 'L3', 'K3', 'J3'], '#f85149', isMirrored, '[BOT BRIDGE] 5V Supply Track (N3-M3-L3-K3-J3)', 'VBUS_5V');
+
+                // C3 Bulk Cap & C1 (-) Bridge: L4 to K4 to J4 (C3 - & C1 GND -> ESP32 GND)
+                createSolderBridgeBlob(targetLayer, ['L4', 'K4', 'J4'], '#4493f8', isMirrored, '[BOT BRIDGE] GND Col 4 Bridge (L4-K4-J4)', 'GND_ANALOG');
 
                 // Pump Drain Track Bridge: E13 to D13 to C13 to B13 (D1 Anode -> Q1 Drain -> TB3 Pin 1)
                 createSolderBridgeBlob(targetLayer, ['E13', 'D13', 'C13', 'B13'], '#ec6547', isMirrored, '[BOT BRIDGE] Pump Drain Track (E13-D13-C13-B13)', 'PUMP_DRAIN');
@@ -990,13 +995,13 @@
                 // Pump 5V Track Bridge: E15 to D15 to C15 to B15 (D1 Cathode to TB3 Pin 2)
                 createSolderBridgeBlob(targetLayer, ['E15', 'D15', 'C15', 'B15'], '#ff7b72', isMirrored, '[BOT BRIDGE] Pump 5V Track (E15-D15-C15-B15)', 'PUMP_5V');
 
-                // C3 Bulk Cap (+) Bridge: L3 to K3 to J3 (C3 + -> ESP32 5V In)
-                createSolderBridgeBlob(targetLayer, ['L3', 'K3', 'J3'], '#f85149', isMirrored, '[BOT BRIDGE] C3 (+) 5V Bridge (L3-K3-J3)', 'VBUS_5V');
+                // Gate Drive Bridge: D8 to C8 (ESP32 GPIO 7 directly down to R5 left leg)
+                createSolderBridgeBlob(targetLayer, ['D8', 'C8'], '#f0883e', isMirrored, '[BOT BRIDGE] Gate Drive Bridge (D8-C8)', 'GPIO7_GATE');
 
-                // C3 Bulk Cap & C1 (-) Bridge: L4 to K4 to J4 (C3 - & C1 GND -> ESP32 GND)
-                createSolderBridgeBlob(targetLayer, ['L4', 'K4', 'J4'], '#4493f8', isMirrored, '[BOT BRIDGE] GND Col 4 Bridge (L4-K4-J4)', 'GND_ANALOG');
+                // Soil Data Track Bridge: Q7 to P7 to O7 (TB2 Pin 1 Data -> Col 7 Track -> C2 Filter Left Leg)
+                createSolderBridgeBlob(targetLayer, ['Q7', 'P7', 'O7'], '#3fb950', isMirrored, '[BOT BRIDGE] Soil Data Track (Q7-P7-O7)', 'GPIO1_SOIL');
 
-                // Soil GND Bridge: Q11 to P11 to O11
+                // Soil GND Bridge: Q11 to P11 to O11 (TB2 Pin 3 GND -> Row P Sensor GND -> C2 Filter Right Leg)
                 createSolderBridgeBlob(targetLayer, ['Q11', 'P11', 'O11'], '#4493f8', isMirrored, '[BOT BRIDGE] Soil GND Bridge (Q11-P11-O11)', 'GND_ANALOG');
 
                 // Ultrasonic GND Bridge: Q21 to P21
@@ -1012,23 +1017,19 @@
                     { pad: 'D14', net: 'GND_POWER', label: 'Wire: D14 GND In' },
                     { pad: 'N15', net: 'PUMP_5V', label: 'Wire: N15 5V Feed' },
                     { pad: 'E15', net: 'PUMP_5V', label: 'Wire: E15 5V In' },
-                    { pad: 'J3', net: 'VBUS_5V', label: 'Wire: J3 5V Tap' },
-                    { pad: 'N3', net: 'VBUS_5V', label: 'Wire: N3 5V In' },
                     { pad: 'J4', net: 'GND_ANALOG', label: 'Wire: J4 GND Tap' },
-                    { pad: 'P4', net: 'GND_ANALOG', label: 'Wire: P4 GND In' },
+                    { pad: 'P11', net: 'GND_ANALOG', label: 'Wire: P11 GND In' },
                     { pad: 'Q15', net: 'VBUS_5V', label: 'Wire: Q15 5V In' },
                     { pad: 'Q19', net: 'GPIO4_ECHO', label: 'Wire: Q19 Echo Out' },
                     { pad: 'O19', net: 'GPIO4_ECHO', label: 'Wire: O19 Echo In' },
-                    { pad: 'Q7', net: 'GPIO1_SOIL', label: 'Wire: Q7 Soil DATA' },
+                    { pad: 'O7', net: 'GPIO1_SOIL', label: 'Wire: O7 Soil DATA Out' },
                     { pad: 'J7', net: 'GPIO1_SOIL', label: 'Wire: J7 Soil ADC' },
                     { pad: 'Q9', net: 'GPIO2_VCC', label: 'Wire: Q9 Soil VCC' },
                     { pad: 'J8', net: 'GPIO2_VCC', label: 'Wire: J8 Switched VCC' },
                     { pad: 'J9', net: 'GPIO3_TRIG', label: 'Wire: J9 TRIG Out' },
                     { pad: 'Q17', net: 'GPIO3_TRIG', label: 'Wire: Q17 TRIG In' },
                     { pad: 'O17', net: 'GPIO4_ECHO', label: 'Wire: O17 Echo 3.3V' },
-                    { pad: 'J10', net: 'GPIO4_ECHO', label: 'Wire: J10 Echo ADC' },
-                    { pad: 'D8', net: 'GPIO7_GATE', label: 'Wire: D8 Gate Out' },
-                    { pad: 'C8', net: 'GPIO7_GATE', label: 'Wire: C8 Gate In' }
+                    { pad: 'J10', net: 'GPIO4_ECHO', label: 'Wire: J10 Echo ADC' }
                 ];
 
                 for (const item of wirePads) {
