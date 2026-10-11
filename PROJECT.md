@@ -79,17 +79,18 @@ For a permanent soldered build in an enclosure, an **18-row by 24-column 0.1" (2
   * **TB2 (3-Pin Soil):** Row Q, Cols 7 (AOUT / Data), 9 (Switched VCC), 11 (GND); wire entries face **UPWARDS** off Row R. Pinout routes straight/parallel down into ESP32 GPIO 1 (J7) and GPIO 2 (J8) with **zero wire crossovers**.
   * **TB1 (4-Pin Ultrasonic):** Row Q, Cols 15 (5V), 17 (TRIG), 19 (ECHO), 21 (GND); wire entries face **UPWARDS** off Row R.
   * Spacer between TB2 and TB1: Cols 12–14 (7.62 mm spacing for unobstructed screwdriver access).
-* **Supply Monitor Divider (Row K Zero-Crossing):**
+* **Supply Monitor Divider (Row K & L Zero-Crossing):**
   * **R1 (10kΩ):** Vertically spans N6 (+5V bus) to K6 (Divider Node).
-  * **R2 (10kΩ) & C1 (100nF):** Run horizontally along Row K from K6/K5 to K4 (GND). Solder bridged at K4 $\to$ J4 (ESP32 GND) and K6 $\to$ J6 (GPIO 0 ADC). Completely avoids crossing over the uninsulated Row N +5V bus!
+  * **R2 (10kΩ):** Runs horizontally along Row K from K6 (Node) to K4 (GND). Solder bridged at K4 $\to$ J4 (ESP32 GND) and K6 $\to$ J6 (GPIO 0 ADC).
+  * **C1 (100nF):** Ceramic filter with left leg in L4 (GND) and right leg in K5 (Node). Avoids crowding hole K4; directly grounded via Col 4 vertical bridge L4 $\to$ K4 $\to$ J4!
 * **Outward Pump Terminal (Bottom Edge / Row B):**
   * **TB3 (2-Pin Pump):** Row B, Cols 19 (Drain -), 21 (+5V); wire entries face **DOWNWARDS** off Row A. Dedicated holes, completely separated from flyback diode D1.
 * **Actuators & Direct Solder Bridges (Separated D1 & TB3):**
   * **Q1 (FQP30N06L TO-220 MOSFET):** Row C, Cols 18 (Gate), 19 (Drain), 20 (Source).
-  * **D1 (1N5819 Schottky Diode):** Row D, Cols 19 (Anode) to 21 (Cathode). Cathode silver stripe faces Col 21 (+5V). Mounted 2 rows away from TB3 to eliminate pin hole sharing.
+  * **D1 (1N5819 Schottky Diode):** Row E, Cols 19 (Anode) to 21 (Cathode). Cathode silver stripe faces Col 21 (+5V). Moved up to Row E, providing two full rows of clearance from TB3.
   * **Direct Underside Solder Bridges:** 
-    * 3-pad bridge along Col 19: **D19 (Anode) $\to$ C19 (Q1 Drain) $\to$ B19 (TB3 Pin 1 Drain)**.
-    * 2-pad bridge along Col 21: **D21 (D1 Cathode) $\to$ B21 (TB3 Pin 2 +5V)**. Zero hookup wire required for high-current switch!
+    * 4-pad bridge along Col 19: **E19 (Anode) $\to$ D19 $\to$ C19 (Q1 Drain) $\to$ B19 (TB3 Pin 1 Drain)**.
+    * 4-pad bridge / lead bend along Col 21: **E21 (D1 Cathode) $\to$ D21 $\to$ C21 $\to$ B21 (TB3 Pin 2 +5V)**. Zero hookup wire required for high-current switch!
   * **C3 (100µF Bulk Capacitor):** Row L, Cols 3 (+) to 4 (-), directly joined between VCC (+5V at J3) and GND (J4) via vertical solder bridges L3 $\to$ K3 $\to$ J3 and L4 $\to$ K4 $\to$ J4.
 * **Noise Immunity Dual Star-Ground Buses:**
   * **Analog / Sensor GND (Row P):** Bare bus wire along Row P (Cols 4–21) providing an ultra-quiet ground reference for ADC supply monitor (GPIO 0), capacitive soil sensor (GPIO 1), and ultrasonic echo divider.

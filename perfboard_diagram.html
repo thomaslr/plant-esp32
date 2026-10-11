@@ -410,7 +410,7 @@
         <div class="canvas-card" id="canvas-card">
             <div class="notice-banner">
                 <div>
-                    <b>✅ CORRECTED R1/R2/C1 DIVIDER:</b> R1 is vertical (N6 $\to$ M6). R2 and C1 sit horizontally on Row M (M6 $\to$ M4 GND). Zero bus crossovers!
+                    <b>✅ CLEAN PERFBOARD LAYOUT:</b> C1 grounded at L4, D1 moved up to Row E (Cols 19/21), C3 (100µF) across VCC-GND at L3/L4. Zero bus crossovers!
                 </div>
                 <div style="font-family:monospace; color:#8b949e;">Top = Row R • Bottom = Row A</div>
             </div>
@@ -500,7 +500,7 @@
                 <div style="font-size: 12px; line-height: 1.6; color: var(--text-muted);">
                     <div>• <b>R1 (10kΩ)</b>: Sits vertically between <b>N6 (+5V)</b> and <b>K6 (Node)</b>.</div>
                     <div>• <b>R2 (10kΩ)</b>: Sits horizontally along Row K between <b>K6 (Node)</b> and <b>K4 (GND)</b>.</div>
-                    <div>• <b>C1 (100nF)</b>: Sits horizontally along Row K between <b>K5 (Node)</b> and <b>K4 (GND)</b>.</div>
+                    <div>• <b>C1 (100nF)</b>: Spans between <b>L4 (GND)</b> and <b>K5 (Node)</b>. Solder bridged K5 $\to$ K6 $\to$ J6 (Node) and L4 $\to$ K4 $\to$ J4 (GND).</div>
                     <div>• <b>Bridge K6 $\to$ J6</b>: Connects 2.5V node directly to ESP32 GPIO 0.</div>
                     <div>• <b>Bridge K4 $\to$ J4</b>: Connects divider/filter ground to ESP32 GND (Pin J4).</div>
                 </div>
@@ -537,15 +537,15 @@
                             <tr><td><b>Row A GND</b></td><td>A18 → A24</td><td><span class="method-badge method-bus">Bare Bus Wire</span></td></tr>
                             <tr><td><b>Row N 5V</b></td><td>N3 → N15</td><td><span class="method-badge method-bus">Bare Bus Wire</span></td></tr>
                             <tr><td><b>Star GND</b></td><td>J4 → A18</td><td><span class="method-badge method-wire">24 AWG Wire</span></td></tr>
-                            <tr><td><b>5V Feed</b></td><td>J3 → D21</td><td><span class="method-badge method-wire">24 AWG Wire</span></td></tr>
+                            <tr><td><b>5V Feed</b></td><td>J3 → E21</td><td><span class="method-badge method-wire">24 AWG Wire</span></td></tr>
                             <tr><td><b>5V Bus Tap</b></td><td>J3 → N3</td><td><span class="method-badge method-wire">Jumper Wire</span></td></tr>
                             <tr><td><b>Analog GND Tap</b></td><td>J4 → P4</td><td><span class="method-badge method-wire">Jumper Wire</span></td></tr>
                             <tr><td><b>C3 (+) 5V</b></td><td>L3 → J3</td><td><span class="method-badge method-bridge">Lead / Bridge</span></td></tr>
-                            <tr><td><b>C3 (-) GND</b></td><td>L4 → J4</td><td><span class="method-badge method-bridge">Lead / Bridge</span></td></tr>
+                            <tr><td><b>C3/C1 (-) GND</b></td><td>L4 → J4</td><td><span class="method-badge method-bridge">Lead / Bridge</span></td></tr>
                             <tr><td><b>Divider Node</b></td><td>K6 → J6</td><td><span class="method-badge method-bridge">Solder Bridge</span></td></tr>
                             <tr><td><b>Divider GND</b></td><td>K4 → J4</td><td><span class="method-badge method-bridge">Solder Bridge</span></td></tr>
-                            <tr><td><b>Pump Drain</b></td><td>D19 → C19 → B19</td><td><span class="method-badge method-bridge">3-Pad Solder Bridge</span></td></tr>
-                            <tr><td><b>Pump +5V</b></td><td>D21 → B21</td><td><span class="method-badge method-bridge">2-Pad Solder Bridge</span></td></tr>
+                            <tr><td><b>Pump Drain</b></td><td>E19 → D19 → C19 → B19</td><td><span class="method-badge method-bridge">4-Pad Solder Bridge</span></td></tr>
+                            <tr><td><b>Pump +5V</b></td><td>E21 → D21 → C21 → B21</td><td><span class="method-badge method-bridge">4-Pad Bridge / Lead Bend</span></td></tr>
                             <tr><td><b>Gate Node</b></td><td>C17 → C18</td><td><span class="method-badge method-bridge">2-Pad Solder Bridge</span></td></tr>
                             <tr><td><b>Q1 Source GND</b></td><td>C20 → A20</td><td><span class="method-badge method-lead">Lead Bend</span></td></tr>
                             <tr><td><b>Echo Stepper In</b></td><td>Q19 → O19</td><td><span class="method-badge method-bridge">Solder Bridge</span></td></tr>
@@ -568,11 +568,11 @@
                             <tr><td><b>TB2</b></td><td>3-Pin Terminal (Soil)</td><td><span class="coord-chip">Q7(Data), Q9(VCC), Q11(GND)</span></td></tr>
                             <tr><td><b>TB3</b></td><td>2-Pin Terminal (Pump)</td><td><span class="coord-chip">B19(Drain), B21(+5V)</span></td></tr>
                             <tr><td><b>Q1</b></td><td>FQP30N06L TO-220</td><td><span class="coord-chip">C18(G), 19(D), 20(S)</span></td></tr>
-                            <tr><td><b>D1</b></td><td>1N5819 Schottky Diode</td><td><span class="coord-chip">D19(Anode) → D21(Cathode)</span></td></tr>
+                            <tr><td><b>D1</b></td><td>1N5819 Schottky Diode</td><td><span class="coord-chip">E19(Anode) → E21(Cathode)</span></td></tr>
                             <tr><td><b>C3</b></td><td>100µF Bulk Cap (VCC-GND)</td><td><span class="coord-chip">L3(+), L4(-)</span></td></tr>
                             <tr><td><b>R1</b></td><td>10kΩ (Vertical)</td><td><span class="coord-chip">N6 (+5V) → K6 (Node)</span></td></tr>
                             <tr><td><b>R2</b></td><td>10kΩ (Horizontal)</td><td><span class="coord-chip">K6 (Node) → K4 (GND)</span></td></tr>
-                            <tr><td><b>C1</b></td><td>100nF Ceramic (Horizontal)</td><td><span class="coord-chip">K5 (Node) → K4 (GND)</span></td></tr>
+                            <tr><td><b>C1</b></td><td>100nF Ceramic Filter</td><td><span class="coord-chip">L4 (GND) → K5 (Node)</span></td></tr>
                             <tr><td><b>C2</b></td><td>100nF Ceramic (Soil RF)</td><td><span class="coord-chip">O7,11</span></td></tr>
                             <tr><td><b>R3,R4</b></td><td>1kΩ & 2kΩ (Echo Stepper)</td><td><span class="coord-chip">O19,17,P17</span></td></tr>
                             <tr><td><b>R5,R6</b></td><td>1kΩ & 100kΩ (Gate)</td><td><span class="coord-chip">C14,17,C18,A18</span></td></tr>
@@ -597,7 +597,7 @@
                             <tr><td>Supply Divider</td><td>J6 to J3</td><td><b>≈ 10.0 kΩ (R1)</b></td></tr>
                             <tr><td>Gate Pull-down</td><td>D8 to J4</td><td><b>≈ 101 kΩ</b></td></tr>
                             <tr><td>Echo Stepper</td><td>J10 to J4</td><td><b>≈ 2.0 kΩ</b></td></tr>
-                            <tr><td>Flyback Diode</td><td>D19 to D21</td><td><b>Diode 0.35V</b></td></tr>
+                            <tr><td>Flyback Diode</td><td>E19 to E21</td><td><b>Diode 0.35V</b></td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -638,14 +638,14 @@
                 'PUMP_5V': {
                     name: '+5V (Pump Power Feed)',
                     color: '#ff7b72',
-                    desc: 'Dedicated heavy 5V feed line from J3 buffering motor power at D1 Cathode (D21) and TB3 Pin 2 (B21).',
-                    pads: ['D21','B21','J3']
+                    desc: 'Dedicated heavy 5V feed line from J3 buffering motor power at D1 Cathode (E21) and TB3 Pin 2 (B21).',
+                    pads: ['E21','D21','C21','B21','J3']
                 },
                 'GPIO0_ADC': {
                     name: 'GPIO 0 (5V Rail Monitor ADC)',
                     color: '#d29922',
-                    desc: 'ADC1_CH0 input monitoring 5V supply via R1 (10k), R2 (10k), and C1 (100nF) filter on Row K.',
-                    pads: ['J6','K6','K5','N6','K4']
+                    desc: 'ADC1_CH0 input monitoring 5V supply via R1 (10k), R2 (10k), and C1 (100nF) filter on Row K & L.',
+                    pads: ['J6','K6','K5','N6','K4','L4']
                 },
                 'GPIO1_SOIL': {
                     name: 'GPIO 1 (Soil Moisture Analog ADC)',
@@ -680,8 +680,8 @@
                 'PUMP_DRAIN': {
                     name: 'Pump Drain (Switched Return -)',
                     color: '#ec6547',
-                    desc: 'Switched negative terminal connecting D1 Anode (D19) to Q1 Drain (C19) & TB3 Pin 1 (B19).',
-                    pads: ['D19','C19','B19']
+                    desc: 'Switched negative terminal connecting D1 Anode (E19) to Q1 Drain (C19) & TB3 Pin 1 (B19).',
+                    pads: ['E19','D19','C19','B19']
                 }
             };
 
@@ -694,7 +694,7 @@
             }
 
             const CONNECTION_NOTES = {
-                'J3': 'ESP32 5V In -> (1) Jumper to N3 (+5V Bus), (2) Heavy wire to D21 (TB3 +5V & D1 Cathode), (3) Solder bridge to C3 (+) at L3',
+                'J3': 'ESP32 5V In -> (1) Jumper to N3 (+5V Bus), (2) Heavy wire to E21 (TB3 +5V & D1 Cathode), (3) Solder bridge to C3 (+) at L3',
                 'J4': 'ESP32 GND -> (1) Solder bridge up to K4/L4 (C3 (-) & R2/C1 GND), (2) Jumper to P4 (Analog GND Bus), (3) Star GND to A18',
                 'J6': 'ESP32 GPIO 0 -> Solder bridge directly up to K6 (R1/R2/C1 Divider Node)',
                 'J7': 'ESP32 GPIO 1 (Soil ADC) -> Straight jumper wire up to Q7 (TB2 Pin 1 Soil DATA)',
@@ -703,8 +703,8 @@
                 'J10': 'ESP32 GPIO 4 -> Hookup jumper from O17 (Echo 3.33V Node)',
                 'D8': 'ESP32 GPIO 7 -> Hookup jumper to C14 (R5 1k Gate resistor)',
                 'L3': 'C3 Bulk Cap (+) 100µF -> Solder bridge down Col 3 to J3 (ESP32 5V In / VCC)',
-                'L4': 'C3 Bulk Cap (-) 100µF -> Solder bridge down Col 4 to J4 (ESP32 GND)',
-                'K4': 'R2 / C1 Ground Pad -> Solder bridge down to J4 (ESP32 GND) and up to L4',
+                'L4': 'C3 Bulk Cap (-) 100µF & C1 GND -> Solder bridge down Col 4 to K4 (R2 GND) and J4 (ESP32 GND)',
+                'K4': 'R2 Ground Pad -> Solder bridge down to J4 (ESP32 GND) and up to L4 (C1 / C3 GND)',
                 'K5': 'C1 Filter Node Lead -> Solder bridge right to K6 (Divider Node)',
                 'K6': 'Supply Divider Node -> Solder bridge down to J6 (GPIO 0), connects R1 bottom and R2 top',
                 'N6': 'R1 Top Lead (+5V) -> Soldered directly into Row N +5V Bus',
@@ -715,12 +715,12 @@
                 'Q17': 'TB1 Pin 2 (Ultrasonic TRIG) -> Hookup jumper to J9 (GPIO 3)',
                 'Q19': 'TB1 Pin 3 (Ultrasonic ECHO) -> Solder bridge to O19 (R3 1k divider top)',
                 'Q21': 'TB1 Pin 4 (Ultrasonic GND) -> Solder bridge to Row P Analog GND Bus (P21)',
-                'D19': 'D1 Flyback Diode (Anode) -> Solder bridge down Col 19 to C19 (Q1 Drain) & B19 (TB3 Pin 1 Drain)',
-                'D21': 'D1 Flyback Diode (Cathode) -> Heavy 5V feed from J3, solder bridge down Col 21 to B21 (TB3 Pin 2 +5V)',
-                'B19': 'TB3 Pin 1 (Pump -) -> Solder bridge up Col 19 to C19 (Q1 Drain) and D19 (D1 Anode)',
-                'B21': 'TB3 Pin 2 (Pump +5V) -> Solder bridge up Col 21 to D21 (D1 Cathode) and +5V feed from J3',
+                'E19': 'D1 Flyback Diode (Anode) -> Solder bridge / lead bend down Col 19 to D19, C19 (Q1 Drain) & B19 (TB3 Pin 1 Drain)',
+                'E21': 'D1 Flyback Diode (Cathode) -> Heavy 5V feed from J3, solder bridge / lead bend down Col 21 to B21 (TB3 Pin 2 +5V)',
+                'B19': 'TB3 Pin 1 (Pump -) -> Solder bridge up Col 19 to C19 (Q1 Drain) and E19 (D1 Anode)',
+                'B21': 'TB3 Pin 2 (Pump +5V) -> Solder bridge up Col 21 to E21 (D1 Cathode) and +5V feed from J3',
                 'C18': 'Q1 Gate -> Solder bridge to C17 (R5 output) and top lead of R6 (100k pull-down)',
-                'C19': 'Q1 Drain -> Solder bridge to D19 (D1 Anode) and B19 (TB3 Pin 1 Drain)!',
+                'C19': 'Q1 Drain -> Solder bridge to E19 (D1 Anode) and B19 (TB3 Pin 1 Drain)!',
                 'C20': 'Q1 Source -> Lead bend down Column 20 into Row A Power GND Bus (A20)',
                 'O17': 'Echo Divider 3.3V Node -> Hookup jumper to J10 (GPIO 4)',
                 'O19': 'R3 Top Leg -> Bridged from Q19 (TB1 ECHO)',
@@ -855,20 +855,20 @@
                 // Supply Divider Ground Bridge: K4 to J4 (R2/C1 GND to ESP32 GND)
                 createSolderBridgeBlob(targetLayer, ['K4', 'J4'], '#4493f8', isMirrored, 'Supply GND Bridge (K4-J4)', 'GND_ANALOG');
 
-                // Pump Drain Bridge: D19 to C19 to B19 (D1 Anode -> Q1 Drain -> TB3 Pin 1)
-                createSolderBridgeBlob(targetLayer, ['D19', 'C19', 'B19'], '#ec6547', isMirrored, 'Pump Drain Bridge (D19-C19-B19)', 'PUMP_DRAIN');
+                // Pump Drain Bridge: E19 to D19 to C19 to B19 (D1 Anode -> Q1 Drain -> TB3 Pin 1)
+                createSolderBridgeBlob(targetLayer, ['E19', 'D19', 'C19', 'B19'], '#ec6547', isMirrored, 'Pump Drain Bridge (E19-D19-C19-B19)', 'PUMP_DRAIN');
 
                 // Gate Resistor Bridge: C17 to C18
                 createSolderBridgeBlob(targetLayer, ['C17', 'C18'], '#f0883e', isMirrored, 'Gate Resistor Bridge (C17-C18)', 'GPIO7_GATE');
 
-                // Pump 5V Feed Bridge: D21 to B21 (D1 Cathode -> TB3 Pin 2)
-                createSolderBridgeBlob(targetLayer, ['D21', 'B21'], '#ff7b72', isMirrored, 'Pump 5V Feed Bridge (D21-B21)', 'PUMP_5V');
+                // Pump 5V Feed Bridge: E21 to D21 to C21 to B21 (D1 Cathode -> TB3 Pin 2)
+                createSolderBridgeBlob(targetLayer, ['E21', 'D21', 'C21', 'B21'], '#ff7b72', isMirrored, 'Pump 5V Feed Bridge (E21-B21)', 'PUMP_5V');
 
                 // C3 Bulk Cap (+) Bridge: L3 to K3 to J3 (C3 + -> ESP32 5V In)
                 createSolderBridgeBlob(targetLayer, ['L3', 'K3', 'J3'], '#f85149', isMirrored, 'C3 (+) 5V Bridge (L3-K3-J3)', 'VBUS_5V');
 
-                // C3 Bulk Cap (-) Bridge: L4 to K4 to J4 (C3 - -> ESP32 GND)
-                createSolderBridgeBlob(targetLayer, ['L4', 'K4', 'J4'], '#4493f8', isMirrored, 'C3 (-) GND Bridge (L4-K4-J4)', 'GND_ANALOG');
+                // C3 Bulk Cap & C1 (-) Bridge: L4 to K4 to J4 (C3 - & C1 GND -> ESP32 GND)
+                createSolderBridgeBlob(targetLayer, ['L4', 'K4', 'J4'], '#4493f8', isMirrored, 'GND Col 4 Bridge (L4-K4-J4)', 'GND_ANALOG');
 
                 // Echo In Bridge: Q19 to O19
                 createSolderBridgeBlob(targetLayer, ['Q19', 'O19'], '#56d364', isMirrored, 'Echo In Bridge (Q19-O19)', 'GPIO4_ECHO');
@@ -896,8 +896,8 @@
                 // 5V Bus Tap: J3 to N3
                 createCurvedJumper(targetLayer, 'J3', 'N3', '#f85149', 3, isMirrored, '5V to Row N Bus', -16, 'VBUS_5V');
 
-                // Heavy +5V Power Feed: J3 to D21
-                createCurvedJumper(targetLayer, 'J3', 'D21', '#ff7b72', 4, isMirrored, '+5V Heavy Feed (24 AWG)', 40, 'PUMP_5V');
+                // Heavy +5V Power Feed: J3 to E21
+                createCurvedJumper(targetLayer, 'J3', 'E21', '#ff7b72', 4, isMirrored, '+5V Heavy Feed (24 AWG)', 40, 'PUMP_5V');
 
                 // Pump Gate Drive: D8 to C14
                 createCurvedJumper(targetLayer, 'D8', 'C14', '#f0883e', 3, isMirrored, 'GPIO 7 Gate Drive', 24, 'GPIO7_GATE');
@@ -1219,21 +1219,21 @@
                 // 4. Q1: FQP30N06L TO-220 MOSFET in Row C (Cols 18, 19, 20)
                 renderMosfet('Q1', 'C18', 'C19', 'C20');
 
-                // 5. D1: 1N5819 Schottky Diode in Row D (Cols 19 to 21) - SEPARATED FROM TB3!
-                renderDiode('D1 (1N5819)', 'D19', 'D21');
+                // 5. D1: 1N5819 Schottky Diode in Row E (Cols 19 to 21) - MOVED UP TO ROW E!
+                renderDiode('D1 (1N5819)', 'E19', 'E21');
 
                 // 6. C3: 100µF Bulk Reservoir Capacitor in Row L (Cols 3 & 4) - JOINED BETWEEN VCC AND GND!
                 renderCapacitorElectrolytic('C3 (100µF)', 'L3', 'L4');
 
-                // 7. Supply Divider Passives (CLEAN, ZERO-CROSSOVER CONFIGURATION ALONG ROW K!)
+                // 7. Supply Divider Passives (CLEAN, ZERO-CROSSOVER CONFIGURATION ALONG ROW K & L!)
                 // R1 (10k): Vertical between N6 (+5V) and K6 (Node)
                 renderResistor('R1 (10k)', 'N6', 'K6', '#e3b341');
 
                 // R2 (10k): Horizontal along Row K between K6 (Node) and K4 (GND)
                 renderResistor('R2 (10k)', 'K6', 'K4', '#e3b341');
 
-                // C1 (100nF): Horizontal along Row K between K5 (Node) and K4 (GND)
-                renderCapacitorCeramic('C1 (100nF)', 'K5', 'K4');
+                // C1 (100nF): Ceramic filter spanning between L4 (GND) and K5 (Node)
+                renderCapacitorCeramic('C1 (100nF)', 'L4', 'K5');
 
                 // C2 (100nF): Soil RF filter across Q7 (AOUT) and P11 (GND) via O7/O11
                 renderCapacitorCeramic('C2 (100nF)', 'O7', 'O11');
