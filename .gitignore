@@ -7,3 +7,4 @@
 *.elf
 secrets.h
 .DS_Store
+*.lck

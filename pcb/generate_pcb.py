@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 Precision KiCad 8 Router & Generator for Plant ESP32 Controller
-Zero-crossing, zero-short, verified DRC with zone refill
+Configured specifically for modular KF301 5.0mm Pitch Terminal Blocks
+Generous inter-block clearance, full screw access, and zero-crossing DRC clean layout.
 """
 
 import os
@@ -102,10 +103,11 @@ def generate_board():
     for nid, nname in nets:
         lines.append(f'\t(net {nid} "{nname}")')
 
-    W, H = 68.0, 52.0
+    # Board Dimensions: 74 mm x 54 mm (Substantial room for all KF301 blocks)
+    W, H = 74.0, 54.0
     lines.append(f'\t(gr_rect (start 0 0) (end {W} {H}) (stroke (width 0.15) (type solid)) (layer "Edge.Cuts") (uuid "{u()}"))')
 
-    # 4x M3 Mounting Holes (diameter 3.2mm, pad 5.0mm)
+    # 4x M3 Mounting Holes (diameter 3.2mm, pad 5.0mm, accommodates 6.0mm screw heads)
     for i, (hx, hy) in enumerate([(3.5, 3.5), (W-3.5, 3.5), (3.5, H-3.5), (W-3.5, H-3.5)], 1):
         lines.append(f'\t(footprint "MountingHole_3.2mm_M3_Pad"')
         lines.append(f'\t\t(layer "F.Cu") (uuid "{u()}") (at {hx} {hy})')
@@ -114,46 +116,52 @@ def generate_board():
         lines.append(f'\t)')
 
     # Silkscreen Branding
-    lines.append(f'\t(gr_text "PLANT CONTROLLER" (at 18.0 49.2) (layer "F.SilkS") (uuid "{u()}") (effects (font (size 1.0 1.0) bold (thickness 0.16))))')
-    lines.append(f'\t(gr_text "ESP32-C3 SuperMini • Rev 1.0" (at 47.0 49.2) (layer "F.SilkS") (uuid "{u()}") (effects (font (size 0.95 0.95) (thickness 0.15))))')
-    lines.append(f'\t(gr_text "USB-C" (at 5.5 34.0 90) (layer "F.SilkS") (uuid "{u()}") (effects (font (size 1.0 1.0) bold (thickness 0.18))))')
-    lines.append(f'\t(gr_line (start 4.5 30.0) (end 4.5 38.0) (stroke (width 0.25) (type solid)) (layer "F.SilkS") (uuid "{u()}"))')
-    lines.append(f'\t(gr_line (start 4.5 34.0) (end 2.5 34.0) (stroke (width 0.25) (type solid)) (layer "F.SilkS") (uuid "{u()}"))')
+    lines.append(f'\t(gr_text "PLANT CONTROLLER" (at 20.0 51.5) (layer "F.SilkS") (uuid "{u()}") (effects (font (size 1.0 1.0) bold (thickness 0.16))))')
+    lines.append(f'\t(gr_text "ESP32-C3 SuperMini • Rev 1.1 (KF301)" (at 52.0 51.5) (layer "F.SilkS") (uuid "{u()}") (effects (font (size 0.9 0.9) (thickness 0.15))))')
+    lines.append(f'\t(gr_text "USB-C" (at 5.5 37.5 90) (layer "F.SilkS") (uuid "{u()}") (effects (font (size 1.0 1.0) bold (thickness 0.18))))')
+    lines.append(f'\t(gr_line (start 4.5 33.5) (end 4.5 41.5) (stroke (width 0.25) (type solid)) (layer "F.SilkS") (uuid "{u()}"))')
+    lines.append(f'\t(gr_line (start 4.5 37.5) (end 2.5 37.5) (stroke (width 0.25) (type solid)) (layer "F.SilkS") (uuid "{u()}"))')
 
-    def terminal_block(ref, val, x_start, y, pin_count, pitch, net_tuples, labels, bx_pad_right=2.0):
-        lines.append(f'\t(footprint "TerminalBlock_bornier-{pin_count}_P5.08mm"')
+    # KF301 Modular Terminal Block footprint generator (5.00mm pitch, 7.6mm depth, 1.3mm drill)
+    def kf301_terminal(ref, val, x_start, y, pin_count, net_tuples, labels):
+        pitch = 5.00
+        lines.append(f'\t(footprint "TerminalBlock_KF301-{pin_count}P_P5.00mm"')
         lines.append(f'\t\t(layer "F.Cu") (uuid "{u()}") (at {x_start} {y})')
-        lines.append(f'\t\t(property "Reference" "{ref}" (at {(pin_count-1)*pitch/2} -4.6) (layer "F.SilkS") (effects (font (size 0.85 0.85) bold (thickness 0.15))))')
-        bx1 = -2.0
-        bx2 = (pin_count - 1) * pitch + bx_pad_right
-        lines.append(f'\t\t(fp_rect (start {bx1} -2.8) (end {bx2} 2.8) (stroke (width 0.2) (type solid)) (fill none) (layer "F.SilkS"))')
+        lines.append(f'\t\t(property "Reference" "{ref}" (at {(pin_count-1)*pitch/2} -4.8) (layer "F.SilkS") (effects (font (size 0.85 0.85) bold (thickness 0.15))))')
+        bx1 = -2.5
+        bx2 = (pin_count - 1) * pitch + 2.5
+        # Exact KF301 physical outer housing boundary: 7.6mm depth (-3.8mm to +3.8mm from pin center)
+        lines.append(f'\t\t(fp_rect (start {bx1} -3.8) (end {bx2} 3.8) (stroke (width 0.2) (type solid)) (fill none) (layer "F.SilkS"))')
         for p in range(pin_count):
             px = p * pitch
             nid, nname = net_tuples[p]
             lbl = labels[p]
             lines.append(f'\t\t(pad "{p+1}" thru_hole roundrect (at {px} 0) (size 2.5 2.5) (drill 1.3) (roundrect_rratio 0.25) (layers "*.Cu" "*.Mask") (net {nid} "{nname}"))')
-            lines.append(f'\t\t(fp_text user "{lbl}" (at {px} 2.0) (layer "F.SilkS") (uuid "{u()}") (effects (font (size 0.8 0.8) bold (thickness 0.13))))')
+            lines.append(f'\t\t(fp_text user "{lbl}" (at {px} 4.9) (layer "F.SilkS") (uuid "{u()}") (effects (font (size 0.8 0.8) bold (thickness 0.13))))')
         lines.append(f'\t)')
 
-    # Terminals on top edge (Y = 8.5)
-    # TB2: Soil Sensor at X=21.0
-    terminal_block("TB2", "Soil_Moisture", 21.0, 8.5, 3, 5.08,
+    # Terminals on top edge (Y = 10.0mm)
+    # TB2: Soil Sensor at X=14.0 (pins at 14, 19, 24; body x: [11.5, 26.5])
+    # 5.0mm clear from H1 screw head!
+    kf301_terminal("TB2", "Soil_Moisture", 14.0, 10.0, 3,
                    [(4, "GPIO1_SOIL"), (5, "GPIO2_VCC"), (1, "GND")],
                    ["DATA", "VCC", "GND"])
 
-    # TB1: Ultrasonic at X=36.0
-    terminal_block("TB1", "Ultrasonic", 36.0, 8.5, 4, 5.08,
+    # TB1: Ultrasonic at X=31.5 (pins at 31.5, 36.5, 41.5, 46.5; body x: [29.0, 49.0])
+    # Gap between TB2 and TB1 is 2.5mm (generous room for interlocking dovetail tabs)
+    kf301_terminal("TB1", "Ultrasonic", 31.5, 10.0, 4,
                    [(2, "+5V"), (6, "GPIO3_TRIG"), (8, "ECHO_5V"), (1, "GND")],
                    ["5V", "TRIG", "ECHO", "GND"])
 
-    # TB3: Pump at X=56.0 (Pin 1: +5V, Pin 2: PUMP_DRAIN)
-    terminal_block("TB3", "Pump_5V", 56.0, 8.5, 2, 5.08,
+    # TB3: Pump at X=53.5 (pins at 53.5, 58.5; body x: [51.0, 61.0])
+    # Gap between TB1 and TB3 is 2.0mm; clearance to H2 screw head is 6.5mm!
+    kf301_terminal("TB3", "Pump_5V", 53.5, 10.0, 2,
                    [(2, "+5V"), (11, "PUMP_DRAIN")],
-                   ["+", "-"], bx_pad_right=1.6)
+                   ["+", "-"])
 
-    # ESP32 Headers: J1 at Y=26.0, J2 at Y=41.24
+    # ESP32 Headers: J1 at Y=30.0, J2 at Y=45.24
     lines.append(f'\t(footprint "PinSocket_1x08_P2.54mm_Vertical"')
-    lines.append(f'\t\t(layer "F.Cu") (uuid "{u()}") (at 14.0 26.0)')
+    lines.append(f'\t\t(layer "F.Cu") (uuid "{u()}") (at 14.0 30.0)')
     lines.append(f'\t\t(property "Reference" "J1" (at -2.4 0 90) (layer "F.SilkS") (effects (font (size 0.8 0.8) bold (thickness 0.14))))')
     j1_nets = [
         (2, "+5V"), (1, "GND"), (12, "+3V3"), (3, "GPIO0_ADC"),
@@ -168,7 +176,7 @@ def generate_board():
     lines.append(f'\t)')
 
     lines.append(f'\t(footprint "PinSocket_1x08_P2.54mm_Vertical"')
-    lines.append(f'\t\t(layer "F.Cu") (uuid "{u()}") (at 14.0 41.24)')
+    lines.append(f'\t\t(layer "F.Cu") (uuid "{u()}") (at 14.0 45.24)')
     lines.append(f'\t\t(property "Reference" "J2" (at -2.4 0 90) (layer "F.SilkS") (effects (font (size 0.8 0.8) bold (thickness 0.14))))')
     j2_nets = [
         (0, ""), (0, ""), (0, ""), (0, ""),
@@ -183,11 +191,11 @@ def generate_board():
     lines.append(f'\t)')
 
     # ESP32 Box Outline
-    lines.append(f'\t(gr_rect (start 10.5 23.8) (end 34.5 43.4) (stroke (width 0.2) (type solid)) (fill none) (layer "F.SilkS") (uuid "{u()}"))')
-    lines.append(f'\t(gr_text "ESP32-C3 SuperMini" (at 22.5 33.6) (layer "F.SilkS") (uuid "{u()}") (effects (font (size 1.1 1.1) bold (thickness 0.18))))')
+    lines.append(f'\t(gr_rect (start 10.5 27.8) (end 34.5 47.4) (stroke (width 0.2) (type solid)) (fill none) (layer "F.SilkS") (uuid "{u()}"))')
+    lines.append(f'\t(gr_text "ESP32-C3 SuperMini" (at 22.5 37.6) (layer "F.SilkS") (uuid "{u()}") (effects (font (size 1.1 1.1) bold (thickness 0.18))))')
 
-    # Q1: FQP30N06L N-MOSFET (TO-220 Vertical) at X=58.0, Y=26.0
-    qx, qy = 58.0, 26.0
+    # Q1: FQP30N06L N-MOSFET (TO-220 Vertical) at X=58.5, Y=30.0 (Pins at 55.96, 58.5, 61.04)
+    qx, qy = 58.5, 30.0
     lines.append(f'\t(footprint "TO-220-3_Vertical"')
     lines.append(f'\t\t(layer "F.Cu") (uuid "{u()}") (at {qx} {qy})')
     lines.append(f'\t\t(property "Reference" "Q1" (at 0 -3.4) (layer "F.SilkS") (effects (font (size 0.85 0.85) bold (thickness 0.15))))')
@@ -203,25 +211,25 @@ def generate_board():
     lines.append(f'\t\t(fp_text user "S" (at 2.54 2.6) (layer "F.SilkS") (uuid "{u()}") (effects (font (size 0.8 0.8) (thickness 0.13))))')
     lines.append(f'\t)')
 
-    # D1: 1N5819 Schottky Diode (DO-41 Horizontal) at X=58.54, Y=16.5
-    # Pin 1 at X=56.0 (+5V / Cathode), Pin 2 at X=61.08 (PUMP_DRAIN / Anode)
-    dx, dy = 58.54, 16.5
+    # D1: 1N5819 Schottky Diode (DO-41 Horizontal) at X=56.0, Y=19.5
+    # Pin 1 at X=53.5 (+5V / Cathode), Pin 2 at X=58.5 (PUMP_DRAIN / Anode) -> Perfect vertical alignment with TB3 and Q1!
+    dx, dy = 56.0, 19.5
     lines.append(f'\t(footprint "D_DO-41_SOD81_P7.62mm_Horizontal"')
     lines.append(f'\t\t(layer "F.Cu") (uuid "{u()}") (at {dx} {dy})')
     lines.append(f'\t\t(property "Reference" "D1" (at 0 -2.3) (layer "F.SilkS") (effects (font (size 0.85 0.85) bold (thickness 0.15))))')
     lines.append(f'\t\t(fp_rect (start -1.4 -1.2) (end 1.4 1.2) (stroke (width 0.2) (type solid)) (fill none) (layer "F.SilkS"))')
     lines.append(f'\t\t(fp_line (start -1.0 -1.2) (end -1.0 1.2) (stroke (width 0.4) (type solid)) (layer "F.SilkS"))')
-    lines.append(f'\t\t(pad "1" thru_hole circle (at -2.54 0) (size 1.8 1.8) (drill 1.0) (layers "*.Cu" "*.Mask") (net 2 "+5V"))')       # 56.0
-    lines.append(f'\t\t(pad "2" thru_hole circle (at 2.54 0) (size 1.8 1.8) (drill 1.0) (layers "*.Cu" "*.Mask") (net 11 "PUMP_DRAIN"))') # 61.08
+    lines.append(f'\t\t(pad "1" thru_hole circle (at -2.5 0) (size 1.8 1.8) (drill 1.0) (layers "*.Cu" "*.Mask") (net 2 "+5V"))')       # 53.5
+    lines.append(f'\t\t(pad "2" thru_hole circle (at 2.5 0) (size 1.8 1.8) (drill 1.0) (layers "*.Cu" "*.Mask") (net 11 "PUMP_DRAIN"))') # 58.5
     lines.append(f'\t)')
 
-    # C3: 100uF Bulk Electrolytic at X=7.0, Y=26.0
+    # C3: 100uF Bulk Electrolytic at X=6.5, Y=30.0
     lines.append(f'\t(footprint "CP_Radial_D6.3mm_P2.50mm"')
-    lines.append(f'\t\t(layer "F.Cu") (uuid "{u()}") (at 7.0 26.0)')
+    lines.append(f'\t\t(layer "F.Cu") (uuid "{u()}") (at 6.5 30.0)')
     lines.append(f'\t\t(property "Reference" "C3" (at 0 -3.8) (layer "F.SilkS") (effects (font (size 0.8 0.8) bold (thickness 0.14))))')
     lines.append(f'\t\t(fp_circle (center 0 0) (end 3.15 0) (stroke (width 0.2) (type solid)) (fill none) (layer "F.SilkS"))')
-    lines.append(f'\t\t(pad "1" thru_hole rect (at 0 -1.25) (size 1.8 1.8) (drill 0.9) (layers "*.Cu" "*.Mask") (net 2 "+5V"))') # (7.0, 24.75)
-    lines.append(f'\t\t(pad "2" thru_hole circle (at 0 1.25) (size 1.8 1.8) (drill 0.9) (layers "*.Cu" "*.Mask") (net 1 "GND"))') # (7.0, 27.25)
+    lines.append(f'\t\t(pad "1" thru_hole rect (at 0 -1.25) (size 1.8 1.8) (drill 0.9) (layers "*.Cu" "*.Mask") (net 2 "+5V"))') # (6.5, 28.75)
+    lines.append(f'\t\t(pad "2" thru_hole circle (at 0 1.25) (size 1.8 1.8) (drill 0.9) (layers "*.Cu" "*.Mask") (net 1 "GND"))') # (6.5, 31.25)
     lines.append(f'\t\t(fp_text user "+" (at -1.8 -1.25) (layer "F.SilkS") (uuid "{u()}") (effects (font (size 1.0 1.0) bold (thickness 0.18))))')
     lines.append(f'\t)')
 
@@ -244,21 +252,21 @@ def generate_board():
         lines.append(f'\t\t(pad "2" thru_hole circle (at 1.25 0) (size 1.7 1.7) (drill 0.9) (layers "*.Cu" "*.Mask") (net {net2[0]} "{net2[1]}"))')
         lines.append(f'\t)')
 
-    # Supply Divider R1, R2, C1 to the left (X=13.0)
-    resistor("R1", "10k", 13.0, 16.5, (2, "+5V"), (3, "GPIO0_ADC"), ref_offset_y=-2.2)
-    resistor("R2", "10k", 13.0, 20.5, (1, "GND"), (3, "GPIO0_ADC"), ref_offset_y=2.2)
-    ceramic_cap("C1", "100nF", 20.62, 18.5, (3, "GPIO0_ADC"), (1, "GND"))
+    # Supply Divider R1, R2 at X=11.5 (Y=19.5/24.0); C1 at X=18.5, Y=24.0
+    resistor("R1", "10k", 11.5, 19.5, (2, "+5V"), (3, "GPIO0_ADC"), ref_offset_y=-2.2)
+    resistor("R2", "10k", 11.5, 24.0, (1, "GND"), (3, "GPIO0_ADC"), ref_offset_y=2.2)
+    ceramic_cap("C1", "100nF", 18.5, 24.0, (3, "GPIO0_ADC"), (1, "GND"))
 
-    # C2: Soil RF Filter near TB2 at X=16.0, Y=13.5
-    ceramic_cap("C2", "100nF", 16.0, 13.5, (4, "GPIO1_SOIL"), (1, "GND"))
+    # C2: Soil RF Filter at X=19.0, Y=19.5 (Pin 1: 17.75, Pin 2: 20.25 GND)
+    ceramic_cap("C2", "100nF", 19.0, 19.5, (4, "GPIO1_SOIL"), (1, "GND"))
 
-    # Echo Stepper R3, R4 at X=45.0
-    resistor("R3", "1k", 45.0, 16.5, (7, "GPIO4_ECHO"), (8, "ECHO_5V"), ref_offset_y=-2.2)
-    resistor("R4", "2k", 45.0, 20.5, (7, "GPIO4_ECHO"), (1, "GND"), ref_offset_y=2.2)
+    # Echo Stepper R3, R4 at X=43.0 (Y=19.5/24.0)
+    resistor("R3", "1k", 43.0, 19.5, (7, "GPIO4_ECHO"), (8, "ECHO_5V"), ref_offset_y=-2.2)
+    resistor("R4", "2k", 43.0, 24.0, (7, "GPIO4_ECHO"), (1, "GND"), ref_offset_y=2.2)
 
-    # MOSFET Gate Resistors R5, R6 at X=45.0
-    resistor("R5", "1k", 45.0, 36.0, (9, "GPIO7_GATE"), (10, "GATE_DRIVE"), ref_offset_y=-2.2)
-    resistor("R6", "100k", 45.0, 45.5, (1, "GND"), (10, "GATE_DRIVE"), ref_offset_y=-2.2)
+    # MOSFET Gate Resistors R5, R6 at X=48.0 (Y=38.0/47.5)
+    resistor("R5", "1k", 48.0, 38.0, (9, "GPIO7_GATE"), (10, "GATE_DRIVE"), ref_offset_y=-2.2)
+    resistor("R6", "100k", 48.0, 47.5, (1, "GND"), (10, "GATE_DRIVE"), ref_offset_y=-2.2)
 
     # ---------------------------------------------------------
     # NON-CROSSING COPPER TRACES
@@ -267,71 +275,81 @@ def generate_board():
         lines.append(f'\t(segment (start {x1} {y1}) (end {x2} {y2}) (width {w}) (layer "{layer}") (net {nid}) (uuid "{u()}"))')
 
     # Net 2 (+5V) Power Bus (0.8mm)
-    # C3-1 (7.0, 24.75) -> J1-1 (14.0, 26.0)
-    seg(7.0, 24.75, 7.0, 24.0, 0.8, 2)
-    seg(7.0, 24.0, 14.0, 24.0, 0.8, 2)
-    seg(14.0, 24.0, 14.0, 26.0, 0.8, 2)
-    # C3-1 (7.0, 24.75) up along X=7.0 to R1-1 (9.19, 16.5)
-    seg(7.0, 24.75, 7.0, 16.5, 0.8, 2)
-    seg(7.0, 16.5, 9.19, 16.5, 0.8, 2)
-    # Along safe perimeter corridor at Y=1.5 (completely clears H1 and H2)
-    seg(9.19, 16.5, 9.19, 1.5, 0.8, 2)
-    seg(9.19, 1.5, 36.0, 1.5, 0.8, 2)
-    seg(36.0, 1.5, 36.0, 8.5, 0.8, 2) # TB1 Pin 1 (+5V)
-    # To TB3 Pin 1 (+5V at X=56.0) and D1 Pin 1 (+5V at X=56.0)
-    seg(36.0, 1.5, 56.0, 1.5, 0.8, 2)
-    seg(56.0, 1.5, 56.0, 8.5, 0.8, 2) # TB3 Pin 1 (+5V)
-    seg(56.0, 8.5, 56.0, 16.5, 0.8, 2) # D1 Cathode (+5V)
+    # C3-1 (6.5, 28.75) -> J1-1 (14.0, 30.0)
+    seg(6.5, 28.75, 6.5, 28.0, 0.8, 2)
+    seg(6.5, 28.0, 14.0, 28.0, 0.8, 2)
+    seg(14.0, 28.0, 14.0, 30.0, 0.8, 2)
+    # C3-1 (6.5, 28.75) connects left to X=4.5 bus
+    seg(6.5, 28.75, 4.5, 26.75, 0.8, 2)
+    seg(4.5, 26.75, 4.5, 19.5, 0.8, 2)
+    # Stub to R1-1 (7.69, 19.5)
+    seg(4.5, 19.5, 7.69, 19.5, 0.8, 2)
+    # Along X=4.5 up to Y=8.0, then diagonal to X=7.5, Y=5.0 to clear H1
+    seg(4.5, 19.5, 4.5, 8.0, 0.8, 2)
+    seg(4.5, 8.0, 7.5, 5.0, 0.8, 2)
+    seg(7.5, 5.0, 7.5, 1.5, 0.8, 2)
+    # Across safe perimeter corridor at Y=1.5
+    seg(7.5, 1.5, 31.5, 1.5, 0.8, 2)
+    seg(31.5, 1.5, 31.5, 10.0, 0.8, 2) # TB1 Pin 1 (+5V)
+    # To TB3 Pin 1 (+5V at X=53.5) and D1 Pin 1 (+5V at X=53.5)
+    seg(31.5, 1.5, 53.5, 1.5, 0.8, 2)
+    seg(53.5, 1.5, 53.5, 10.0, 0.8, 2) # TB3 Pin 1 (+5V)
+    seg(53.5, 10.0, 53.5, 19.5, 0.8, 2) # D1 Cathode (+5V)
 
     # Net 3 (GPIO0_ADC)
-    seg(16.81, 16.5, 19.37, 17.5, 0.35, 3)
-    seg(19.37, 17.5, 19.37, 18.5, 0.35, 3)
-    seg(19.37, 18.5, 16.81, 19.5, 0.35, 3)
-    seg(16.81, 19.5, 16.81, 20.5, 0.35, 3)
-    seg(16.81, 20.5, 21.62, 23.5, 0.35, 3)
-    seg(21.62, 23.5, 21.62, 26.0, 0.35, 3)
+    # R1-2 (15.31, 19.5) -> R2-2 (15.31, 24.0) -> C1-1 (17.25, 24.0) -> J1-4 (21.62, 30.0)
+    seg(15.31, 19.5, 15.31, 24.0, 0.35, 3)
+    seg(15.31, 24.0, 17.25, 24.0, 0.35, 3)
+    seg(17.25, 24.0, 21.62, 28.37, 0.35, 3)
+    seg(21.62, 28.37, 21.62, 30.0, 0.35, 3)
 
     # Net 4 (GPIO1_SOIL)
-    seg(21.0, 8.5, 21.0, 10.0, 0.35, 4)
-    seg(21.0, 10.0, 14.75, 10.0, 0.35, 4)
-    seg(14.75, 10.0, 14.75, 13.5, 0.35, 4)
-    seg(21.0, 10.0, 24.16, 13.16, 0.35, 4)
-    seg(24.16, 13.16, 24.16, 26.0, 0.35, 4)
+    # TB2 Pin 1 (14.0, 10.0) -> C2-1 (17.75, 19.5) -> J1-5 (24.16, 30.0)
+    seg(14.0, 10.0, 14.0, 15.75, 0.35, 4)
+    seg(14.0, 15.75, 17.75, 19.5, 0.35, 4)
+    seg(17.75, 19.5, 24.16, 25.91, 0.35, 4)
+    seg(24.16, 25.91, 24.16, 30.0, 0.35, 4)
 
     # Net 5 (GPIO2_VCC)
-    seg(26.08, 8.5, 26.08, 12.0, 0.5, 5)
-    seg(26.08, 12.0, 26.70, 12.62, 0.5, 5)
-    seg(26.70, 12.62, 26.70, 26.0, 0.5, 5)
+    # TB2 Pin 2 (19.0, 10.0) -> J1-6 (26.70, 30.0)
+    seg(19.0, 10.0, 19.0, 16.0, 0.5, 5)
+    seg(19.0, 16.0, 26.70, 23.7, 0.5, 5)
+    seg(26.70, 23.7, 26.70, 30.0, 0.5, 5)
 
     # Net 6 (GPIO3_TRIG)
-    seg(41.08, 8.5, 41.08, 12.0, 0.35, 6)
-    seg(41.08, 12.0, 29.24, 23.84, 0.35, 6)
-    seg(29.24, 23.84, 29.24, 26.0, 0.35, 6)
+    # TB1 Pin 2 (36.5, 10.0) -> J1-7 (29.24, 30.0)
+    seg(36.5, 10.0, 36.5, 16.0, 0.35, 6)
+    seg(36.5, 16.0, 29.24, 23.26, 0.35, 6)
+    seg(29.24, 23.26, 29.24, 30.0, 0.35, 6)
 
     # Net 7 (GPIO4_ECHO)
-    seg(41.19, 16.5, 41.19, 20.5, 0.35, 7)
-    seg(41.19, 20.5, 41.19, 22.0, 0.35, 7)
-    seg(41.19, 22.0, 31.78, 24.5, 0.35, 7)
-    seg(31.78, 24.5, 31.78, 26.0, 0.35, 7)
+    # R3-1 (39.19, 19.5) -> R4-1 (39.19, 24.0) -> J1-8 (31.78, 30.0)
+    seg(39.19, 19.5, 39.19, 24.0, 0.35, 7)
+    seg(39.19, 24.0, 39.19, 25.5, 0.35, 7)
+    seg(39.19, 25.5, 34.69, 30.0, 0.35, 7)
+    seg(34.69, 30.0, 31.78, 30.0, 0.35, 7)
 
     # Net 8 (ECHO_5V)
-    seg(46.16, 8.5, 48.81, 11.15, 0.35, 8)
-    seg(48.81, 11.15, 48.81, 16.5, 0.35, 8)
+    # TB1 Pin 3 (41.5, 10.0) -> R3-2 (46.81, 19.5)
+    seg(41.5, 10.0, 41.5, 14.19, 0.35, 8)
+    seg(41.5, 14.19, 46.81, 19.5, 0.35, 8)
 
     # Net 9 (GPIO7_GATE)
-    seg(26.70, 41.24, 26.70, 36.0, 0.35, 9)
-    seg(26.70, 36.0, 41.19, 36.0, 0.35, 9)
+    # J2 Pin 6 (26.70, 45.24) -> R5-1 (44.19, 38.0)
+    seg(26.70, 45.24, 26.70, 38.0, 0.35, 9)
+    seg(26.70, 38.0, 44.19, 38.0, 0.35, 9)
 
     # Net 10 (GATE_DRIVE)
-    seg(48.81, 36.0, 48.81, 45.5, 0.5, 10)
-    seg(48.81, 36.0, 55.46, 29.35, 0.5, 10)
-    seg(55.46, 29.35, 55.46, 26.0, 0.5, 10)
+    # R5-2 (51.81, 38.0) -> R6-2 (51.81, 47.5) & Q1-1 Gate (55.96, 30.0)
+    seg(51.81, 38.0, 51.81, 47.5, 0.5, 10)
+    seg(51.81, 38.0, 51.81, 34.15, 0.5, 10)
+    seg(51.81, 34.15, 55.96, 30.0, 0.5, 10)
 
     # Net 11 (PUMP_DRAIN) - High Current 1.0mm
-    # Connects TB3 Pin 2 (61.08, 8.5) -> D1 Pin 2 (61.08, 16.5) -> Q1 Pin 2 Drain (58.0, 26.0)
-    seg(61.08, 8.5, 61.08, 16.5, 1.0, 11)
-    seg(61.08, 16.5, 61.08, 22.92, 1.0, 11)
-    seg(61.08, 22.92, 58.0, 26.0, 1.0, 11)
+    # Connects TB3 Pin 2 (58.5, 10.0) -> D1 Pin 2 (58.5, 19.5) -> Q1 Pin 2 Drain (58.5, 30.0)
+    # Perfectly straight vertical line! Zero bends, lowest resistance!
+    seg(58.5, 10.0, 58.5, 19.5, 1.0, 11)
+    seg(58.5, 19.5, 58.5, 30.0, 1.0, 11)
 
     # Bottom Ground Plane Pour (B.Cu)
     lines.append(f'\t(zone (net 1) (net_name "GND") (layer "B.Cu") (uuid "{u()}")')
@@ -346,7 +364,7 @@ def generate_board():
     lines.append(')')
     with open('pcb/plant-esp32.kicad_pcb', 'w') as f:
         f.write('\n'.join(lines) + '\n')
-    print("Clean PCB generated successfully.")
+    print(f"Clean PCB generated successfully for KF301 ({W}x{H} mm).")
 
 if __name__ == '__main__':
     generate_board()
