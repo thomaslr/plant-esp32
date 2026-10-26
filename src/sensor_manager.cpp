@@ -159,10 +159,27 @@ float SensorManager::readSupplyVoltage() {
 
     int median_mv = calculateMedianInt(samples, NUM_SAMPLES);
 
-    // 10k/10k voltage divider steps 5V down by 1/2.
+    // 100k/100k voltage divider steps 5V down by 1/2.
     // Full rail voltage = 2.0 * measured voltage at divider center tap.
     float rail_volts = (median_mv * 2.0f) / 1000.0f;
     return rail_volts;
+}
+
+float SensorManager::readBatteryVoltage() {
+    constexpr size_t NUM_SAMPLES = 5;
+    int samples[NUM_SAMPLES];
+
+    for (size_t i = 0; i < NUM_SAMPLES; ++i) {
+        samples[i] = analogReadMilliVolts(PIN_BATTERY_MONITOR_ADC);
+        delay(5);
+    }
+
+    int median_mv = calculateMedianInt(samples, NUM_SAMPLES);
+
+    // 100k/100k voltage divider steps battery voltage down by 1/2.
+    // Full battery voltage = 2.0 * measured voltage at divider center tap.
+    float batt_volts = (median_mv * 2.0f) / 1000.0f;
+    return batt_volts;
 }
 
 float SensorManager::readChipTemperature() {
@@ -174,8 +191,9 @@ SensorReading SensorManager::readAllSensors(bool pumpActiveState) {
     r.timestamp = static_cast<uint32_t>(esp_timer_get_time() / 1000000ULL);
     r.pump_active = pumpActiveState;
 
-    // 1. Supply Rail Voltage
+    // 1. Supply Rail & 18650 Battery Voltages (Concurrent Dual ADC)
     r.supply_voltage = readSupplyVoltage();
+    r.battery_voltage = readBatteryVoltage();
 
     // 2. Chip Temperature
     r.chip_temp = readChipTemperature();

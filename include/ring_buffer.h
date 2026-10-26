@@ -18,6 +18,7 @@ struct SensorReading {
     float water_percent = 0.0f;    // Tank fullness percentage
     float distance_cm = 0.0f;      // Raw ultrasonic distance to water surface
     float supply_voltage = 0.0f;   // 5V rail measured voltage
+    float battery_voltage = 0.0f;  // 18650 Battery measured voltage
     float chip_temp = 0.0f;        // Internal ESP32-C3 silicon temperature
     bool pump_active = false;      // True if pump was running during sample
 };
@@ -76,6 +77,7 @@ public:
             obj["water_percent"] = roundf(r.water_percent * 10.0f) / 10.0f;
             obj["distance_cm"] = roundf(r.distance_cm * 10.0f) / 10.0f;
             obj["supply_voltage"] = roundf(r.supply_voltage * 100.0f) / 100.0f;
+            obj["battery_voltage"] = roundf(r.battery_voltage * 100.0f) / 100.0f;
             obj["chip_temp"] = roundf(r.chip_temp * 10.0f) / 10.0f;
             obj["pump_active"] = r.pump_active;
         }

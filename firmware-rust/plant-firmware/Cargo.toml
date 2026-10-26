@@ -1,0 +1,16 @@
+[package]
+name = "plant-firmware"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+plant-core = { path = "../plant-core" }
+esp-idf-svc = { version = "0.53.0", default-features = false, features = ["std", "binstart", "critical-section"] }
+embedded-svc = { version = "0.29", default-features = false, features = ["std"] }
+anyhow = "1.0"
+log = "0.4"
+serde = { version = "1.0", default-features = false, features = ["alloc", "derive"] }
+serde_json = { version = "1.0", default-features = false, features = ["alloc"] }
+
+[build-dependencies]
+embuild = { version = "0.33.2", features = ["espidf"] }

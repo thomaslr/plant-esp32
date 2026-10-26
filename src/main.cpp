@@ -85,6 +85,10 @@ void taskSensorAcquisition(void* pvParameters) {
         // Broadcast telemetry via WebSockets to connected browsers
         webServerMgr.broadcastTelemetry(reading);
 
+        Serial.printf("[SENSOR] Soil: %.1f%% | Water: %.1fcm | 5V Rail: %.2fV | Bat: %.2fV | Chip: %.1fC\n",
+                      reading.soil_percent, reading.water_level_cm, reading.supply_voltage,
+                      reading.battery_voltage, reading.chip_temp);
+
         // Automated Watering Logic
         if (!pumpRunning) {
             float soil = reading.soil_percent;

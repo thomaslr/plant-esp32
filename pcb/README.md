@@ -1,84 +1,95 @@
-# Plant ESP32 Controller — Custom PCB Fabrication Package
+# Plant ESP32 Controller — Hardware & PCB Design Hub
 
-This directory contains the production-ready KiCad 8/10 project, fabrication files (Gerbers & Drill), 3D visual renders, and ordering instructions for the **Plant ESP32 Automated Watering & Telemetry System**, specifically tailored for **KF301 Modular 5.00mm Pitch Screw Terminal Blocks**.
+This directory contains the complete circuit designs, fabrication archives, interactive prototyping visualizers, and documentation for the **Plant ESP32 Automated Watering & Telemetry System**.
+
+The repository provides three production editions sharing the exact same mechanical footprint ($74.0 \times 54.0\,\text{mm}$), identical M3 mounting hole locations, and identical KF301 screw terminal positions:
+
+---
+
+## Hardware Editions Directory Structure
+
+```
+pcb/
+├── smd/                            # Turnkey SMT / SuperMini Socket Edition (Rev 2.3)
+│   ├── plant-esp32-smd.kicad_pcb    # KiCad PCB layout (0 DRC violations)
+│   ├── plant-esp32-smd.kicad_sch    # Schematic netlist
+│   ├── plant-esp32-smd_gerbers.zip  # Production Gerber & drill fabrication zip
+│   ├── plant-esp32-smd_bom.csv      # JLCPCB SMT BOM (100% Basic Parts, $0 fees)
+│   ├── plant-esp32-smd_cpl.csv      # Pick-and-place centroids
+│   ├── generate_pcb_smd.py          # Python layout generator & DRC compiler
+│   ├── plant-esp32-smd-top.png      # 3D render top view
+│   └── README.md                    # Dedicated SMD BOM & JLCPCB ordering guide
+│
+├── esp32-onboard-smd/              # Fully Integrated Onboard ESP32-C3-WROOM-02 Edition
+│   ├── plant-esp32-onboard.kicad_pcb # KiCad PCB layout (0 DRC violations)
+│   ├── plant-esp32-onboard.kicad_sch # Complete KiCad schematic
+│   ├── plant-esp32-onboard_gerbers.zip # Production Gerber & drill fabrication zip
+│   ├── plant-esp32-onboard_bom.csv   # JLCPCB SMT BOM
+│   ├── plant-esp32-onboard_cpl.csv   # Pick-and-place centroids
+│   ├── build_onboard_pcb.py          # Python layout generator & precision router
+│   ├── precision_router.py           # A* grid router for high-density routing
+│   ├── plant-esp32-onboard-top.png   # 3D render top view
+│   └── README.md                     # Dedicated Onboard Edition guide
+│
+├── hole-thru/                       # 100% Through-Hole Edition (Rev 2.0)
+│   ├── plant-esp32.kicad_pcb        # KiCad PCB layout (0 DRC violations)
+│   ├── plant-esp32.kicad_sch        # Schematic netlist
+│   ├── plant-esp32_gerbers.zip      # Production Gerber & drill fabrication zip
+│   ├── generate_pcb.py              # Python layout generator
+│   ├── circuit_diagram.html         # Interactive breadboard SVG visualizer
+│   ├── breadboard_circuit_guide.md  # Step-by-step breadboard assembly guide
+│   ├── perfboard_diagram.html       # Interactive perfboard SVG visualizer
+│   ├── perfboard_circuit_guide.md   # Step-by-step soldered perfboard guide
+│   ├── pcb_render_top.png           # 3D render top view
+│   ├── pcb_render_iso.png           # 3D render isometric view
+│   ├── pcb_render_bottom.png        # 3D render bottom view
+│   └── README.md                    # Dedicated through-hole assembly guide
+│
+└── README.md                        # Master hardware index (this file)
+```
+
+---
+
+## Comparison: SMD vs. Through-Hole
+
+| Feature | 🤖 Turnkey SMD Edition (`pcb/smd/`) | 🛠️ Through-Hole Edition (`pcb/hole-thru/`) |
+| :--- | :--- | :--- |
+| **Best For** | Automated JLCPCB factory assembly | DIY hand soldering & prototyping |
+| **Assembly Effort** | **Minimal** — JLCPCB pre-solders all SMD parts | Full hand-soldering of all passives |
+| **JLCPCB Feeder Fees** | **\$0.00** (100% Basic Library Parts) | N/A (Standard bare PCB fabrication) |
+| **MOSFET** | AO3400A (SOT-23, 30V 5.7A, Low $R_{DS(on)}$) | FQP30N06L / IRLZ44N (TO-220-3) |
+| **Flyback Diode** | SS34 (SMA / DO-214AC, 3A 40V Schottky) | 1N4001 (DO-41 axial) |
+| **Solar / Battery Input** | **TB4** (KF301-3P) + **D2** (SS34 Anti-Backfeed Diode) | N/A (USB / 5V rail direct) |
+| **Battery Monitoring** | **Dedicated Dual ADC** (5V Rail on G0 + 18650 on G4, 0 jumpers) | 5V Rail Divider only (210 µA drain) |
+| **5V Power Decoupling** | **Hybrid**: 2× 10 µF Basic MLCCs + Radial `C_EXT` (DNP) | 100 µF Radial Electrolytic can |
+| **Expansion Sockets** | **Included**: LDR divider, SHT30, BH1750 (DNP) | Standard core functionality |
+| **Firmware Mapping** | Soil on **G5**, LDR on **G3**, TRIG on **G10**, ECHO on **G6**, Bat on **G4** | Soil Power on **GPIO 2**, TRIG on **GPIO 3**, ECHO on **GPIO 4** |
 
 ---
 
 ## 3D Board Previews
 
-| Top View (Components & Silkscreen) | Isometric 3D View |
+### 🤖 Option 1: Turnkey SMD Edition with Expansion (Rev 2.3)
+👉 **Full details and ordering guide:** [`pcb/smd/README.md`](smd/README.md)
+
+| Top View (SMD) | Isometric 3D View (SMD) |
 | :---: | :---: |
-| ![Top View](pcb_render_top.png) | ![Isometric View](pcb_render_iso.png) |
-
-| Bottom View (Solid Ground Plane Pour) |
-| :---: |
-| ![Bottom View](pcb_render_bottom.png) |
+| ![SMD Top View](smd/pcb_smd_render_top.png) | ![SMD Isometric View](smd/pcb_smd_render_iso.png) |
 
 ---
 
-## Mechanical & Electrical Clearances (KF301 Verified)
+### 🛠️ Option 2: 100% Through-Hole Edition (Rev 2.0)
+👉 **Full details and assembly guide:** [`pcb/hole-thru/README.md`](hole-thru/README.md)
 
-The board layout has been explicitly configured for the mechanical envelope of **KF301-2P, KF301-3P, and KF301-4P** (or spliced 2P+2P) terminal blocks:
-* **Pin Pitch**: Exactly **5.00 mm** (matching metric KF301 pin spacing).
-* **Pad Hole Diameter**: **1.3 mm drill** (comfortably fits round or square KF301 solder pins).
-* **Body Outline on Silkscreen**: Exactly **7.6 mm depth** ($-3.8\text{ mm}$ to $+3.8\text{ mm}$ relative to pin center).
-* **Inter-Block Gaps**:
-  * **2.5 mm physical gap** between TB2 (Soil) and TB1 (Ultrasonic) — plenty of room for interlocking side dovetails.
-  * **2.0 mm physical gap** between TB1 (Ultrasonic) and TB3 (Pump).
-* **Mounting Hole Clearances**:
-  * **5.0 mm clearance** from TB2 outer edge to top-left M3 screw head (H1).
-  * **6.5 mm clearance** from TB3 outer edge to top-right M3 screw head (H2).
-  * Standoffs, washers, and screw heads will never touch or crowd the terminal housings.
-* **Component Clearance Below Terminals**:
-  * A clear **$4.5\text{ mm}$ corridor** exists below the plastic housing before reaching the nearest resistors/capacitors.
-  * Fingers and small screwdrivers have comfortable access to terminal screws without risking damage to nearby components.
-* **Pin Labels**:
-  * Silkscreen labels (`[DATA]`, `[VCC]`, `[GND]`, `[5V]`, `[TRIG]`, `[ECHO]`, `[GND]`, `[+]`, `[-]`) are printed outside the housing footprint so they remain visible when wires are screwed down.
-
----
-
-## PCB Specifications
-
-| Parameter | Specification | Fabricator Default? |
-| :--- | :--- | :--- |
-| **Dimensions** | **74.0 mm × 54.0 mm** | Custom (auto-detected from Edge.Cuts) |
-| **Layer Count** | **2 Layers** (Top: Signals & Power Bus, Bottom: Solid Ground Plane) | Yes |
-| **Board Thickness** | **1.6 mm** | Yes (Standard) |
-| **Base Material** | FR-4 Standard (Tg 130–140°C) | Yes |
-| **Copper Weight** | **1 oz** (35 µm) | Yes |
-| **Surface Finish** | **HASL Lead-Free** (or Lead-Free OSP / ENIG) | Recommended: HASL Lead-Free |
-| **Solder Mask** | Any color (Green, Matte Black, Blue, Purple) | Yes |
-| **Silkscreen** | White | Yes |
-| **Mounting Holes** | **4× M3** (3.2 mm drill, 5.0 mm annular ring, grounded) | Yes |
-| **Design Rule Check** | **0 DRC Violations • 0 Unconnected Nets** | 100% Clean |
-
----
-
-## Bill of Materials (BOM) — 100% Through-Hole (THT)
-
-| Designator | Description / Value | Footprint / Pitch | Recommended Part / Notes |
-| :--- | :--- | :--- | :--- |
-| **ESP32** | ESP32-C3 SuperMini module | 2× 1x8 Female Pin Header (2.54 mm pitch, 15.24 mm spacing) | ESP32-C3 SuperMini |
-| **TB1** | 4-Pin Screw Terminal Block | **KF301-4P** (or 2× KF301-2P spliced), 5.00 mm pitch | Ultrasonic Sensor (5V, TRIG, ECHO, GND) |
-| **TB2** | 3-Pin Screw Terminal Block | **KF301-3P**, 5.00 mm pitch | Soil Moisture Sensor (DATA, VCC, GND) |
-| **TB3** | 2-Pin Screw Terminal Block | **KF301-2P**, 5.00 mm pitch | 5V Submersible Pump (+5V, Drain -) |
-| **Q1** | N-Channel Power MOSFET | TO-220-3 Vertical | **FQP30N06L** / IRLZ44N (Logic-Level, $V_{GS(th)} \le 2.5\text{V}$) |
-| **D1** | Schottky Flyback Diode | DO-41 Horizontal (7.62 mm pitch) | **1N5819** (1A 40V Schottky) |
-| **R1, R2** | 10 kΩ Resistor (1/4W) | Axial DIN0207 (7.62 mm pitch) | Supply Voltage Divider ($V_{in} \to$ GPIO0) |
-| **R3** | 1 kΩ Resistor (1/4W) | Axial DIN0207 (7.62 mm pitch) | Echo Divider High-Side (Echo 5V $\to$ GPIO4) |
-| **R4** | 2 kΩ Resistor (1/4W) | Axial DIN0207 (7.62 mm pitch) | Echo Divider Low-Side (GPIO4 $\to$ GND) |
-| **R5** | 1 kΩ Resistor (1/4W) | Axial DIN0207 (7.62 mm pitch) | Gate In-Rush Current Limiter (GPIO7 $\to$ Gate) |
-| **R6** | 100 kΩ Resistor (1/4W) | Axial DIN0207 (7.62 mm pitch) | Gate Pull-Down Bleeder (Gate $\to$ GND) |
-| **C1** | 100 nF (0.1 µF) Ceramic Capacitor | Disc 2.5 mm pitch | ADC Smoothing Filter |
-| **C2** | 100 nF (0.1 µF) Ceramic Capacitor | Disc 2.5 mm pitch | Soil Sensor Analog RF Noise Filter |
-| **C3** | 100 µF Electrolytic Capacitor (16V–25V) | Radial D6.3 mm, 2.5 mm pitch | 5V Power Rail Transient Bulk Decoupling |
-| **H1–H4** | 4× M3 Standoffs / Screws | 3.2 mm hole | M3 nylon or brass PCB standoffs (10–15 mm) |
+| Top View (THT) | Isometric 3D View (THT) |
+| :---: | :---: |
+| ![THT Top View](hole-thru/pcb_render_top.png) | ![THT Isometric View](hole-thru/pcb_render_iso.png) |
 
 ---
 
 ## Terminal Block Wiring Reference
 
-The silkscreen below each terminal block is labeled clearly:
+### Top Edge Terminals (Both Editions)
 
 ```
 [ Top Edge of PCB ]
@@ -88,58 +99,30 @@ The silkscreen below each terminal block is labeled clearly:
 
 * **TB2 (Soil Sensor)**:
   * `DATA` $\to$ Sensor Analog Out (GPIO1)
-  * `VCC` $\to$ Sensor VCC (GPIO2 switched power)
+  * `VCC` $\to$ Sensor VCC (GPIO5 on SMD edition / GPIO2 on THT edition)
   * `GND` $\to$ Sensor GND
 * **TB1 (Ultrasonic Sensor - HC-SR04 / RCWL-1601)**:
   * `5V` $\to$ Sensor VCC
-  * `TRIG` $\to$ Sensor Trig (GPIO3)
-  * `ECHO` $\to$ Sensor Echo (GPIO4 via 1k/2k level-divider)
+  * `TRIG` $\to$ Sensor Trig (GPIO10 on SMD edition / GPIO3 on THT edition)
+  * `ECHO` $\to$ Sensor Echo (GPIO6 on SMD edition / GPIO4 on THT edition via 1k/2k level-divider)
   * `GND` $\to$ Sensor GND
 * **TB3 (Submersible Water Pump)**:
   * `+` $\to$ Pump Positive lead (connected to +5V)
   * `-` $\to$ Pump Negative lead (switched to GND via MOSFET Drain)
 
----
+### Right Edge Terminal (SMD Edition Only - Rev 2.3)
 
-## How to Order the PCB
+```
+[ Right Edge of PCB ]
+  TB4 (External Solar / Battery 18650 UPS Module)
+   [EXT_5V] [GND] [BAT] (wire entry facing right)
+```
 
-### Ordering via JLCPCB (Recommended — 2 to 4 Day Delivery to Singapore / SEA)
-1. Go to **[jlcpcb.com](https://jlcpcb.com/)** and click **"Add Gerber file"**.
-2. Upload:
-   ```
-   pcb/plant-esp32_gerbers.zip
-   ```
-3. JLCPCB will automatically detect the dimensions (**74.0 mm × 54.0 mm**) and render a live 2D/3D board preview.
-4. Verify standard options:
-   * **Base Material**: FR-4
-   * **Layers**: 2
-   * **Dimensions**: 74 mm × 54 mm (auto-detected)
-   * **PCB Qty**: 5 (minimum order)
-   * **Thickness**: 1.6 mm
-   * **Surface Finish**: **HASL Lead-Free**
-   * **Copper Weight**: 1 oz
-5. Total cost: **US \$2.00** for 5 boards (+ ~\$3–\$5 shipping to Singapore).
-
----
-
-## Assembly / Soldering Sequence
-
-1. **Step 1: Resistors (R1, R2, R3, R4, R5, R6)**
-   * R1 & R2: 10 kΩ (Brown-Black-Orange)
-   * R3 & R5: 1 kΩ (Brown-Black-Red)
-   * R4: 2 kΩ (Red-Black-Red)
-   * R6: 100 kΩ (Brown-Black-Yellow)
-2. **Step 2: Schottky Diode (D1)**
-   * Match the **white cathode band** to the stripe indicated on the silkscreen (facing Pin 1 / left).
-3. **Step 3: Ceramic Capacitors (C1, C2)**
-   * Non-polarized 100 nF disc capacitors.
-4. **Step 4: ESP32 Pin Headers (J1, J2)**
-   * 2× 1x8 female pin socket strips.
-5. **Step 5: MOSFET (Q1)**
-   * Metal tab faces top edge (matching the thick silkscreen line).
-6. **Step 6: Bulk Electrolytic Capacitor (C3)**
-   * Long lead is (+), white striped stripe is GND (-).
-7. **Step 7: KF301 Terminal Blocks (TB1, TB2, TB3)**
-   * Insert with the wire entry openings facing outward towards the top edge. Solder the sturdy 1.3 mm pins.
-8. **Step 8: Stand-offs**
-   * Fasten four M3 standoffs into H1–H4.
+* **TB4 (External Power & Battery)**:
+  * `EXT_5V` (Pin 1) $\to$ Regulated +5V output from solar boost converter (protected by D2 anti-backfeed diode)
+  * `GND` (Pin 2) $\to$ Common system ground
+  * `BAT` (Pin 3) $\to$ Direct connection to 18650 Li-ion battery positive terminal (`BAT+`)
+* **Dedicated Dual ADC Voltage Monitoring (No Jumpers!)**:
+  * **GPIO 0 (`ADC1_CH0`)**: Dedicated 5V supply rail monitor via 100k/100k divider + 100nF
+  * **GPIO 4 (`ADC1_CH4`)**: Dedicated 18650 battery monitor via 100k/100k divider + 100nF from TB4 Pin 3 (21 µA drain)
+  * Both voltages sampled simultaneously in real-time firmware with zero selector headers or manual jumpers.

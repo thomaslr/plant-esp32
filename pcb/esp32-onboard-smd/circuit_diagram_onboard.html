@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plant Monitor ESP32-C3 Onboard SMD — Interactive Circuit Diagram & PCBA Visualizer</title>
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --card-bg: #161b22;
+            --text-color: #c9d1d9;
+            --heading-color: #f0f6fc;
+            --border-color: #30363d;
+            --accent-blue: #58a6ff;
+            --accent-green: #3fb950;
+            --accent-red: #f85149;
+            --accent-purple: #bc8cff;
+            --accent-yellow: #d29922;
+            --accent-cyan: #39c5cf;
+            --accent-orange: #f0883e;
+            --accent-pink: #f778ba;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 20px 24px;
+        }
+
+        .header {
+            max-width: 1500px;
+            margin: 0 auto 16px auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .header h1 {
+            color: var(--heading-color);
+            font-size: 22px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header .badge {
+            background: rgba(56, 139, 253, 0.15);
+            border: 1px solid rgba(56, 139, 253, 0.4);
+            color: var(--accent-blue);
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        .header .badge-turnkey {
+            background: rgba(63, 185, 80, 0.15);
+            border: 1px solid rgba(63, 185, 80, 0.4);
+            color: var(--accent-green);
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        .header p {
+            font-size: 13px;
+            color: #8b949e;
+            margin-top: 4px;
+        }
+
+        .container {
+            max-width: 1500px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 460px;
+            gap: 20px;
+            align-items: start;
+        }
+
+        .canvas-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.4);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .canvas-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 12px;
+            margin-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .btn-filter {
+            background: #21262d;
+            color: #c9d1d9;
+            border: 1px solid #30363d;
+            padding: 4px 9px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 500;
+            transition: all 0.15s ease;
+        }
+
+        .btn-filter:hover {
+            background: #30363d;
+            color: #fff;
+            border-color: #8b949e;
+        }
+
+        .btn-filter.active {
+            background: #1f6feb;
+            color: #ffffff;
+            border-color: #388bfd;
+        }
+
+        .svg-container {
+            width: 100%;
+            height: 620px;
+            background: #090d13;
+            border-radius: 6px;
+            border: 1px solid #21262d;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        svg {
+            width: 100%;
+            height: 100%;
+            cursor: grab;
+        }
+
+        svg:active { cursor: grabbing; }
+
+        /* Component styling */
+        .pcb-board { fill: #0a1f13; stroke: #1b4332; stroke-width: 2; }
+        .mount-hole { fill: #1f242c; stroke: #8b949e; stroke-width: 1.5; }
+        .trace { stroke-linecap: round; stroke-linejoin: round; transition: opacity 0.2s, stroke-width 0.2s; }
+        .pad { cursor: pointer; transition: transform 0.1s; }
+        .pad:hover { filter: brightness(1.4); }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .panel {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .panel h2 {
+            font-size: 14px;
+            color: var(--heading-color);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            padding-bottom: 8px;
+        }
+
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+        }
+
+        .info-table th {
+            text-align: left;
+            color: #8b949e;
+            padding: 5px 6px;
+            border-bottom: 1px solid #30363d;
+            font-weight: 600;
+        }
+
+        .info-table td {
+            padding: 5px 6px;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+
+        .info-table tr:hover {
+            background-color: rgba(56, 139, 253, 0.08);
+        }
+
+        .badge-basic {
+            background: rgba(63, 185, 80, 0.15);
+            color: var(--accent-green);
+            border: 1px solid rgba(63, 185, 80, 0.4);
+            border-radius: 4px;
+            padding: 1px 5px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .badge-ext {
+            background: rgba(210, 153, 34, 0.15);
+            color: var(--accent-yellow);
+            border: 1px solid rgba(210, 153, 34, 0.4);
+            border-radius: 4px;
+            padding: 1px 5px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .badge-pin {
+            font-family: monospace;
+            background: rgba(56, 139, 253, 0.15);
+            color: var(--accent-blue);
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-size: 11px;
+        }
+
+        .highlight-box {
+            background: rgba(56, 139, 253, 0.08);
+            border-left: 3px solid var(--accent-blue);
+            padding: 10px 12px;
+            border-radius: 0 4px 4px 0;
+            font-size: 12px;
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+
+        .tooltip {
+            position: absolute;
+            background: #1c2128;
+            border: 1px solid #444c56;
+            color: #f0f6fc;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            line-height: 1.4;
+            pointer-events: none;
+            display: none;
+            z-index: 100;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.6);
+            max-width: 280px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div>
+            <h1>Plant Monitor ESP32-C3 <span class="badge">Onboard SMD Edition</span> <span class="badge-turnkey">Turnkey PCBA</span></h1>
+            <p>Direct Monolithic ESP32-C3-WROOM-02 Integration with Native USB-C, Dual Dedicated ADCs & 100% Basic SMT Passives</p>
+        </div>
+        <div style="font-size: 12px; color: #8b949e; text-align: right;">
+            Board: <strong>74.0 × 54.0 mm</strong> | DRC: <strong style="color: var(--accent-green);">0 Violations / 0 Unconnected</strong><br>
+            SMT Loading Fee: <strong>$9.00 Total</strong> (Only 3 Extended Parts: ESP32-C3, USB-C, Buttons)
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Interactive PCB / Circuit Diagram Card -->
+        <div class="canvas-card">
+            <div class="canvas-toolbar">
+                <span style="font-size: 11px; font-weight: 600; color: #8b949e;">FILTER NET:</span>
+                <div class="filter-group">
+                    <button class="btn-filter active" onclick="filterNet('all')">All Nets</button>
+                    <button class="btn-filter" onclick="filterNet('v5')">+5V Bus</button>
+                    <button class="btn-filter" onclick="filterNet('v33')">+3.3V Logic</button>
+                    <button class="btn-filter" onclick="filterNet('gnd')">GND</button>
+                    <button class="btn-filter" onclick="filterNet('usb')">USB DP/DN</button>
+                    <button class="btn-filter" onclick="filterNet('rst')">EN / Boot</button>
+                    <button class="btn-filter" onclick="filterNet('adc0')">5V Sense (IO0)</button>
+                    <button class="btn-filter" onclick="filterNet('adc4')">Bat Sense (IO4)</button>
+                    <button class="btn-filter" onclick="filterNet('soil')">Soil (IO1/5)</button>
+                    <button class="btn-filter" onclick="filterNet('ultra')">Echo/Trig (IO6/10)</button>
+                    <button class="btn-filter" onclick="filterNet('pump')">Pump Gate (IO7)</button>
+                    <button class="btn-filter" onclick="filterNet('ldr')">LDR (IO3)</button>
+                    <button class="btn-filter" onclick="filterNet('i2c')">I2C (IO20/21)</button>
+                </div>
+            </div>
+
+            <div class="svg-container">
+                <div class="tooltip" id="tooltip"></div>
+                <!-- SVG Board Rendering: 74mm x 54mm with 10x scale -> 740 x 540 viewBox -->
+                <svg id="pcb-svg" viewBox="-20 -20 780 580">
+                    <defs>
+                        <!-- Glow filter -->
+                        <filter id="glow-blue" x="-20%" y="-20%" width="140%" height="140%">
+                            <feGaussianBlur stdDeviation="3" result="blur" />
+                            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                        </filter>
+                    </defs>
+
+                    <!-- 1. PCB FR4 Board Substrate (Dark Green) -->
+                    <rect class="pcb-board" x="0" y="0" width="740" height="540" rx="16" />
+
+                    <!-- Corner Mounting Holes (M3 - 3.2mm drill, 5.0mm pad) at (35, 35), (705, 35), (35, 505), (705, 505) -->
+                    <circle class="mount-hole" cx="35" cy="35" r="25" />
+                    <circle cx="35" cy="35" r="16" fill="#000" />
+                    <circle class="mount-hole" cx="705" cy="35" r="25" />
+                    <circle cx="705" cy="35" r="16" fill="#000" />
+                    <circle class="mount-hole" cx="35" cy="505" r="25" />
+                    <circle cx="35" cy="505" r="16" fill="#000" />
+                    <circle class="mount-hole" cx="705" cy="505" r="25" />
+                    <circle cx="705" cy="505" r="16" fill="#000" />
+
+                    <!-- Silkscreen Markings -->
+                    <text x="20" y="25" fill="#f0f6fc" font-size="11" font-weight="bold" letter-spacing="1">PLANT ESP32 CONTROLLER</text>
+                    <text x="20" y="40" fill="#8b949e" font-size="9">ONBOARD SMD EDITION • REV 1.0</text>
+                    
+                    <!-- Antenna Keepout Hatch / Outline on PCB Bottom Edge -->
+                    <rect x="175" y="445" width="190" height="85" fill="none" stroke="#e3b341" stroke-width="1.2" stroke-dasharray="4,4" rx="4" />
+                    <text x="270" y="490" fill="#e3b341" font-size="10" font-weight="bold" text-anchor="middle">ANTENNA KEEP-OUT ZONE</text>
+                    <text x="270" y="505" fill="#8b949e" font-size="8" text-anchor="middle">NO COPPER / NO TRACES ON ANY LAYER</text>
+
+                    <!-- Voltage Sense Silkscreen Labels -->
+                    <text x="110" y="465" fill="#39c5cf" font-size="9" font-weight="bold" text-anchor="middle">5V SENSE</text>
+                    <text x="440" y="405" fill="#3fb950" font-size="9" font-weight="bold" text-anchor="middle">BAT SENSE</text>
+
+                    <!-- 2. COPPER TRACES -->
+                    <g id="traces">
+                        <!-- +5V Power Bus (Red) -->
+                        <g class="net-v5">
+                            <!-- From USB-C J1 to U2 AMS1117-3.3 Pin 3 (IN) -->
+                            <path class="trace" d="M 85.5 318 L 96 318 L 96 261 L 108 261" stroke="#f85149" stroke-width="7" fill="none" opacity="0.85"/>
+                            <path class="trace" d="M 85.5 367 L 96 367 L 96 318" stroke="#f85149" stroke-width="7" fill="none" opacity="0.85"/>
+                            <!-- To C10 (10uF) and C7 (100nF) input filters -->
+                            <path class="trace" d="M 96 261 L 96 210 L 25 210 L 25 190" stroke="#f85149" stroke-width="4" fill="none" opacity="0.85"/>
+                            <path class="trace" d="M 25 210 L 25 230" stroke="#f85149" stroke-width="4" fill="none" opacity="0.85"/>
+                            <!-- To 5V ADC Divider (R1 at 110, 415) -->
+                            <path class="trace" d="M 96 367 L 96 415 L 100.5 415" stroke="#f85149" stroke-width="5" fill="none" opacity="0.85"/>
+                            <!-- From D2 Cathode (615, 220) to D1 Cathode (520, 180) and 5V Rail -->
+                            <path class="trace" d="M 615 220 L 520 220 L 520 180" stroke="#f85149" stroke-width="8" fill="none" opacity="0.85"/>
+                            <!-- Connect to TB1-1 (Ultrasonic 5V at 315, 100) and TB3-1 (Pump 5V at 535, 100) -->
+                            <path class="trace" d="M 96 210 L 96 70 L 315 70 L 315 100" stroke="#f85149" stroke-width="8" fill="none" opacity="0.85"/>
+                            <path class="trace" d="M 315 70 L 535 70 L 535 100" stroke="#f85149" stroke-width="8" fill="none" opacity="0.85"/>
+                            <path class="trace" d="M 535 70 L 535 180 L 520 180" stroke="#f85149" stroke-width="8" fill="none" opacity="0.85"/>
+                            <!-- EXT_5V from TB4-1 (665, 310) to D2 Anode (655, 220) -->
+                            <path class="trace" d="M 665 310 L 655 310 L 655 220" stroke="#f0883e" stroke-width="7" fill="none" opacity="0.9"/>
+                        </g>
+
+                        <!-- +3.3V Logic Bus (Blue) -->
+                        <g class="net-v33">
+                            <!-- From U2 Pin 2/Tab (85, 261 / 85, 199) to output caps C11, C8 -->
+                            <path class="trace" d="M 85 261 L 85 199 L 85 170 L 85 145" stroke="#388bfd" stroke-width="6" fill="none" opacity="0.85"/>
+                            <!-- To ESP32-C3 Pin 1 (357.5, 410) via C12 (405, 410) -->
+                            <path class="trace" d="M 85 170 L 85 120 L 270 120 L 405 120 L 405 410 L 357.5 410" stroke="#388bfd" stroke-width="6" fill="none" opacity="0.85"/>
+                            <!-- To Pull-ups R10, R11 and LEDs D3, D4 -->
+                            <path class="trace" d="M 85 170 L 150 170 L 150 160" stroke="#388bfd" stroke-width="4" fill="none" opacity="0.85"/>
+                            <path class="trace" d="M 150 170 L 150 190" stroke="#388bfd" stroke-width="4" fill="none" opacity="0.85"/>
+                            <path class="trace" d="M 405 120 L 405 245 L 390.5 245" stroke="#388bfd" stroke-width="4" fill="none" opacity="0.85"/>
+                            <path class="trace" d="M 405 245 L 405 285 L 390.5 285" stroke="#388bfd" stroke-width="4" fill="none" opacity="0.85"/>
+                            <!-- To I2C Sockets (480, 440) and (467, 495) -->
+                            <path class="trace" d="M 405 410 L 405 440 L 480 440" stroke="#388bfd" stroke-width="4" fill="none" opacity="0.85"/>
+                            <path class="trace" d="M 480 440 L 480 470 L 467 470 L 467 495" stroke="#388bfd" stroke-width="4" fill="none" opacity="0.85"/>
+                        </g>
+
+                        <!-- USB D+ / D- Data Lines (Pink & Violet) -->
+                        <g class="net-usb">
+                            <!-- DP: J1 (85.5, 340 / 350) to ESP32 Pin 14 (182.5, 350) -->
+                            <path class="trace" d="M 85.5 350 L 182.5 350" stroke="#f778ba" stroke-width="4" fill="none" opacity="0.9"/>
+                            <path class="trace" d="M 85.5 340 L 105 340 L 105 350" stroke="#f778ba" stroke-width="3" stroke-dasharray="4,2" fill="none" opacity="0.8"/>
+                            <!-- DN: J1 (85.5, 335 / 345) to ESP32 Pin 13 (182.5, 335) -->
+                            <path class="trace" d="M 85.5 335 L 182.5 335" stroke="#bc8cff" stroke-width="4" fill="none" opacity="0.9"/>
+                            <path class="trace" d="M 85.5 345 L 120 345 L 120 335" stroke="#bc8cff" stroke-width="3" stroke-dasharray="4,2" fill="none" opacity="0.8"/>
+                            <!-- CC1 & CC2 to 5.1k resistors -->
+                            <path class="trace" d="M 85.5 330 L 120 330 L 120 300" stroke="#39c5cf" stroke-width="3" fill="none" opacity="0.85"/>
+                            <path class="trace" d="M 85.5 360 L 120 360 L 120 390" stroke="#39c5cf" stroke-width="3" fill="none" opacity="0.85"/>
+                        </g>
+
+                        <!-- Reset & Boot Signals (Cyan) -->
+                        <g class="net-rst">
+                            <!-- ESP_EN: Pin 2 (357.5, 395) to SW1 (470, 295), R10 (400, 285), C9 (400, 315) -->
+                            <path class="trace" d="M 357.5 395 L 375 395 L 375 315 L 409.5 315" stroke="#39c5cf" stroke-width="4" fill="none" opacity="0.85"/>
+                            <path class="trace" d="M 409.5 315 L 409.5 285" stroke="#39c5cf" stroke-width="4" fill="none" opacity="0.85"/>
+                            <path class="trace" d="M 409.5 285 L 440 285 L 440 313.75" stroke="#39c5cf" stroke-width="4" fill="none" opacity="0.85"/>
+                            <!-- ESP_IO9: Pin 8 (357.5, 305) to SW2 (470, 245), R11 (400, 245) -->
+                            <path class="trace" d="M 357.5 305 L 409.5 305 L 409.5 245 L 440 245 L 440 263.75" stroke="#e3b341" stroke-width="4" fill="none" opacity="0.85"/>
+                            <!-- STAT LED: Pin 7 (357.5, 320) to R15 (185, 190) -->
+                            <path class="trace" d="M 357.5 320 L 330 320 L 330 200 L 194.5 200 L 194.5 190" stroke="#58a6ff" stroke-width="3.5" fill="none" opacity="0.85"/>
+                        </g>
+
+                        <!-- Dedicated 5V ADC Sense (GPIO0, Pin 18 at 182.5, 410) (Cyan) -->
+                        <g class="net-adc0">
+                            <path class="trace" d="M 119.5 415 L 119.5 445" stroke="#39c5cf" stroke-width="4" fill="none" opacity="0.85"/>
+                            <path class="trace" d="M 119.5 415 L 164.5 415 L 164.5 425" stroke="#39c5cf" stroke-width="4" fill="none" opacity="0.85"/>
+                            <path class="trace" d="M 164.5 415 L 182.5 410" stroke="#39c5cf" stroke-width="4" fill="none" opacity="0.9"/>
+                        </g>
+
+                        <!-- Dedicated 18650 Battery Sense (GPIO4, Pin 3 at 357.5, 380) (Green) -->
+                        <g class="net-adc4">
+                            <path class="trace" d="M 665 410 L 449.5 410 L 449.5 360" stroke="#3fb950" stroke-width="4" stroke-dasharray="6,4" fill="none" opacity="0.85"/>
+                            <path class="trace" d="M 430.5 360 L 430.5 385" stroke="#3fb950" stroke-width="4" fill="none" opacity="0.85"/>
+                            <path class="trace" d="M 430.5 385 L 395.5 385 L 395.5 380 L 357.5 380" stroke="#3fb950" stroke-width="4" fill="none" opacity="0.9"/>
+                        </g>
+
+                        <!-- Soil Moisture (GPIO1 Data & GPIO5 VCC) (Yellow / Blue) -->
+                        <g class="net-soil">
+                            <!-- Soil DATA from TB2-1 (140, 100) to Pin 17 (182.5, 395) via C2 (155, 380) -->
+                            <path class="trace" d="M 140 100 L 140 380 L 145.5 380" stroke="#d29922" stroke-width="4" fill="none" opacity="0.85"/>
+                            <path class="trace" d="M 145.5 380 L 182.5 395" stroke="#d29922" stroke-width="4" fill="none" opacity="0.85"/>
+                            <!-- Soil VCC from Pin 4 (357.5, 365) to TB2-2 (190, 100) -->
+                            <path class="trace" d="M 357.5 365 L 375 365 L 375 140 L 190 140 L 190 100" stroke="#58a6ff" stroke-width="4.5" stroke-dasharray="6,4" fill="none" opacity="0.85"/>
+                        </g>
+
+                        <!-- Ultrasonic (GPIO10 TRIG & GPIO6 ECHO) (Purple / Amber) -->
+                        <g class="net-ultra">
+                            <!-- TRIG from Pin 10 (182.5, 290) to TB1-2 (365, 100) -->
+                            <path class="trace" d="M 182.5 290 L 210 290 L 210 150 L 365 150 L 365 100" stroke="#d29922" stroke-width="4" fill="none" opacity="0.85"/>
+                            <!-- ECHO from TB1-3 (415, 100) to R3 (415, 165) -> R4 (415, 195) -> Pin 5 (357.5, 350) -->
+                            <path class="trace" d="M 415 100 L 415 165" stroke="#bc8cff" stroke-width="4" fill="none" opacity="0.85"/>
+                            <path class="trace" d="M 424.5 165 L 405.5 195" stroke="#bc8cff" stroke-width="4" fill="none" opacity="0.85"/>
+                            <path class="trace" d="M 424.5 165 L 435 165 L 435 350 L 357.5 350" stroke="#bc8cff" stroke-width="4" fill="none" opacity="0.9"/>
+                        </g>
+
+                        <!-- MOSFET Gate & Pump Drain (Red/Orange) -->
+                        <g class="net-pump">
+                            <!-- Gate from Pin 6 (357.5, 335) to R5 (500, 340) -> R6 (540, 340) -> Q1 Gate (570.5, 340) -->
+                            <path class="trace" d="M 357.5 335 L 490.5 340" stroke="#ff7b72" stroke-width="4" fill="none" opacity="0.85"/>
+                            <path class="trace" d="M 509.5 340 L 530.5 340" stroke="#ff7b72" stroke-width="4" fill="none" opacity="0.85"/>
+                            <path class="trace" d="M 549.5 340 L 570.5 340" stroke="#ff7b72" stroke-width="4" fill="none" opacity="0.85"/>
+                            <!-- Motor Drain from TB3-2 (585, 100) to Q1 Drain (580, 320) & D1 Anode (560, 180) -->
+                            <path class="trace" d="M 585 100 L 585 320 L 580 320" stroke="#f0883e" stroke-width="8" fill="none" opacity="0.9"/>
+                            <path class="trace" d="M 585 180 L 560 180" stroke="#f0883e" stroke-width="8" fill="none" opacity="0.9"/>
+                        </g>
+
+                        <!-- Ambient Light Sensor LDR (GPIO3, Pin 15 at 182.5, 365) (Gold) -->
+                        <g class="net-ldr">
+                            <!-- LDR1 (300, 190) -> R7 (300, 230) -> C4 (300, 255) -> Pin 15 (182.5, 365) -->
+                            <path class="trace" d="M 312.7 190 L 312.7 230 L 309.5 230" stroke="#e3b341" stroke-width="4" fill="none" opacity="0.85"/>
+                            <path class="trace" d="M 309.5 230 L 309.5 255" stroke="#e3b341" stroke-width="4" fill="none" opacity="0.85"/>
+                            <path class="trace" d="M 309.5 255 L 309.5 365 L 182.5 365" stroke="#e3b341" stroke-width="4" fill="none" opacity="0.9"/>
+                        </g>
+
+                        <!-- I2C Bus: SDA on IO20 (182.5, 305) & SCL on IO21 (182.5, 320) -->
+                        <g class="net-i2c">
+                            <!-- SDA Pin 11 to MOD1 (480+7.62, 440) and MOD2 -->
+                            <path class="trace" d="M 182.5 305 L 240 305 L 240 160 L 556.2 160 L 556.2 440" stroke="#39c5cf" stroke-width="3" fill="none" opacity="0.8"/>
+                            <!-- SCL Pin 12 to MOD1 (480+5.08, 440) and MOD2 -->
+                            <path class="trace" d="M 182.5 320 L 250 320 L 250 170 L 530.8 170 L 530.8 440" stroke="#58a6ff" stroke-width="3" fill="none" opacity="0.8"/>
+                        </g>
+                    </g>
+
+                    <!-- 3. TERMINAL BLOCKS (THROUGH-HOLE) -->
+                    <!-- TB2 (Soil Moisture, KF301-3P) at X=140, Y=100 -->
+                    <g id="comp-TB2" transform="translate(140, 100)">
+                        <rect x="-25" y="-38" width="150" height="76" fill="#1b4332" stroke="#2d6a4f" stroke-width="2" rx="4"/>
+                        <circle cx="0" cy="0" r="13" fill="#d29922" stroke="#fff" stroke-width="1.5" class="pad" onmouseover="showTip('TB2 Pin 1: DATA (Analog Moisture Signal -> C2 -> GPIO 1)')" onmouseout="hideTip()"/>
+                        <circle cx="50" cy="0" r="13" fill="#58a6ff" stroke="#fff" stroke-width="1.5" class="pad" onmouseover="showTip('TB2 Pin 2: VCC (Switched 3.3V Sensor Power <- GPIO 5)')" onmouseout="hideTip()"/>
+                        <circle cx="100" cy="0" r="13" fill="#30363d" stroke="#fff" stroke-width="1.5" class="pad" onmouseover="showTip('TB2 Pin 3: GND (System Ground Plane)')" onmouseout="hideTip()"/>
+                        <text x="50" y="-45" fill="#f0f6fc" font-size="11" font-weight="bold" text-anchor="middle">TB2 - Soil</text>
+                        <text x="0" y="30" fill="#d29922" font-size="9" text-anchor="middle">DATA</text>
+                        <text x="50" y="30" fill="#58a6ff" font-size="9" text-anchor="middle">VCC</text>
+                        <text x="100" y="30" fill="#8b949e" font-size="9" text-anchor="middle">GND</text>
+                    </g>
+
+                    <!-- TB1 (Ultrasonic Sensor, KF301-4P) at X=315, Y=100 -->
+                    <g id="comp-TB1" transform="translate(315, 100)">
+                        <rect x="-25" y="-38" width="200" height="76" fill="#1b4332" stroke="#2d6a4f" stroke-width="2" rx="4"/>
+                        <circle cx="0" cy="0" r="13" fill="#f85149" stroke="#fff" stroke-width="1.5" class="pad" onmouseover="showTip('TB1 Pin 1: +5V Power Supply to HC-SR04 / RCWL-1601')" onmouseout="hideTip()"/>
+                        <circle cx="50" cy="0" r="13" fill="#d29922" stroke="#fff" stroke-width="1.5" class="pad" onmouseover="showTip('TB1 Pin 2: TRIG (Trigger Pulse <- GPIO 10)')" onmouseout="hideTip()"/>
+                        <circle cx="100" cy="0" r="13" fill="#bc8cff" stroke="#fff" stroke-width="1.5" class="pad" onmouseover="showTip('TB1 Pin 3: ECHO (5V Echo Pulse -> R3/R4 Level Divider -> GPIO 6)')" onmouseout="hideTip()"/>
+                        <circle cx="150" cy="0" r="13" fill="#30363d" stroke="#fff" stroke-width="1.5" class="pad" onmouseover="showTip('TB1 Pin 4: GND')" onmouseout="hideTip()"/>
+                        <text x="75" y="-45" fill="#f0f6fc" font-size="11" font-weight="bold" text-anchor="middle">TB1 - Ultrasonic</text>
+                        <text x="0" y="30" fill="#f85149" font-size="9" text-anchor="middle">5V</text>
+                        <text x="50" y="30" fill="#d29922" font-size="9" text-anchor="middle">TRIG</text>
+                        <text x="100" y="30" fill="#bc8cff" font-size="9" text-anchor="middle">ECHO</text>
+                        <text x="150" y="30" fill="#8b949e" font-size="9" text-anchor="middle">GND</text>
+                    </g>
+
+                    <!-- TB3 (Water Pump, KF301-2P) at X=535, Y=100 -->
+                    <g id="comp-TB3" transform="translate(535, 100)">
+                        <rect x="-25" y="-38" width="100" height="76" fill="#1b4332" stroke="#2d6a4f" stroke-width="2" rx="4"/>
+                        <circle cx="0" cy="0" r="13" fill="#f85149" stroke="#fff" stroke-width="1.5" class="pad" onmouseover="showTip('TB3 Pin 1: +5V Submersible Pump Positive')" onmouseout="hideTip()"/>
+                        <circle cx="50" cy="0" r="13" fill="#f0883e" stroke="#fff" stroke-width="1.5" class="pad" onmouseover="showTip('TB3 Pin 2: Pump Negative / Drain (Switched via AO3400A Q1, clamped by D1 SS34)')" onmouseout="hideTip()"/>
+                        <text x="25" y="-45" fill="#f0f6fc" font-size="11" font-weight="bold" text-anchor="middle">TB3 - Motor</text>
+                        <text x="0" y="30" fill="#f85149" font-size="10" text-anchor="middle">+</text>
+                        <text x="50" y="30" fill="#f0883e" font-size="10" text-anchor="middle">-</text>
+                    </g>
+
+                    <!-- TB4 (External Solar / 18650 Battery, KF301-3P) at X=665, Y=310 (Vertical) -->
+                    <g id="comp-TB4" transform="translate(665, 310)">
+                        <rect x="-38" y="-25" width="76" height="150" fill="#1b4332" stroke="#2d6a4f" stroke-width="2" rx="4"/>
+                        <circle cx="0" cy="0" r="13" fill="#f0883e" stroke="#fff" stroke-width="1.5" class="pad" onmouseover="showTip('TB4 Pin 1: EXT_5V (Solar Boost 5V Input -> D2 SS34 Anti-Backfeed)')" onmouseout="hideTip()"/>
+                        <circle cx="0" cy="50" r="13" fill="#30363d" stroke="#fff" stroke-width="1.5" class="pad" onmouseover="showTip('TB4 Pin 2: GND (System Ground)')" onmouseout="hideTip()"/>
+                        <circle cx="0" cy="100" r="13" fill="#3fb950" stroke="#fff" stroke-width="1.5" class="pad" onmouseover="showTip('TB4 Pin 3: BAT (18650 Li-ion Direct Positive -> R8/R9 Divider -> GPIO 4)')" onmouseout="hideTip()"/>
+                        <text x="0" y="145" fill="#f0f6fc" font-size="11" font-weight="bold" text-anchor="middle">TB4 (EXT PWR)</text>
+                        <text x="-25" y="4" fill="#f0883e" font-size="9" text-anchor="end">EXT 5V</text>
+                        <text x="-25" y="54" fill="#8b949e" font-size="9" text-anchor="end">GND</text>
+                        <text x="-25" y="104" fill="#3fb950" font-size="9" text-anchor="end">BAT</text>
+                    </g>
+
+                    <!-- 4. USB-C RECEPTACLE J1 (HRO TYPE-C-31-M-12) at X=45, Y=342.5 -->
+                    <g id="comp-J1" transform="translate(45, 342.5)">
+                        <rect x="-35" y="-45" width="85" height="90" fill="#21262d" stroke="#8b949e" stroke-width="1.5" rx="5"/>
+                        <!-- Shield Tabs -->
+                        <rect x="25" y="-40" width="12" height="6" fill="#30363d" stroke="#fff" stroke-width="0.8"/>
+                        <rect x="25" y="34" width="12" height="6" fill="#30363d" stroke="#fff" stroke-width="0.8"/>
+                        <text x="-15" y="4" fill="#f0f6fc" font-size="10" font-weight="bold" transform="rotate(-90 -15 4)">USB-C</text>
+                        <!-- Connector Pads at X=40.5 relative to center -->
+                        <rect x="36" y="-32.5" width="9" height="4" fill="#30363d" class="pad" onmouseover="showTip('J1 Pin A1/B12: GND')" onmouseout="hideTip()"/>
+                        <rect x="36" y="-24.5" width="9" height="4" fill="#f85149" class="pad" onmouseover="showTip('J1 Pin A4/B9: +5V VBUS Power')" onmouseout="hideTip()"/>
+                        <rect x="36" y="-12.5" width="9" height="3" fill="#39c5cf" class="pad" onmouseover="showTip('J1 Pin A5: CC1 (5.1k Pulldown via R12)')" onmouseout="hideTip()"/>
+                        <rect x="36" y="-7.5" width="9" height="3" fill="#bc8cff" class="pad" onmouseover="showTip('J1 Pin B7: USB_DN (D- to ESP32 GPIO 18)')" onmouseout="hideTip()"/>
+                        <rect x="36" y="-2.5" width="9" height="3" fill="#f778ba" class="pad" onmouseover="showTip('J1 Pin A6: USB_DP (D+ to ESP32 GPIO 19)')" onmouseout="hideTip()"/>
+                        <rect x="36" y="2.5" width="9" height="3" fill="#bc8cff" class="pad" onmouseover="showTip('J1 Pin A7: USB_DN (D- to ESP32 GPIO 18)')" onmouseout="hideTip()"/>
+                        <rect x="36" y="7.5" width="9" height="3" fill="#f778ba" class="pad" onmouseover="showTip('J1 Pin B6: USB_DP (D+ to ESP32 GPIO 19)')" onmouseout="hideTip()"/>
+                        <rect x="36" y="17.5" width="9" height="3" fill="#39c5cf" class="pad" onmouseover="showTip('J1 Pin B5: CC2 (5.1k Pulldown via R13)')" onmouseout="hideTip()"/>
+                        <rect x="36" y="24.5" width="9" height="4" fill="#f85149" class="pad" onmouseover="showTip('J1 Pin A9/B4: +5V VBUS Power')" onmouseout="hideTip()"/>
+                        <rect x="36" y="32.5" width="9" height="4" fill="#30363d" class="pad" onmouseover="showTip('J1 Pin A12/B1: GND')" onmouseout="hideTip()"/>
+                    </g>
+
+                    <!-- 5. AMS1117-3.3 VOLTAGE REGULATOR U2 at X=85, Y=230 (SOT-223) -->
+                    <g id="comp-U2" transform="translate(85, 230)">
+                        <rect x="-35" y="-35" width="70" height="70" fill="#161b22" stroke="#d29922" stroke-width="1.5" rx="3"/>
+                        <text x="0" y="-8" fill="#d29922" font-size="9" font-weight="bold" text-anchor="middle">AMS1117</text>
+                        <text x="0" y="5" fill="#8b949e" font-size="8" text-anchor="middle">3.3V 1A LDO</text>
+                        <!-- Tab Pin 2 (OUT) at Top -->
+                        <rect x="-18" y="-40" width="36" height="8" fill="#388bfd" class="pad" onmouseover="showTip('U2 Tab / Pin 2: +3.3V Regulated Output (Heatsink Tab)')" onmouseout="hideTip()"/>
+                        <!-- Bottom Pins: Pin 1 GND (-23, 31), Pin 2 OUT (0, 31), Pin 3 IN (+23, 31) -->
+                        <rect x="-28" y="26" width="10" height="12" fill="#30363d" class="pad" onmouseover="showTip('U2 Pin 1: GND')" onmouseout="hideTip()"/>
+                        <rect x="-5" y="26" width="10" height="12" fill="#388bfd" class="pad" onmouseover="showTip('U2 Pin 2: +3.3V Regulated Output')" onmouseout="hideTip()"/>
+                        <rect x="18" y="26" width="10" height="12" fill="#f85149" class="pad" onmouseover="showTip('U2 Pin 3: +5V Power Input')" onmouseout="hideTip()"/>
+                        <text x="-23" y="20" fill="#8b949e" font-size="7" text-anchor="middle">GND</text>
+                        <text x="0" y="20" fill="#388bfd" font-size="7" text-anchor="middle">OUT</text>
+                        <text x="23" y="20" fill="#f85149" font-size="7" text-anchor="middle">IN</text>
+                    </g>
+
+                    <!-- 6. ESP32-C3-WROOM-02 MODULE U1 at X=270, Y=350 -->
+                    <g id="comp-U1" transform="translate(270, 350)">
+                        <!-- Module Shield & PCB -->
+                        <rect x="-90" y="-125" width="180" height="255" fill="#161b22" stroke="#58a6ff" stroke-width="2" rx="4"/>
+                        <!-- Metal Shield Can -->
+                        <rect x="-82" y="-120" width="164" height="175" fill="#1f242c" stroke="#388bfd" stroke-width="1" rx="3"/>
+                        <text x="0" y="-60" fill="#f0f6fc" font-size="13" font-weight="bold" text-anchor="middle">ESP32-C3-WROOM-02</text>
+                        <text x="0" y="-40" fill="#79c0ff" font-size="10" text-anchor="middle">Espressif RISC-V Wi-Fi + BLE 5</text>
+                        <text x="0" y="-20" fill="#8b949e" font-size="8" text-anchor="middle">Native USB CDC/JTAG • 4MB Flash</text>
+
+                        <!-- Central Thermal Ground Pad 19 -->
+                        <rect x="-15" y="-15" width="30" height="30" fill="#30363d" stroke="#58a6ff" stroke-width="1" class="pad" onmouseover="showTip('U1 Pin 19 (EP): Thermal Ground Exposed Pad')" onmouseout="hideTip()"/>
+                        <text x="0" y="4" fill="#8b949e" font-size="8" text-anchor="middle">GND</text>
+
+                        <!-- West Side Pins (Pads 10 to 18) at local X = -87.5 -->
+                        <!-- Pin 10 (TRIG): Y = -60 -->
+                        <rect x="-92" y="-66" width="14" height="9" fill="#d29922" class="pad" onmouseover="showTip('U1 Pin 10: GPIO 10 (Ultrasonic TRIG)')" onmouseout="hideTip()"/>
+                        <text x="-70" y="-59" fill="#d29922" font-size="8">10:TRIG</text>
+                        <!-- Pin 11 (SDA): Y = -45 -->
+                        <rect x="-92" y="-51" width="14" height="9" fill="#39c5cf" class="pad" onmouseover="showTip('U1 Pin 11: GPIO 20 (I2C SDA: SHT30 & BH1750)')" onmouseout="hideTip()"/>
+                        <text x="-70" y="-44" fill="#39c5cf" font-size="8">11:SDA</text>
+                        <!-- Pin 12 (SCL): Y = -30 -->
+                        <rect x="-92" y="-36" width="14" height="9" fill="#58a6ff" class="pad" onmouseover="showTip('U1 Pin 12: GPIO 21 (I2C SCL: SHT30 & BH1750)')" onmouseout="hideTip()"/>
+                        <text x="-70" y="-29" fill="#58a6ff" font-size="8">12:SCL</text>
+                        <!-- Pin 13 (USB DN): Y = -15 -->
+                        <rect x="-92" y="-21" width="14" height="9" fill="#bc8cff" class="pad" onmouseover="showTip('U1 Pin 13: GPIO 18 (Native USB D-)')" onmouseout="hideTip()"/>
+                        <text x="-70" y="-14" fill="#bc8cff" font-size="8">13:D-</text>
+                        <!-- Pin 14 (USB DP): Y = 0 -->
+                        <rect x="-92" y="-6" width="14" height="9" fill="#f778ba" class="pad" onmouseover="showTip('U1 Pin 14: GPIO 19 (Native USB D+)')" onmouseout="hideTip()"/>
+                        <text x="-70" y="1" fill="#f778ba" font-size="8">14:D+</text>
+                        <!-- Pin 15 (LDR ADC): Y = 15 -->
+                        <rect x="-92" y="9" width="14" height="9" fill="#e3b341" class="pad" onmouseover="showTip('U1 Pin 15: GPIO 3 (ADC1_CH3: LDR Light Sensor)')" onmouseout="hideTip()"/>
+                        <text x="-70" y="16" fill="#e3b341" font-size="8">15:LDR</text>
+                        <!-- Pin 16 (NC): Y = 30 -->
+                        <rect x="-92" y="24" width="14" height="9" fill="#484f58" class="pad" onmouseover="showTip('U1 Pin 16: NC (No Connection)')" onmouseout="hideTip()"/>
+                        <text x="-70" y="31" fill="#8b949e" font-size="8">16:NC</text>
+                        <!-- Pin 17 (Soil ADC): Y = 45 -->
+                        <rect x="-92" y="39" width="14" height="9" fill="#d29922" class="pad" onmouseover="showTip('U1 Pin 17: GPIO 1 (ADC1_CH1: Soil Moisture Analog In)')" onmouseout="hideTip()"/>
+                        <text x="-70" y="46" fill="#d29922" font-size="8">17:SOIL</text>
+                        <!-- Pin 18 (5V ADC): Y = 60 -->
+                        <rect x="-92" y="54" width="14" height="9" fill="#39c5cf" class="pad" onmouseover="showTip('U1 Pin 18: GPIO 0 (ADC1_CH0: Dedicated 5V Supply Rail Monitor)')" onmouseout="hideTip()"/>
+                        <text x="-70" y="61" fill="#39c5cf" font-size="8">18:5V ADC</text>
+
+                        <!-- East Side Pins (Pads 1 to 9) at local X = +87.5 -->
+                        <!-- Pin 9 (GND): Y = -60 -->
+                        <rect x="78" y="-66" width="14" height="9" fill="#30363d" class="pad" onmouseover="showTip('U1 Pin 9: GND')" onmouseout="hideTip()"/>
+                        <text x="45" y="-59" fill="#8b949e" font-size="8">GND:9</text>
+                        <!-- Pin 8 (BOOT / IO9): Y = -45 -->
+                        <rect x="78" y="-51" width="14" height="9" fill="#e3b341" class="pad" onmouseover="showTip('U1 Pin 8: GPIO 9 (BOOT Strapping Pin / SW2 Pushbutton)')" onmouseout="hideTip()"/>
+                        <text x="40" y="-44" fill="#e3b341" font-size="8">BOOT:8</text>
+                        <!-- Pin 7 (STAT LED / IO8): Y = -30 -->
+                        <rect x="78" y="-36" width="14" height="9" fill="#58a6ff" class="pad" onmouseover="showTip('U1 Pin 7: GPIO 8 (Active-Low Blue STAT LED D4)')" onmouseout="hideTip()"/>
+                        <text x="40" y="-29" fill="#58a6ff" font-size="8">STAT:7</text>
+                        <!-- Pin 6 (GATE / IO7): Y = -15 -->
+                        <rect x="78" y="-21" width="14" height="9" fill="#ff7b72" class="pad" onmouseover="showTip('U1 Pin 6: GPIO 7 (Pump MOSFET Gate Drive)')" onmouseout="hideTip()"/>
+                        <text x="40" y="-14" fill="#ff7b72" font-size="8">GATE:6</text>
+                        <!-- Pin 5 (ECHO / IO6): Y = 0 -->
+                        <rect x="78" y="-6" width="14" height="9" fill="#bc8cff" class="pad" onmouseover="showTip('U1 Pin 5: GPIO 6 (Ultrasonic Echo Pulse 3.3V)')" onmouseout="hideTip()"/>
+                        <text x="40" y="1" fill="#bc8cff" font-size="8">ECHO:5</text>
+                        <!-- Pin 4 (SOIL VCC / IO5): Y = 15 -->
+                        <rect x="78" y="9" width="14" height="9" fill="#58a6ff" class="pad" onmouseover="showTip('U1 Pin 4: GPIO 5 (Switched 3.3V Power for Soil Sensor)')" onmouseout="hideTip()"/>
+                        <text x="35" y="16" fill="#58a6ff" font-size="8">VCC_EN:4</text>
+                        <!-- Pin 3 (BAT ADC / IO4): Y = 30 -->
+                        <rect x="78" y="24" width="14" height="9" fill="#3fb950" class="pad" onmouseover="showTip('U1 Pin 3: GPIO 4 (ADC1_CH4: Dedicated 18650 Battery Monitor)')" onmouseout="hideTip()"/>
+                        <text x="35" y="31" fill="#3fb950" font-size="8">BAT ADC:3</text>
+                        <!-- Pin 2 (EN / RST): Y = 45 -->
+                        <rect x="78" y="39" width="14" height="9" fill="#39c5cf" class="pad" onmouseover="showTip('U1 Pin 2: EN (Chip Enable / Hardware Reset SW1)')" onmouseout="hideTip()"/>
+                        <text x="45" y="46" fill="#39c5cf" font-size="8">EN:2</text>
+                        <!-- Pin 1 (+3V3): Y = 60 -->
+                        <rect x="78" y="54" width="14" height="9" fill="#388bfd" class="pad" onmouseover="showTip('U1 Pin 1: +3.3V VDD Power Supply')" onmouseout="hideTip()"/>
+                        <text x="45" y="61" fill="#388bfd" font-size="8">3V3:1</text>
+                    </g>
+
+                    <!-- 7. HARDWARE BUTTONS: SW1 (RESET) & SW2 (BOOT) -->
+                    <!-- SW1 RESET at (470, 295) -->
+                    <g id="comp-SW1" transform="translate(470, 295)">
+                        <rect x="-20" y="-14" width="40" height="28" fill="#21262d" stroke="#39c5cf" stroke-width="1.2" rx="3"/>
+                        <circle cx="0" cy="0" r="7" fill="#39c5cf" class="pad" onmouseover="showTip('SW1: Hardware RESET Button (TS-1187A). Pulls EN to GND.')" onmouseout="hideTip()"/>
+                        <text x="0" y="20" fill="#39c5cf" font-size="8" font-weight="bold" text-anchor="middle">RESET</text>
+                    </g>
+
+                    <!-- SW2 BOOT at (470, 245) -->
+                    <g id="comp-SW2" transform="translate(470, 245)">
+                        <rect x="-20" y="-14" width="40" height="28" fill="#21262d" stroke="#e3b341" stroke-width="1.2" rx="3"/>
+                        <circle cx="0" cy="0" r="7" fill="#e3b341" class="pad" onmouseover="showTip('SW2: Hardware BOOT Button (TS-1187A). Pulls GPIO 9 to GND during reset for firmware download.')" onmouseout="hideTip()"/>
+                        <text x="0" y="20" fill="#e3b341" font-size="8" font-weight="bold" text-anchor="middle">BOOT</text>
+                    </g>
+
+                    <!-- 8. STATUS & POWER LEDS -->
+                    <!-- D3 PWR Green LED at (150, 160) -->
+                    <g id="comp-D3" transform="translate(150, 160)">
+                        <rect x="-10" y="-8" width="20" height="16" fill="#1b4332" stroke="#3fb950" stroke-width="1" rx="2"/>
+                        <circle cx="0" cy="0" r="4" fill="#3fb950" class="pad" onmouseover="showTip('D3: Power LED (Green 0805 SMD, Basic Part #C2290). Indicates +3.3V rail health.')" onmouseout="hideTip()"/>
+                        <text x="0" y="-12" fill="#3fb950" font-size="7" font-weight="bold" text-anchor="middle">PWR</text>
+                    </g>
+
+                    <!-- D4 STAT Blue LED at (150, 190) -->
+                    <g id="comp-D4" transform="translate(150, 190)">
+                        <rect x="-10" y="-8" width="20" height="16" fill="#0d2538" stroke="#58a6ff" stroke-width="1" rx="2"/>
+                        <circle cx="0" cy="0" r="4" fill="#58a6ff" class="pad" onmouseover="showTip('D4: Status LED (Blue 0805 SMD, Basic Part #C72041). Active-Low on GPIO 8.')" onmouseout="hideTip()"/>
+                        <text x="0" y="-12" fill="#58a6ff" font-size="7" font-weight="bold" text-anchor="middle">STAT</text>
+                    </g>
+
+                    <!-- 9. SMT PASSIVES (0805) & PROTECTION DIODES -->
+                    <!-- D1 SS34 Flyback Diode at (540, 180) -->
+                    <g id="comp-D1" transform="translate(540, 180)">
+                        <rect x="-18" y="-10" width="36" height="20" fill="#21262d" stroke="#f0883e" stroke-width="1.2" rx="3"/>
+                        <text x="0" y="4" fill="#f0883e" font-size="8" font-weight="bold" text-anchor="middle">D1:SS34</text>
+                    </g>
+
+                    <!-- D2 SS34 Anti-Backfeed Diode at (635, 220) -->
+                    <g id="comp-D2" transform="translate(635, 220)">
+                        <rect x="-18" y="-10" width="36" height="20" fill="#21262d" stroke="#f0883e" stroke-width="1.2" rx="3"/>
+                        <text x="0" y="4" fill="#f0883e" font-size="8" font-weight="bold" text-anchor="middle">D2:SS34</text>
+                    </g>
+
+                    <!-- Q1 AO3400A MOSFET at (580, 330) -->
+                    <g id="comp-Q1" transform="translate(580, 330)">
+                        <rect x="-15" y="-15" width="30" height="30" fill="#161b22" stroke="#ff7b72" stroke-width="1.2" rx="2"/>
+                        <text x="0" y="4" fill="#ff7b72" font-size="8" font-weight="bold" text-anchor="middle">Q1</text>
+                    </g>
+
+                    <!-- MOD1 & MOD2 I2C Sockets at Bottom Right -->
+                    <g id="comp-MOD1" transform="translate(480, 440)">
+                        <rect x="-5" y="-10" width="86" height="20" fill="#21262d" stroke="#388bfd" stroke-width="1" rx="3"/>
+                        <circle cx="0" cy="0" r="5" fill="#388bfd"/>
+                        <circle cx="25.4" cy="0" r="5" fill="#30363d"/>
+                        <circle cx="50.8" cy="0" r="5" fill="#58a6ff"/>
+                        <circle cx="76.2" cy="0" r="5" fill="#39c5cf"/>
+                        <text x="38" y="-14" fill="#79c0ff" font-size="8" font-weight="bold" text-anchor="middle">MOD1: SHT30 Temp/Hum (DNP)</text>
+                    </g>
+
+                    <g id="comp-MOD2" transform="translate(467, 495)">
+                        <rect x="-5" y="-10" width="112" height="20" fill="#21262d" stroke="#e3b341" stroke-width="1" rx="3"/>
+                        <circle cx="0" cy="0" r="5" fill="#388bfd"/>
+                        <circle cx="25.4" cy="0" r="5" fill="#30363d"/>
+                        <circle cx="50.8" cy="0" r="5" fill="#58a6ff"/>
+                        <circle cx="76.2" cy="0" r="5" fill="#39c5cf"/>
+                        <circle cx="101.6" cy="0" r="5" fill="#30363d"/>
+                        <text x="50" y="-14" fill="#e3b341" font-size="8" font-weight="bold" text-anchor="middle">MOD2: BH1750 Lux Light (DNP)</text>
+                    </g>
+
+                </svg>
+            </div>
+        </div>
+
+        <!-- Sidebar Information Panels -->
+        <div class="sidebar">
+            <div class="panel">
+                <h2>⚡ Board Architecture Highlights</h2>
+                <div class="highlight-box">
+                    <strong>Direct Monolithic ESP32-C3 Integration:</strong> Replaces the SuperMini daughterboard with an official ESP32-C3-WROOM-02 module soldered directly to the board, eliminating all socket assembly and loose pins.
+                </div>
+                <div style="font-size: 11px; line-height: 1.6; color: #8b949e;">
+                    • <strong>Native USB-C CDC/JTAG:</strong> Full-speed hardware USB communication for effortless flashing and serial debugging.<br>
+                    • <strong>AMS1117-3.3 Power Rail:</strong> Solid 1000 mA LDO with multi-stage MLCC filtering (10µF + 100nF + 22µF) eliminates motor brownouts.<br>
+                    • <strong>Dual Dedicated ADCs:</strong> Real-time concurrent sampling on ADC1 (GPIO 0 for 5V, GPIO 4 for Battery) with only 21 µA battery drain.<br>
+                    • <strong>Anti-Backfeed Protection (D2 SS34):</strong> Blocks current from backfeeding into solar boost / battery packs when USB is plugged in.<br>
+                    • <strong>Hardware Buttons & LEDs:</strong> Onboard tactile RESET & BOOT buttons + green PWR and blue STAT LEDs.
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>📋 SMT Assembly Bill of Materials</h2>
+                <div style="max-height: 250px; overflow-y: auto;">
+                    <table class="info-table">
+                        <thead>
+                            <tr>
+                                <th>Designator</th>
+                                <th>Value / Part</th>
+                                <th>LCSC</th>
+                                <th>Type</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>U1</strong></td>
+                                <td>ESP32-C3-WROOM-02-N4</td>
+                                <td><a href="https://www.lcsc.com/product-detail/C2934560.html" target="_blank" style="color: var(--accent-blue);">C2934560</a></td>
+                                <td><span class="badge-ext">Ext ($3)</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>U2</strong></td>
+                                <td>AMS1117-3.3 (SOT-223)</td>
+                                <td><a href="https://www.lcsc.com/product-detail/C6186.html" target="_blank" style="color: var(--accent-blue);">C6186</a></td>
+                                <td><span class="badge-basic">Basic ($0)</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>J1</strong></td>
+                                <td>USB-C HRO TYPE-C-31-M-12</td>
+                                <td><a href="https://www.lcsc.com/product-detail/C165948.html" target="_blank" style="color: var(--accent-blue);">C165948</a></td>
+                                <td><span class="badge-ext">Ext ($3)</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>SW1, SW2</strong></td>
+                                <td>TS-1187A-B-A-B Button (2×)</td>
+                                <td><a href="https://www.lcsc.com/product-detail/C318884.html" target="_blank" style="color: var(--accent-blue);">C318884</a></td>
+                                <td><span class="badge-ext">Ext ($3)</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Q1</strong></td>
+                                <td>AO3400A (30V 5.7A N-Ch)</td>
+                                <td><a href="https://www.lcsc.com/product-detail/C20917.html" target="_blank" style="color: var(--accent-blue);">C20917</a></td>
+                                <td><span class="badge-basic">Basic ($0)</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>D1, D2</strong></td>
+                                <td>SS34 (3A 40V Schottky SMA)</td>
+                                <td><a href="https://www.lcsc.com/product-detail/C8678.html" target="_blank" style="color: var(--accent-blue);">C8678</a></td>
+                                <td><span class="badge-basic">Basic ($0)</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>D3</strong></td>
+                                <td>Green LED 0805 (KT-0805G)</td>
+                                <td><a href="https://www.lcsc.com/product-detail/C2297.html" target="_blank" style="color: var(--accent-blue);">C2297</a></td>
+                                <td><span class="badge-basic">Basic ($0)</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>D4</strong></td>
+                                <td>Blue LED 0805 (KT-0805B)</td>
+                                <td><a href="https://www.lcsc.com/product-detail/C2293.html" target="_blank" style="color: var(--accent-blue);">C2293</a></td>
+                                <td><span class="badge-ext">Ext ($3)</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>R1,2,6,8,9</strong></td>
+                                <td>100 kΩ 0805 SMD (5×)</td>
+                                <td><a href="https://www.lcsc.com/product-detail/C149504.html" target="_blank" style="color: var(--accent-blue);">C149504</a></td>
+                                <td><span class="badge-basic">Basic ($0)</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>R10, R11, R7</strong></td>
+                                <td>10 kΩ 0805 SMD (3×)</td>
+                                <td><a href="https://www.lcsc.com/product-detail/C17414.html" target="_blank" style="color: var(--accent-blue);">C17414</a></td>
+                                <td><span class="badge-basic">Basic ($0)</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>R12, R13</strong></td>
+                                <td>5.1 kΩ 0805 SMD (2×)</td>
+                                <td><a href="https://www.lcsc.com/product-detail/C27834.html" target="_blank" style="color: var(--accent-blue);">C27834</a></td>
+                                <td><span class="badge-basic">Basic ($0)</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>R3, 5, 14, 15</strong></td>
+                                <td>1 kΩ 0805 SMD (4×)</td>
+                                <td><a href="https://www.lcsc.com/product-detail/C17513.html" target="_blank" style="color: var(--accent-blue);">C17513</a></td>
+                                <td><span class="badge-basic">Basic ($0)</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>R4</strong></td>
+                                <td>2 kΩ 0805 SMD (1×)</td>
+                                <td><a href="https://www.lcsc.com/product-detail/C17604.html" target="_blank" style="color: var(--accent-blue);">C17604</a></td>
+                                <td><span class="badge-basic">Basic ($0)</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>C1,2,4,6,7,8</strong></td>
+                                <td>100 nF 50V X7R 0805 (6×)</td>
+                                <td><a href="https://www.lcsc.com/product-detail/C28233.html" target="_blank" style="color: var(--accent-blue);">C28233</a></td>
+                                <td><span class="badge-basic">Basic ($0)</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>C9</strong></td>
+                                <td>1 µF 50V X7R 0805 (1×)</td>
+                                <td><a href="https://www.lcsc.com/product-detail/C28323.html" target="_blank" style="color: var(--accent-blue);">C28323</a></td>
+                                <td><span class="badge-basic">Basic ($0)</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>C10, C11</strong></td>
+                                <td>10 µF 25V X5R 0805 (2×)</td>
+                                <td><a href="https://www.lcsc.com/product-detail/C15850.html" target="_blank" style="color: var(--accent-blue);">C15850</a></td>
+                                <td><span class="badge-basic">Basic ($0)</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>C12</strong></td>
+                                <td>22 µF 10V X5R 0805 (1×)</td>
+                                <td><a href="https://www.lcsc.com/product-detail/C45783.html" target="_blank" style="color: var(--accent-blue);">C45783</a></td>
+                                <td><span class="badge-basic">Basic ($0)</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>📌 ESP32-C3-WROOM-02 Pin Allocation</h2>
+                <div style="max-height: 200px; overflow-y: auto;">
+                    <table class="info-table">
+                        <thead>
+                            <tr>
+                                <th>Pin</th>
+                                <th>Signal</th>
+                                <th>Peripheral Function</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><span class="badge-pin">IO 0</span></td><td>5V Sense</td><td>ADC1_CH0 (100k/100k Divider)</td></tr>
+                            <tr><td><span class="badge-pin">IO 1</span></td><td>Soil Moisture</td><td>ADC1_CH1 (Analog In + 100nF Filter)</td></tr>
+                            <tr><td><span class="badge-pin">IO 3</span></td><td>LDR Light</td><td>ADC1_CH3 (Photoresistor Divider)</td></tr>
+                            <tr><td><span class="badge-pin">IO 4</span></td><td>Battery Sense</td><td>ADC1_CH4 (100k/100k Divider, 21µA)</td></tr>
+                            <tr><td><span class="badge-pin">IO 5</span></td><td>Soil VCC</td><td>Switched 3.3V Sensor Power</td></tr>
+                            <tr><td><span class="badge-pin">IO 6</span></td><td>Echo</td><td>Ultrasonic Echo (1k/2k Divider)</td></tr>
+                            <tr><td><span class="badge-pin">IO 7</span></td><td>Pump Gate</td><td>AO3400A N-Ch MOSFET Low-Side Switch</td></tr>
+                            <tr><td><span class="badge-pin">IO 8</span></td><td>STAT LED</td><td>Active-Low Blue LED (1k Series to 3.3V)</td></tr>
+                            <tr><td><span class="badge-pin">IO 9</span></td><td>BOOT</td><td>Boot Strapping Pin / SW2 Pushbutton</td></tr>
+                            <tr><td><span class="badge-pin">IO 10</span></td><td>Trig</td><td>Ultrasonic Trigger Output Pulse</td></tr>
+                            <tr><td><span class="badge-pin">IO 18</span></td><td>USB D-</td><td>Native USB CDC/JTAG Data Minus</td></tr>
+                            <tr><td><span class="badge-pin">IO 19</span></td><td>USB D+</td><td>Native USB CDC/JTAG Data Plus</td></tr>
+                            <tr><td><span class="badge-pin">IO 20</span></td><td>I2C SDA</td><td>Hardware I2C Data (SHT30 / BH1750)</td></tr>
+                            <tr><td><span class="badge-pin">IO 21</span></td><td>I2C SCL</td><td>Hardware I2C Clock (SHT30 / BH1750)</td></tr>
+                            <tr><td><span class="badge-pin">EN</span></td><td>Reset</td><td>Active-High Enable / SW1 Pushbutton</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function filterNet(net) {
+            // Update active button
+            const buttons = document.querySelectorAll('.btn-filter');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Filter trace visibility
+            const traceGroups = document.querySelectorAll('#traces > g');
+            traceGroups.forEach(group => {
+                if (net === 'all') {
+                    group.style.display = 'block';
+                    group.style.opacity = '1';
+                } else if (group.classList.contains('net-' + net)) {
+                    group.style.display = 'block';
+                    group.style.opacity = '1';
+                } else {
+                    group.style.display = 'none';
+                }
+            });
+        }
+
+        const tooltip = document.getElementById('tooltip');
+        function showTip(text) {
+            tooltip.innerHTML = text;
+            tooltip.style.display = 'block';
+        }
+        function hideTip() {
+            tooltip.style.display = 'none';
+        }
+
+        document.getElementById('pcb-svg').addEventListener('mousemove', function(e) {
+            if (tooltip.style.display === 'block') {
+                const rect = this.getBoundingClientRect();
+                tooltip.style.left = (e.clientX - rect.left + 15) + 'px';
+                tooltip.style.top = (e.clientY - rect.top + 15) + 'px';
+            }
+        });
+    </script>
+</body>
+</html>

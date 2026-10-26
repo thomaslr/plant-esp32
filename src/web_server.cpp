@@ -182,6 +182,7 @@ void WebServerManager::handleStatus(AsyncWebServerRequest* request) {
     s["water_percent"] = roundf(latest.water_percent * 10.0f) / 10.0f;
     s["distance_cm"] = roundf(latest.distance_cm * 10.0f) / 10.0f;
     s["supply_voltage"] = roundf(latest.supply_voltage * 100.0f) / 100.0f;
+    s["battery_voltage"] = roundf(latest.battery_voltage * 100.0f) / 100.0f;
     s["chip_temp"] = roundf(latest.chip_temp * 10.0f) / 10.0f;
 
     JsonObject p = doc["pump"].to<JsonObject>();
@@ -255,6 +256,7 @@ void WebServerManager::broadcastTelemetry(const SensorReading& reading) {
     doc["water_level_cm"] = roundf(reading.water_level_cm * 10.0f) / 10.0f;
     doc["water_percent"] = roundf(reading.water_percent * 10.0f) / 10.0f;
     doc["supply_voltage"] = roundf(reading.supply_voltage * 100.0f) / 100.0f;
+    doc["battery_voltage"] = roundf(reading.battery_voltage * 100.0f) / 100.0f;
     doc["chip_temp"] = roundf(reading.chip_temp * 10.0f) / 10.0f;
     doc["pump_active"] = reading.pump_active;
 

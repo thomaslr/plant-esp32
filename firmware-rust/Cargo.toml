@@ -1,0 +1,6 @@
+[workspace]
+members = [
+    "plant-core",
+    "plant-firmware",
+]
+resolver = "2"

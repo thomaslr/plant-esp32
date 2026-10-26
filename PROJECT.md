@@ -45,18 +45,23 @@ All terminal blocks are mounted with screw openings facing **100% OUTWARDS** off
   * Pin 1 (Col 13): `Drain (-)` (Directly connects to MOSFET Drain via Column 13 breadboard trace)
   * Pin 2 (Col 15): `+5V (+)` (Jumper to +5V Rail)
 
-### 2.4 Complete Pin & Component Mapping
+### 2.4 Complete Pin & Component Mapping (Rev 2.3 Turnkey SMD & Breadboard)
 
-| ESP32-C3 Pin | Header Location | Connected Component | Function & Conditioning |
-| :--- | :--- | :--- | :--- |
-| **GPIO 0** | Col 4 Top (Row G) | 5V Supply Voltage Monitor | ADC1_CH0 via 10kΩ/10kΩ divider (R1/R2) + 100nF filter cap (C1) |
-| **GPIO 1** | Col 5 Top (Row G) | Capacitive Soil Sensor | ADC1_CH1 connected directly to TB2 Pin 2 (`AOUT`) |
-| **GPIO 2** | Col 6 Top (Row G) | Switched Soil Sensor VCC | Digital OUT connected to TB2 Pin 1 (`VCC`). Duty-cycled 3.3V power |
-| **GPIO 3** | Col 7 Top (Row G) | Ultrasonic Sensor `TRIG` | Digital output trigger pulse (10 µs pulse) |
-| **GPIO 4** | Col 8 Top (Row G) | Ultrasonic Sensor `ECHO` | Digital input via 1kΩ/2kΩ divider (R3/R4) stepping 5V down to 3.3V |
-| **GPIO 7** | Col 6 Bottom (Row A) | Pump MOSFET Gate | Digital output to FQP30N06L Gate via 1kΩ resistor (R5 into Col 12) + 100kΩ pull-down (R6) |
-| **GPIO 8** | Internal / Onboard | System Status LED | Active LOW blue LED (breathing: idle, blinking: pump, flashing: error) |
-| **ADC / Int** | Internal Silicon | Chip Temperature | Read via `temperatureRead()` core function |
+| ESP32-C3 Pin | Header Location | Connected Component | Function & Conditioning (Rev 2.3 SMD) | Breadboard Legacy |
+| :--- | :--- | :--- | :--- | :--- |
+| **GPIO 0** | J1 Pin 4 (Col 4 Top) | 5V Supply Rail Monitor | ADC1_CH0 via 100kΩ/100kΩ divider (R1/R2) + 100nF filter (C1) | 5V Rail (10k/10k) |
+| **GPIO 1** | J1 Pin 5 (Col 5 Top) | Capacitive Soil Sensor | ADC1_CH1 connected to TB2 Pin 1 (`DATA` / AOUT) + C2 100nF | Soil AOUT |
+| **GPIO 2** | J1 Pin 6 (Col 6 Top) | Strapping Protected | **Unconnected / Free** (Rock-solid boot reliability, 0 boot hangs) | Soil VCC |
+| **GPIO 3** | J1 Pin 7 (Col 7 Top) | Ambient Light Sensor | ADC1_CH3 via LDR1 (GL55xx DNP) + 10kΩ divider (R7) + 100nF (C4) | Ultrasonic TRIG |
+| **GPIO 4** | J1 Pin 8 (Col 8 Top) | 18650 Battery Monitor | **ADC1_CH4 via 100kΩ/100kΩ divider (R8/R9) + 100nF (C6)** from TB4-3 | Ultrasonic ECHO |
+| **GPIO 5** | J2 Pin 8 (Col 8 Bottom)| Switched Soil VCC | Digital OUT to TB2 Pin 2 (`VCC`). Duty-cycled 3.3V power | N/A |
+| **GPIO 6** | J2 Pin 7 (Col 7 Bottom)| Ultrasonic Sensor `ECHO`| **Digital IN via 1kΩ/2kΩ divider (R3/R4)** stepping 5V down to 3.3V | Spare |
+| **GPIO 7** | J2 Pin 6 (Col 6 Bottom)| Pump MOSFET Gate | Digital OUT to AO3400A Gate via 1kΩ (R5) + 100kΩ pull-down (R6) | Pump Gate |
+| **GPIO 8** | Internal / Onboard | System Status LED | Active LOW blue LED (breathing: idle, blinking: pump, flashing: error) | Status LED |
+| **GPIO 10** | J2 Pin 3 (Col 3 Bottom)| Ultrasonic Sensor `TRIG`| Digital OUT trigger pulse (10 µs pulse to TB1 Pin 2) | N/A |
+| **GPIO 20** | J2 Pin 2 (Col 2 Bottom)| I2C SDA | I2C Data bus for optional SHT30 (MOD1) and BH1750 (MOD2) | Spare |
+| **GPIO 21** | J2 Pin 1 (Col 1 Bottom)| I2C SCL | I2C Clock bus for optional SHT30 (MOD1) and BH1750 (MOD2) | Spare |
+| **ADC / Int**| Internal Silicon | Chip Temperature | Read via `temperatureRead()` core function | Chip Temp |
 
 #### Discrete Components:
 * **R1 & R2 (10 kΩ each):** 5V rail voltage divider (5V $\rightarrow$ 2.5V, safe for 3.3V ADC).
@@ -66,7 +71,7 @@ All terminal blocks are mounted with screw openings facing **100% OUTWARDS** off
 * **R5 (1 kΩ):** Gate damping resistor (Col 6 Row A to Col 12 Row C) protecting GPIO 7 from inrush capacitance and ringing.
 * **R6 (100 kΩ):** Gate pull-down (Col 12 Row D to GND) ensuring pump stays completely OFF during boot and reset.
 * **Q1 (FQP30N06L Logic-Level N-MOSFET, TO-220):** Low-side switch controlling 5V pump motor across 3 adjacent breadboard holes (Gate: Col 12, Drain: Col 13, Source: Col 14). Threshold $V_{GS(th)} = 1.0\text{–}2.5\text{V}$, $R_{DS(on)} = 0.045\,\Omega$ max at 5V ($< 0.05\,\Omega$ at 3.3V gate drive), $V_{DSS} = 60\text{V}$, $I_D = 32\text{A}$. Standard 0.1" (2.54mm) pin pitch drops straight into adjacent Cols 12, 13, 14 with zero lead bending (Pin 1 = Gate in Col 12, Pin 2 = Drain in Col 13, Pin 3 = Source in Col 14).
-* **D1 (1N5819 Schottky Diode):** Flyback protection diode across TB3 (Cathode to +5V Col 15, Anode to Drain Col 13).
+* **D1 (1N4001 Silicon Rectifier Diode):** Flyback protection diode across TB3 (Cathode to +5V Col 15, Anode to Drain Col 13). (Can also use 1N4002–1N4007 or 1N5819 Schottky).
 * **C3 (100 µF electrolytic):** Bulk power reservoir across +5V and GND to suppress motor startup dips (can also use 470 µF if available).
 
 ### 2.5 Permanent Soldered Perfboard Layout (18 Rows R $\to$ A Descending × 24 Columns 1–24)
@@ -87,7 +92,7 @@ For a permanent soldered build in an enclosure, an **18-row by 24-column 0.1" (2
   * **TB3 (2-Pin Pump):** Row B, Cols 13 (Drain -), 15 (+5V); wire entries face **DOWNWARDS** off Row A. Dedicated holes, completely separated from flyback diode D1.
 * **Actuators & Direct Solder Bridges (Separated D1 & TB3):**
   * **Q1 (FQP30N06L TO-220 MOSFET):** Row C, Cols 12 (Gate), 13 (Drain), 14 (Source).
-  * **D1 (1N5819 Schottky Diode):** Row E, Cols 13 (Anode) to 15 (Cathode). Cathode silver stripe faces Col 15 (+5V). Right side positioned at E15.
+  * **D1 (1N4001 Diode):** Row E, Cols 13 (Anode) to 15 (Cathode). Cathode silver stripe faces Col 15 (+5V). Right side positioned at E15.
   * **Direct Underside Solder Bridges:** 
     * 4-pad bridge along Col 13: **E13 (Anode) $\to$ D13 $\to$ C13 (Q1 Drain) $\to$ B13 (TB3 Pin 1 Drain)**.
     * 4-pad bridge along Col 14: **D14 $\to$ C14 (Q1 Source) $\to$ B14 $\to$ A14 (Row A GND)**, fed directly from Row P GND bus via straight insulated wire from **P14 to D14**.
@@ -105,8 +110,8 @@ For a permanent soldered build in an enclosure, an **18-row by 24-column 0.1" (2
     * **Top Layer (Component Side — 10 Insulated Wires):** All rail-crossing and section-linking connections run as elevated, insulated hookup wires above the components (W1 P14→D14 GND Feed, W2 N15→E15 5V Pump Feed, W3a M4→P4 Col 4 GND Jump, W3b P4→P11 Row P GND Feed, W4 N15→Q15 TB1 5V, W5 Q19→O19 TB1 Echo, W6 O7→K7 Soil Data, W7 Q9→K8 Soil VCC, W8 K9→Q17 Trig, W9 O17→K10 Echo 3.3V).
     * **Row K Breakout Architecture:** All 5 microcontroller signal jumpers (Node, Soil Data, Soil VCC, TRIG, ECHO) terminate cleanly into Row K through-holes (`K6`, `K7`, `K8`, `K9`, `K10`), bridged directly on the bottom to ESP32 header pins (`J6-K6`, `J7-K7`, `J8-K8`, `J9-K9`, `J10-K10`). This leaves the entire female socket header on Row J completely free of top-side soldered wires.
 * **Full Assembly Guide & Visualizer:**
-  * Guide: [`perfboard_circuit_guide.md`](file:///Users/robertlongbottom/dev/plant-esp32/perfboard_circuit_guide.md)
-  * Interactive SVG Visualizer: [`perfboard_diagram.html`](file:///Users/robertlongbottom/dev/plant-esp32/perfboard_diagram.html) (Top, Bottom Mirrored, and X-Ray composite views with independent layer toggle checkboxes for Top Insulated Wires, Top Components, Bottom Solder Bridges, Bottom Bus Rails, pad inspection, and fluid wide-screen zoom).
+  * Guide: [`pcb/hole-thru/perfboard_circuit_guide.md`](file:///Users/robertlongbottom/dev/plant-esp32/pcb/hole-thru/perfboard_circuit_guide.md)
+  * Interactive SVG Visualizer: [`pcb/hole-thru/perfboard_diagram.html`](file:///Users/robertlongbottom/dev/plant-esp32/pcb/hole-thru/perfboard_diagram.html) (Top, Bottom Mirrored, and X-Ray composite views with independent layer toggle checkboxes for Top Insulated Wires, Top Components, Bottom Solder Bridges, Bottom Bus Rails, pad inspection, and fluid wide-screen zoom).
 
 ---
 
@@ -158,10 +163,13 @@ graph TD
 * **Non-Blocking Measurement:** Pulse duration is measured using `esp_timer_get_time()`. If 30 ms elapses without the ECHO pin returning `LOW`, the function aborts immediately with `TIMEOUT_ERROR`.
 * **Software Kick (Un-stitching clone sensors):** If the sensor latches HIGH, the ESP32 reconfigures GPIO 4 as an output, drives it `LOW` for 10 µs to clear the sensor's latch, switches it back to input, and enforces a 30 ms acoustic damping quiet time.
 
-### 5.2 Factory eFuse Calibrated ADC Reads
-* Utilizes ESP-IDF `esp_adc_cal` to read factory-calibrated curves burned into eFuse.
-* **GPIO 0 (5V Rail):** Monitored continuously. Records supply rail voltage before and during pump operation to detect weak power adapters or brownouts.
-* **GPIO 1 (Soil Moisture):** 5-sample median filter with 10 ms spacing to reject power line noise and sensor ripple.
+### 5.2 Factory eFuse Calibrated ADC Reads (Dual Voltage Channels)
+* Utilizes ESP-IDF `analogReadMilliVolts` / `esp_adc_cal` to read factory-calibrated curves burned into eFuse.
+* **GPIO 0 (`ADC1_CH0` - 5V Supply Rail):** Monitored continuously via 100k/100k divider + 100nF filter. Records supply rail voltage before and during pump operation to detect weak power adapters or brownouts.
+* **GPIO 4 (`ADC1_CH4` - 18650 Battery):** Dedicated battery state-of-charge channel via 100k/100k divider + 100nF filter (21µA negligible drain) directly from TB4 Pin 3 (`BAT+`).
+* **Zero Jumpers / Concurrent Reading:** Both 5V rail and raw 18650 cell voltages are read simultaneously in firmware without any manual hardware jumpers.
+* **GPIO 1 (`ADC1_CH1` - Soil Moisture):** 5-sample median filter with 10 ms spacing to reject power line noise and sensor ripple.
+* **GPIO 3 (`ADC1_CH3` - Ambient Light LDR):** Monitored via LDR1 + 10k divider (R7) + 100nF (C4). 100% Wi-Fi safe on ADC1.
 
 ---
 
@@ -257,10 +265,27 @@ The firmware preserves 100% backward compatibility with `plant-p2`:
 plant-esp32/
 ├── platformio.ini               # PlatformIO environment, board & library dependencies
 ├── PROJECT.md                   # Complete specification and requirements reference (this file)
-├── breadboard_circuit_guide.md  # Step-by-step physical breadboard wiring guide (15-column)
-├── circuit_diagram.html         # Interactive breadboard SVG visualizer & BOM
-├── perfboard_circuit_guide.md   # Permanent 18x24 soldered perfboard assembly & wiring guide
-├── perfboard_diagram.html       # Interactive perfboard SVG visualizer (Top, Bottom, X-Ray)
+├── pcb/                         # Hardware schematics, PCB fabrication, and circuit prototyping
+│   ├── smd/                     # Turnkey SMT / PCBA Edition with Solar/Battery UPS (Rev 2.3)
+│   │   ├── plant-esp32-smd.kicad_pcb # Production KiCad PCB layout (100% Basic Parts)
+│   │   ├── plant-esp32-smd.kicad_sch # Complete KiCad schematic with dual ADC
+│   │   ├── circuit_diagram_smd.html  # Interactive SVG circuit diagram & net visualizer
+│   │   ├── plant-esp32-smd_bom.csv   # JLCPCB SMT BOM (100% Basic Parts, $0 feeder fees)
+│   │   ├── plant-esp32-smd_hand_solder_bom.csv # Hand-solder through-hole connectors BOM
+│   │   ├── plant-esp32-smd_cpl.csv   # Pick-and-place centroid file
+│   │   ├── plant-esp32-smd_gerbers.zip # Fabrication Gerber and drill zip
+│   │   ├── generate_pcb_smd.py       # Automated PCB router & DRC compiler
+│   │   └── README.md                 # SMT ordering & assembly documentation
+│   ├── hole-thru/               # 100% Through-Hole Edition (Rev 2.0)
+│   │   ├── plant-esp32.kicad_pcb     # Production KiCad PCB layout
+│   │   ├── plant-esp32_gerbers.zip   # Fabrication Gerber and drill zip
+│   │   ├── generate_pcb.py           # Automated PCB layout script
+│   │   ├── breadboard_circuit_guide.md # 15-column breadboard guide
+│   │   ├── circuit_diagram.html      # Interactive breadboard SVG visualizer
+│   │   ├── perfboard_circuit_guide.md # 18x24 soldered perfboard guide
+│   │   ├── perfboard_diagram.html    # Interactive perfboard SVG visualizer
+│   │   └── README.md                 # Through-hole assembly documentation
+│   └── README.md                # Master hardware portal & edition comparison
 ├── include/
 │   ├── config_schema.h          # Configuration structures and defaults
 │   ├── pin_definitions.h        # Board pinout mapping (GPIO 0, 1, 3, 4, 7, 8)

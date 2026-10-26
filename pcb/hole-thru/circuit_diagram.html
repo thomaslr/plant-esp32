@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plant Monitor — 15-Column Mini Breadboard Circuit Diagram</title>
+    <style>
+        :root {
+            --bg-color: #10141a;
+            --card-bg: #181d26;
+            --text-color: #adbac7;
+            --heading-color: #f0f6fc;
+            --border-color: #30363d;
+            --accent-blue: #58a6ff;
+            --accent-green: #3fb950;
+            --accent-red: #f85149;
+            --accent-purple: #bc8cff;
+            --accent-yellow: #d29922;
+            --accent-cyan: #39c5cf;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px 24px;
+            box-sizing: border-box;
+        }
+
+        .header {
+            width: 100%;
+            max-width: 100%;
+            margin: 0 auto 16px auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 16px;
+            box-sizing: border-box;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .header h1 {
+            color: var(--heading-color);
+            font-size: 22px;
+            margin: 0;
+        }
+
+        .header p {
+            margin: 4px 0 0 0;
+            font-size: 13px;
+            color: #768390;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 100%;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 390px;
+            gap: 20px;
+            align-items: start;
+            box-sizing: border-box;
+        }
+
+        .canvas-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.4);
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .canvas-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 12px;
+            margin-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .toolbar-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .canvas-badge {
+            font-size: 10px;
+            font-weight: 700;
+            color: #79c0ff;
+            background: rgba(56, 139, 253, 0.15);
+            border: 1px solid rgba(56, 139, 253, 0.4);
+            border-radius: 4px;
+            padding: 2px 7px;
+            letter-spacing: 0.5px;
+        }
+
+        .canvas-dims {
+            font-size: 11px;
+            color: #768390;
+            font-family: monospace;
+        }
+
+        .toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .btn-tool {
+            background: #21262d;
+            color: #c9d1d9;
+            border: 1px solid #30363d;
+            padding: 5px 11px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 11.5px;
+            font-weight: 500;
+            transition: all 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-tool:hover {
+            background: #30363d;
+            color: #f0f6fc;
+            border-color: #8b949e;
+        }
+
+        .btn-tool.active {
+            background: #1f6feb;
+            color: #ffffff;
+            border-color: #388bfd;
+        }
+
+        .btn-icon {
+            padding: 5px 10px;
+            font-size: 13px;
+            font-weight: bold;
+            line-height: 1;
+        }
+
+        .zoom-group {
+            display: inline-flex;
+            align-items: center;
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .zoom-group .btn-tool {
+            border: none;
+            border-radius: 0;
+            background: transparent;
+        }
+
+        .zoom-group .btn-tool:hover {
+            background: #21262d;
+        }
+
+        .zoom-label {
+            font-size: 11px;
+            font-family: monospace;
+            color: #adbac7;
+            padding: 0 8px;
+            min-width: 44px;
+            text-align: center;
+            user-select: none;
+        }
+
+        .svg-container {
+            width: 100%;
+            overflow: auto;
+            border-radius: 6px;
+            background: #12161f;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            box-sizing: border-box;
+            padding: 8px;
+        }
+
+        #circuitSvg {
+            width: 100%;
+            max-width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 6px;
+            transition: width 0.1s ease-out, height 0.1s ease-out;
+        }
+
+        .svg-container.mode-fitscreen #circuitSvg {
+            width: auto;
+            max-width: 100%;
+            max-height: calc(100vh - 200px);
+            height: auto;
+        }
+
+        .svg-container.mode-native #circuitSvg {
+            width: 1240px;
+            max-width: none;
+            height: 980px;
+            flex-shrink: 0;
+        }
+
+        .svg-container.mode-custom #circuitSvg {
+            max-width: none;
+            flex-shrink: 0;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            min-width: 0;
+        }
+
+        .info-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            font-size: 13px;
+        }
+
+        .info-card h3 {
+            color: var(--heading-color);
+            margin-top: 0;
+            margin-bottom: 12px;
+            font-size: 14px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            padding-bottom: 8px;
+        }
+
+        .comp-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11.5px;
+            margin-top: 4px;
+        }
+
+        .comp-table th, .comp-table td {
+            padding: 6px 6px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: top;
+        }
+
+        .comp-table th {
+            color: var(--heading-color);
+            background-color: rgba(255,255,255,0.03);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 1px 5px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+        .badge-adc { background-color: #223749; color: #79c0ff; border: 1px solid #388bfd; }
+        .badge-dig { background-color: #1f3729; color: #7ee787; border: 1px solid #3fb950; }
+        .badge-pwr { background-color: #3e1b1e; color: #ff7b72; border: 1px solid #f85149; }
+        .badge-tb { background-color: #2e2640; color: #d2a8ff; border: 1px solid #bc8cff; }
+
+        .btn-action {
+            background:#238636;
+            color:#ffffff;
+            border:none;
+            padding:8px 14px;
+            border-radius:6px;
+            cursor:pointer;
+            font-weight:600;
+            font-size:12px;
+        }
+        .btn-action:hover {
+            background:#2ea043;
+        }
+
+        svg text {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            user-select: none;
+        }
+
+        @media (max-width: 1180px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            .sidebar {
+                grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+                display: grid;
+            }
+        }
+
+        @media print {
+            body { padding: 0; background: #ffffff; color: #000000; }
+            .canvas-toolbar, .btn-action { display: none !important; }
+            .container { grid-template-columns: 1fr; }
+            .canvas-card { border: none; box-shadow: none; padding: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <h1>Plant Monitor — 15-Column Breadboard (Outward Terminals &bull; G0/G1 Swapped)</h1>
+            <p>G0 = 5V Supply ADC &bull; G1 = Soil Moisture ADC &bull; All Terminals Face Outwards &bull; Explicit Component Leads</p>
+        </div>
+        <div>
+            <button class="btn-action" onclick="window.print()">Print / Export</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- SVG Canvas Card -->
+        <div class="canvas-card">
+            <!-- Responsive Canvas Toolbar -->
+            <div class="canvas-toolbar">
+                <div class="toolbar-left">
+                    <span class="canvas-badge">VECTOR CANVAS</span>
+                    <span class="canvas-dims" id="canvasDims">Native: 1240 &times; 980</span>
+                </div>
+                <div class="toolbar-right">
+                    <button class="btn-tool active" id="btnFitWidth" title="Fit to Panel Width (Scales across wide screens with zero horizontal scrolling)">Fit Width</button>
+                    <button class="btn-tool" id="btnFitScreen" title="Fit Entire Diagram in Screen without vertical scrolling">Fit Screen</button>
+                    <button class="btn-tool" id="btnNative" title="1:1 Native Resolution (1240px)">1:1 (Native)</button>
+                    <div class="zoom-group">
+                        <button class="btn-tool btn-icon" id="btnZoomOut" title="Zoom Out (–)">−</button>
+                        <span class="zoom-label" id="zoomLabel">100%</span>
+                        <button class="btn-tool btn-icon" id="btnZoomIn" title="Zoom In (+)">+</button>
+                    </div>
+                    <button class="btn-tool btn-icon" id="btnFullscreen" title="Toggle Fullscreen (F)">⛶</button>
+                </div>
+            </div>
+
+            <!-- Scrollable / Scalable Container -->
+            <div class="svg-container" id="svgContainer">
+                <svg id="circuitSvg" viewBox="0 0 1240 980" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <filter id="dropShadow" x="-10%" y="-10%" width="120%" height="120%">
+                        <feDropShadow dx="2" dy="4" stdDeviation="4" flood-opacity="0.45"/>
+                    </filter>
+                    <linearGradient id="terminalGreen" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stop-color="#2ea043"/>
+                        <stop offset="100%" stop-color="#196c2e"/>
+                    </linearGradient>
+                    <linearGradient id="metalSilver" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#ced4da"/>
+                        <stop offset="50%" stop-color="#e9ecef"/>
+                        <stop offset="100%" stop-color="#8b949e"/>
+                    </linearGradient>
+                    <pattern id="gridDots" width="20" height="20" patternUnits="userSpaceOnUse">
+                        <circle cx="10" cy="10" r="0.8" fill="#242b35" />
+                    </pattern>
+                </defs>
+
+                <!-- Background -->
+                <rect width="1240" height="980" fill="#12161f" />
+                <rect width="1240" height="980" fill="url(#gridDots)" />
+
+                <!-- ============================================================ -->
+                <!-- 1. EXTERNAL DEVICES (SENSORS & MOTOR)                        -->
+                <!-- ============================================================ -->
+
+                <!-- HC-SR04 Ultrasonic (Top Left) -->
+                <g transform="translate(60, 20)" filter="url(#dropShadow)">
+                    <rect width="190" height="70" rx="8" fill="#104a7e" stroke="#0a2e4e" stroke-width="2"/>
+                    <circle cx="50" cy="35" r="24" fill="url(#metalSilver)" stroke="#495057" stroke-width="2"/>
+                    <circle cx="50" cy="35" r="18" fill="#343a40"/>
+                    <circle cx="140" cy="35" r="24" fill="url(#metalSilver)" stroke="#495057" stroke-width="2"/>
+                    <circle cx="140" cy="35" r="18" fill="#343a40"/>
+                    <text x="95" y="20" fill="#ffffff" font-size="10" font-weight="bold" text-anchor="middle">HC-SR04 (5V)</text>
+                    <text x="95" y="56" fill="#8bc9ff" font-size="8" text-anchor="middle">Water Tank Level</text>
+                    <text x="32" y="66" fill="#ff7b72" font-size="7">VCC</text>
+                    <text x="70" y="66" fill="#58a6ff" font-size="7">TRIG</text>
+                    <text x="110" y="66" fill="#39c5cf" font-size="7">ECHO</text>
+                    <text x="150" y="66" fill="#79c0ff" font-size="7">GND</text>
+                </g>
+
+                <!-- Capacitive Soil Moisture Probe (Bottom Left) -->
+                <g transform="translate(430, 895)" filter="url(#dropShadow)">
+                    <path d="M 0,0 L 130,0 L 130,55 L 0,55 Z" fill="#1b1f23" stroke="#30363d" stroke-width="2"/>
+                    <path d="M 130,12 L 250,12 L 275,27 L 250,42 L 130,42 Z" fill="#1b1f23" stroke="#30363d" stroke-width="2"/>
+                    <line x1="145" y1="27" x2="240" y2="27" stroke="#ffffff" stroke-width="1.5" stroke-dasharray="4"/>
+                    <text x="60" y="24" fill="#f0f6fc" font-size="10" font-weight="bold">Soil Moisture</text>
+                    <text x="60" y="38" fill="#8b949e" font-size="8">Capacitive v1.2</text>
+                    <rect x="10" y="15" width="30" height="24" fill="#ffffff" rx="2"/>
+                    <circle cx="17" cy="27" r="2" fill="#212529"/>
+                    <circle cx="25" cy="27" r="2" fill="#212529"/>
+                    <circle cx="33" cy="27" r="2" fill="#212529"/>
+                    <text x="17" y="12" fill="#d29922" font-size="7" text-anchor="middle">VCC</text>
+                    <text x="25" y="12" fill="#e3b341" font-size="7" text-anchor="middle">AOUT</text>
+                    <text x="33" y="12" fill="#79c0ff" font-size="7" text-anchor="middle">GND</text>
+                </g>
+
+                <!-- Submersible DC Pump (Bottom Right - Flipped Left-to-Right) -->
+                <g transform="translate(930, 895)" filter="url(#dropShadow)">
+                    <rect x="20" y="8" width="100" height="60" rx="8" fill="#30363d" stroke="#484f58" stroke-width="2"/>
+                    <!-- Inlet on left, Outlet nozzle on right -->
+                    <rect x="0" y="30" width="22" height="16" fill="#8b949e"/>
+                    <rect x="118" y="22" width="22" height="30" rx="3" fill="#ffb703"/>
+                    <circle cx="70" cy="38" r="14" fill="#212529"/>
+                    <text x="70" y="42" fill="#ffffff" font-size="9" font-weight="bold" text-anchor="middle">5V DC PUMP</text>
+                    <!-- Terminals aligned directly with TB3 pins above: - on Left (Col 13), + on Right (Col 15) -->
+                    <text x="40" y="22" fill="#8b949e" font-size="8">-</text>
+                    <text x="100" y="22" fill="#ff7b72" font-size="8">+</text>
+                </g>
+
+
+                <!-- ============================================================ -->
+                <!-- 2. MINI BREADBOARD (15 COLS + TOP & BOTTOM POWER RAILS)       -->
+                <!-- ============================================================ -->
+                <!-- Origin: x=60, y=140. Width: 1120px, Height: 710px -->
+                <g transform="translate(60, 140)" filter="url(#dropShadow)">
+                    <!-- Board base -->
+                    <rect width="1120" height="710" rx="14" fill="#e9ecef" stroke="#ced4da" stroke-width="2"/>
+
+                    <!-- Top Power Rails -->
+                    <rect x="25" y="14" width="1070" height="52" fill="#dee2e6" rx="4"/>
+                    <line x1="35" y1="28" x2="1085" y2="28" stroke="#f85149" stroke-width="2.5"/> <!-- +5V Bus -->
+                    <line x1="35" y1="52" x2="1085" y2="52" stroke="#0969da" stroke-width="2.5"/> <!-- GND Bus -->
+                    <text x="12" y="32" fill="#f85149" font-size="16" font-weight="bold">+</text>
+                    <text x="14" y="56" fill="#0969da" font-size="16" font-weight="bold">-</text>
+                    <text x="1075" y="25" fill="#f85149" font-size="10" font-weight="bold">+5V (USB)</text>
+                    <text x="1075" y="60" fill="#0969da" font-size="10" font-weight="bold">GND</text>
+
+                    <!-- Center Divider Trench -->
+                    <rect x="25" y="340" width="1070" height="32" fill="#ced4da"/>
+                    <text x="560" y="360" fill="#6c757d" font-size="11" font-weight="bold" text-anchor="middle">CENTER TRENCH (DIVIDES UPPER ROWS F–J &amp; LOWER ROWS A–E)</text>
+
+                    <!-- Bottom Power Rails -->
+                    <rect x="25" y="635" width="1070" height="52" fill="#dee2e6" rx="4"/>
+                    <line x1="35" y1="649" x2="1085" y2="649" stroke="#d29922" stroke-width="2.5"/> <!-- +3.3V Bus -->
+                    <line x1="35" y1="673" x2="1085" y2="673" stroke="#0969da" stroke-width="2.5"/> <!-- GND Bus -->
+                    <text x="12" y="653" fill="#d29922" font-size="16" font-weight="bold">+</text>
+                    <text x="14" y="677" fill="#0969da" font-size="16" font-weight="bold">-</text>
+                    <text x="1070" y="646" fill="#d29922" font-size="10" font-weight="bold">+3.3V System</text>
+                    <text x="1070" y="681" fill="#0969da" font-size="10" font-weight="bold">GND (Bridged)</text>
+
+                    <!-- Columns 1 to 15 Coordinates (Spacing: ~66px per column) -->
+                    <!-- Cols: 55, 120, 185, 250, 315, 380, 445, 510, 585, 650, 715, 780, 845, 910, 975 -->
+                    <g font-size="11" fill="#495057" font-weight="bold" text-anchor="middle">
+                        <text x="55" y="85">1</text>   <text x="120" y="85">2</text>  <text x="185" y="85">3</text>  <text x="250" y="85" fill="#388bfd">4</text>
+                        <text x="315" y="85" fill="#388bfd">5</text>  <text x="380" y="85">6</text>  <text x="445" y="85">7</text>  <text x="510" y="85">8</text>
+                        <text x="585" y="85" fill="#2ea043">9</text>  <text x="650" y="85">10</text> <text x="715" y="85" fill="#2ea043">11</text>
+                        <text x="780" y="85">12</text> <text x="845" y="85" fill="#2ea043">13</text> <text x="910" y="85">14</text>
+                        <text x="975" y="85" fill="#2ea043">15</text>
+
+                        <text x="55" y="625">1</text>   <text x="120" y="625">2</text>  <text x="185" y="625">3</text>  <text x="250" y="625">4</text>
+                        <text x="315" y="625">5</text>  <text x="380" y="625" fill="#3fb950">6</text>  <text x="445" y="625">7</text>  <text x="510" y="625" fill="#bc8cff">8</text>
+                        <text x="585" y="625">9</text>  <text x="650" y="625" fill="#bc8cff">10</text> <text x="715" y="625">11</text>
+                        <text x="780" y="625" fill="#bc8cff">12</text> <text x="845" y="625" fill="#f85149">13</text> <text x="910" y="625">14</text>
+                        <text x="975" y="625" fill="#f85149">15</text>
+                    </g>
+
+                    <!-- Row Letters (J down to F on top, E down to A on bottom) -->
+                    <!-- Y Top: J=115, I=160, H=205, G=250, F=295 -->
+                    <!-- Y Bottom: E=405, D=450, C=495, B=540, A=585 -->
+                    <g font-size="11" fill="#6c757d" font-weight="bold">
+                        <text x="28" y="120">J</text> <text x="28" y="165">I</text> <text x="28" y="210">H</text> <text x="28" y="255">G</text> <text x="28" y="300">F</text>
+                        <text x="28" y="410">E</text> <text x="28" y="455">D</text> <text x="28" y="500">C</text> <text x="28" y="545">B</text> <text x="28" y="590">A</text>
+                    </g>
+
+                    <!-- Background Tie Point Holes (Circles for realism) -->
+                    <g fill="#ced4da" opacity="0.6">
+                        <!-- Top holes (Cols 1 to 15, Rows J down to F) -->
+                        <circle cx="55" cy="115" r="3.5"/><circle cx="55" cy="160" r="3.5"/><circle cx="55" cy="205" r="3.5"/><circle cx="55" cy="250" r="3.5"/><circle cx="55" cy="295" r="3.5"/>
+                        <circle cx="120" cy="115" r="3.5"/><circle cx="120" cy="160" r="3.5"/><circle cx="120" cy="205" r="3.5"/><circle cx="120" cy="250" r="3.5"/><circle cx="120" cy="295" r="3.5"/>
+                        <circle cx="185" cy="115" r="3.5"/><circle cx="185" cy="160" r="3.5"/><circle cx="185" cy="205" r="3.5"/><circle cx="185" cy="250" r="3.5"/><circle cx="185" cy="295" r="3.5"/>
+                        <circle cx="250" cy="115" r="3.5"/><circle cx="250" cy="160" r="3.5"/><circle cx="250" cy="205" r="3.5"/><circle cx="250" cy="250" r="3.5"/><circle cx="250" cy="295" r="3.5"/>
+                        <circle cx="315" cy="115" r="3.5"/><circle cx="315" cy="160" r="3.5"/><circle cx="315" cy="205" r="3.5"/><circle cx="315" cy="250" r="3.5"/><circle cx="315" cy="295" r="3.5"/>
+                        <circle cx="380" cy="115" r="3.5"/><circle cx="380" cy="160" r="3.5"/><circle cx="380" cy="205" r="3.5"/><circle cx="380" cy="250" r="3.5"/><circle cx="380" cy="295" r="3.5"/>
+                        <circle cx="445" cy="115" r="3.5"/><circle cx="445" cy="160" r="3.5"/><circle cx="445" cy="205" r="3.5"/><circle cx="445" cy="250" r="3.5"/><circle cx="445" cy="295" r="3.5"/>
+                        <circle cx="510" cy="115" r="3.5"/><circle cx="510" cy="160" r="3.5"/><circle cx="510" cy="205" r="3.5"/><circle cx="510" cy="250" r="3.5"/><circle cx="510" cy="295" r="3.5"/>
+                    </g>
+
+
+                    <!-- ==================== ESP32-C3 SUPERMINI (COLS 1-8) ==================== -->
+                    <!-- Sits across Row F (y=295) and Row B (y=540) -->
+                    <g transform="translate(40, 275)" filter="url(#dropShadow)">
+                        <rect width="490" height="280" rx="6" fill="#161b22" stroke="#30363d" stroke-width="2"/>
+                        <!-- USB-C Port -->
+                        <rect x="-10" y="115" width="22" height="55" rx="4" fill="#8b949e" stroke="#484f58"/>
+                        <rect x="-8" y="128" width="12" height="30" rx="2" fill="#1b1f23"/>
+                        <!-- Antenna -->
+                        <rect x="445" y="95" width="35" height="90" rx="3" fill="#d29922"/>
+                        <text x="462" y="140" fill="#000000" font-size="10" font-weight="bold" transform="rotate(90 462 140)" text-anchor="middle">ANTENNA</text>
+                        <!-- Shield -->
+                        <rect x="180" y="105" width="120" height="80" rx="3" fill="#30363d" stroke="#484f58"/>
+                        <text x="240" y="142" fill="#f0f6fc" font-size="12" font-weight="bold" text-anchor="middle">ESP32-C3</text>
+                        <text x="240" y="160" fill="#8b949e" font-size="9" text-anchor="middle">SuperMini</text>
+                        <rect x="325" y="115" width="12" height="10" fill="#388bfd" rx="1"/>
+                        <text x="331" y="140" fill="#58a6ff" font-size="9" text-anchor="middle">LED</text>
+
+                        <!-- Top Header Pins in Row F (Cols 1 to 8) -->
+                        <g font-size="9" font-weight="bold" fill="#f0f6fc">
+                            <!-- Col 1: 5V -->
+                            <circle cx="15" cy="20" r="6" fill="#f85149"/><text x="15" y="38" text-anchor="middle">5V</text>
+                            <!-- Col 2: GND -->
+                            <circle cx="80" cy="20" r="6" fill="#0969da"/><text x="80" y="38" text-anchor="middle">GND</text>
+                            <!-- Col 3: 3V3 -->
+                            <circle cx="145" cy="20" r="6" fill="#d29922"/><text x="145" y="38" text-anchor="middle">3V3</text>
+                            <!-- Col 4: GPIO 0 (NOW 5V SUPPLY ADC) -->
+                            <circle cx="210" cy="20" r="6" fill="#79c0ff"/><text x="210" y="38" text-anchor="middle">G0 (5V)</text>
+                            <!-- Col 5: GPIO 1 (NOW SOIL MOISTURE ADC) -->
+                            <circle cx="275" cy="20" r="6" fill="#3fb950"/><text x="275" y="38" text-anchor="middle">G1 (Soil)</text>
+                            <!-- Col 6: GPIO 2 (Switched Soil VCC Power) -->
+                            <circle cx="340" cy="20" r="6" fill="#3fb950"/><text x="340" y="38" text-anchor="middle">G2 (Soil Pwr)</text>
+                            <!-- Col 7: GPIO 3 (TRIG) -->
+                            <circle cx="405" cy="20" r="6" fill="#58a6ff"/><text x="405" y="38" text-anchor="middle">G3</text>
+                            <!-- Col 8: GPIO 4 (ECHO) -->
+                            <circle cx="470" cy="20" r="6" fill="#39c5cf"/><text x="470" y="38" text-anchor="middle">G4</text>
+                        </g>
+
+                        <!-- Bottom Header Pins in Row B (Cols 1 to 8) -->
+                        <g font-size="9" font-weight="bold" fill="#f0f6fc">
+                            <circle cx="15" cy="265" r="6" fill="#8b949e"/><text x="15" y="252" text-anchor="middle">G21</text>
+                            <circle cx="80" cy="265" r="6" fill="#8b949e"/><text x="80" y="252" text-anchor="middle">G20</text>
+                            <circle cx="145" cy="265" r="6" fill="#f0883e"/><text x="145" y="252" text-anchor="middle">G10</text>
+                            <circle cx="210" cy="265" r="6" fill="#8b949e"/><text x="210" y="252" text-anchor="middle">G9</text>
+                            <circle cx="275" cy="265" r="6" fill="#388bfd"/><text x="275" y="252" text-anchor="middle">G8</text>
+                            <!-- Col 6: GPIO 7 (PUMP GATE) -->
+                            <circle cx="340" cy="265" r="6" fill="#3fb950"/><text x="340" y="252" text-anchor="middle">G7</text>
+                            <circle cx="405" cy="265" r="6" fill="#bc8cff"/><text x="405" y="252" text-anchor="middle">G6</text>
+                            <circle cx="470" cy="265" r="6" fill="#8b949e"/><text x="470" y="252" text-anchor="middle">G5</text>
+                        </g>
+                    </g>
+
+
+                    <!-- ============================================================ -->
+                    <!-- 3. TERMINAL BLOCKS (ALL FACING OUTWARDS OFF THE EDGES!)      -->
+                    <!-- ============================================================ -->
+
+                    <!-- [TB1] ULTRASONIC 4-PIN (ROW J &bull; COLS 9, 11, 13, 15) -->
+                    <!-- Wire entries and screws face UPWARDS (Outwards off top edge) -->
+                    <g transform="translate(565, 88)" filter="url(#dropShadow)">
+                        <rect width="430" height="48" rx="5" fill="url(#terminalGreen)" stroke="#114e21" stroke-width="1.5"/>
+                        <!-- Arrow indicator showing wire entry direction -->
+                        <polygon points="215,-8 210,-2 220,-2" fill="#3fb950"/>
+                        <text x="215" y="-12" fill="#3fb950" font-size="10" font-weight="bold" text-anchor="middle">&uarr; WIRES ENTER FROM TOP EDGE &uarr;</text>
+                        <!-- Screws at Col 9 (x=20), Col 11 (x=150), Col 13 (x=280), Col 15 (x=410) -->
+                        <circle cx="20" cy="24" r="8" fill="#86efac" stroke="#166534" stroke-width="1.5"/>
+                        <circle cx="150" cy="24" r="8" fill="#86efac" stroke="#166534" stroke-width="1.5"/>
+                        <circle cx="280" cy="24" r="8" fill="#86efac" stroke="#166534" stroke-width="1.5"/>
+                        <circle cx="410" cy="24" r="8" fill="#86efac" stroke="#166534" stroke-width="1.5"/>
+                        <line x1="16" y1="24" x2="24" y2="24" stroke="#166534" stroke-width="2"/>
+                        <line x1="146" y1="24" x2="154" y2="24" stroke="#166534" stroke-width="2"/>
+                        <line x1="276" y1="24" x2="284" y2="24" stroke="#166534" stroke-width="2"/>
+                        <line x1="406" y1="24" x2="414" y2="24" stroke="#166534" stroke-width="2"/>
+                        <text x="20" y="42" fill="#ffffff" font-size="8" text-anchor="middle">5V</text>
+                        <text x="150" y="42" fill="#ffffff" font-size="8" text-anchor="middle">TRIG</text>
+                        <text x="280" y="42" fill="#ffffff" font-size="8" text-anchor="middle">ECHO</text>
+                        <text x="410" y="42" fill="#ffffff" font-size="8" text-anchor="middle">GND</text>
+                    </g>
+
+                    <!-- [TB2] SOIL SENSOR 3-PIN (ROW F &bull; COLS 10, 12, 14) -->
+                    <!-- Wire entries and screws face DOWNWARDS (into open center trench) -->
+                    <g transform="translate(625, 272)" filter="url(#dropShadow)">
+                        <rect width="310" height="48" rx="5" fill="url(#terminalGreen)" stroke="#114e21" stroke-width="1.5"/>
+                        <!-- Arrow indicator -->
+                        <polygon points="155,54 150,48 160,48" fill="#bc8cff"/>
+                        <text x="155" y="64" fill="#bc8cff" font-size="9" font-weight="bold" text-anchor="middle">&darr; SOIL PROBE WIRES (CENTER TRENCH) &darr;</text>
+                        <!-- Screws at Col 10 (x=25), Col 12 (x=155), Col 14 (x=285) -->
+                        <circle cx="25" cy="23" r="8" fill="#86efac" stroke="#166534" stroke-width="1.5"/>
+                        <circle cx="155" cy="23" r="8" fill="#86efac" stroke="#166534" stroke-width="1.5"/>
+                        <circle cx="285" cy="23" r="8" fill="#86efac" stroke="#166534" stroke-width="1.5"/>
+                        <line x1="21" y1="23" x2="29" y2="23" stroke="#166534" stroke-width="2"/>
+                        <line x1="151" y1="23" x2="159" y2="23" stroke="#166534" stroke-width="2"/>
+                        <line x1="281" y1="23" x2="289" y2="23" stroke="#166534" stroke-width="2"/>
+                        <text x="25" y="10" fill="#ffffff" font-size="7.5" text-anchor="middle">VCC (G2)</text>
+                        <text x="155" y="10" fill="#ffffff" font-size="8" text-anchor="middle">AOUT</text>
+                        <text x="285" y="10" fill="#ffffff" font-size="8" text-anchor="middle">GND</text>
+                        <text x="155" y="38" fill="#bc8cff" font-size="9" font-weight="bold" text-anchor="middle">TB2: Soil Moisture (Row F &bull; Cols 10, 12, 14)</text>
+                    </g>
+
+                    <!-- [TB3] PUMP MOTOR 2-PIN (ROW A &bull; COLS 13, 15) -->
+                    <!-- Wire entries and screws face DOWNWARDS (Outwards off bottom edge) -->
+                    <g transform="translate(825, 565)" filter="url(#dropShadow)">
+                        <rect width="170" height="48" rx="5" fill="url(#terminalGreen)" stroke="#114e21" stroke-width="1.5"/>
+                        <polygon points="85,58 80,52 90,52" fill="#f85149"/>
+                        <text x="85" y="68" fill="#f85149" font-size="9.5" font-weight="bold" text-anchor="middle">&darr; MOTOR WIRES &darr;</text>
+                        <!-- Screws at Col 13 (x=20), Col 15 (x=150) -->
+                        <circle cx="20" cy="24" r="8" fill="#86efac" stroke="#166534" stroke-width="1.5"/>
+                        <circle cx="150" cy="24" r="8" fill="#86efac" stroke="#166534" stroke-width="1.5"/>
+                        <line x1="16" y1="24" x2="24" y2="24" stroke="#166534" stroke-width="2"/>
+                        <line x1="146" y1="24" x2="154" y2="24" stroke="#166534" stroke-width="2"/>
+                        <text x="20" y="10" fill="#ffffff" font-size="7.5" text-anchor="middle">DRAIN</text>
+                        <text x="150" y="10" fill="#ffffff" font-size="7.5" text-anchor="middle">+5V</text>
+                        <text x="85" y="38" fill="#f85149" font-size="9" font-weight="bold" text-anchor="middle">TB3: Pump (Cols 13, 15)</text>
+                    </g>
+
+
+                    <!-- ============================================================ -->
+                    <!-- 4. PUMP MOSFET (TO-220 &bull; ROWS C–D &bull; COLS 12, 13, 14) -->
+                    <!-- ============================================================ -->
+                    <!-- Standard 2.54mm (0.1") pin pitch across 3 adjacent holes: Col 12 (G), Col 13 (D), Col 14 (S) -->
+                    <g transform="translate(745, 465)" filter="url(#dropShadow)">
+                        <rect x="-10" y="-14" width="220" height="75" rx="6" fill="rgba(248, 81, 73, 0.08)" stroke="#f85149" stroke-width="1.2" stroke-dasharray="3"/>
+                        <text x="100" y="0" fill="#f85149" font-size="9" font-weight="bold" text-anchor="middle">Pump N-FET FQP30N06L (Cols 12–14)</text>
+                        <!-- Heatsink Tab -->
+                        <rect x="10" y="10" width="180" height="8" fill="url(#metalSilver)" rx="1"/>
+                        <!-- Black Body -->
+                        <rect x="10" y="18" width="180" height="25" fill="#212529" stroke="#30363d" rx="2"/>
+                        <text x="100" y="35" fill="#ffffff" font-size="9" font-weight="bold" text-anchor="middle">FQP30N06L</text>
+                        <!-- Metal Leads extending into Breadboard Holes: Col 12 (x=35), Col 13 (x=100), Col 14 (x=165) -->
+                        <line x1="35" y1="43" x2="35" y2="55" stroke="#ced4da" stroke-width="2.5"/>
+                        <line x1="100" y1="43" x2="100" y2="55" stroke="#ced4da" stroke-width="2.5"/>
+                        <line x1="165" y1="43" x2="165" y2="55" stroke="#ced4da" stroke-width="2.5"/>
+                        <circle cx="35" cy="55" r="4" fill="#3fb950"/> <!-- Gate pin in Col 12 -->
+                        <circle cx="100" cy="55" r="4" fill="#484f58"/> <!-- Drain pin in Col 13 (Direct share with TB3!) -->
+                        <circle cx="165" cy="55" r="4" fill="#0969da"/> <!-- Source pin in Col 14 -->
+                        <text x="35" y="68" fill="#3fb950" font-size="7.5" text-anchor="middle">G (12)</text>
+                        <text x="100" y="68" fill="#adbac7" font-size="7.5" text-anchor="middle">D (13)</text>
+                        <text x="165" y="68" fill="#0969da" font-size="7.5" text-anchor="middle">S (14)</text>
+                    </g>
+
+
+                    <!-- ============================================================ -->
+                    <!-- 5. PASSIVE COMPONENTS WITH EXPLICIT PHYSICAL LEADS           -->
+                    <!-- ============================================================ -->
+
+                    <!-- [R1] 10kΩ SUPPLY DIVIDER TOP (Top 5V Rail &rarr; Col 4 Row H) -->
+                    <g id="comp_R1">
+                        <!-- Upper lead from Top (+) 5V Rail (y=28) to resistor body -->
+                        <line x1="250" y1="28" x2="250" y2="175" stroke="#ced4da" stroke-width="2"/>
+                        <!-- Resistor Body centered at x=250, y=190 -->
+                        <rect x="242" y="175" width="16" height="30" rx="3" fill="#cfb997" stroke="#484f58"/>
+                        <!-- Color bands: Brown, Black, Orange -->
+                        <line x1="242" y1="181" x2="258" y2="181" stroke="#8b4513" stroke-width="2.5"/>
+                        <line x1="242" y1="188" x2="258" y2="188" stroke="#000000" stroke-width="2.5"/>
+                        <line x1="242" y1="195" x2="258" y2="195" stroke="#ff7b72" stroke-width="2.5"/>
+                        <!-- Lower lead into Col 4 Row H (y=205) -->
+                        <line x1="250" y1="205" x2="250" y2="205" stroke="#ced4da" stroke-width="2"/>
+                        <text x="265" y="193" fill="#d29922" font-size="8" font-weight="bold">R1: 10kΩ</text>
+                    </g>
+
+                    <!-- [R2] 10kΩ SUPPLY DIVIDER BOTTOM (Col 4 Row G &rarr; Top (-) GND Rail) -->
+                    <g id="comp_R2">
+                        <!-- Lead from Col 4 Row G (y=250) up to resistor body -->
+                        <line x1="250" y1="250" x2="230" y2="235" stroke="#ced4da" stroke-width="2"/>
+                        <rect x="215" y="220" width="30" height="15" rx="3" fill="#cfb997" stroke="#484f58"/>
+                        <line x1="223" y1="220" x2="223" y2="235" stroke="#8b4513" stroke-width="2.5"/>
+                        <line x1="230" y1="220" x2="230" y2="235" stroke="#000000" stroke-width="2.5"/>
+                        <line x1="237" y1="220" x2="237" y2="235" stroke="#ff7b72" stroke-width="2.5"/>
+                        <!-- Lead up to Top (-) GND Rail (y=52) at Col 2 -->
+                        <path d="M 215,227 L 120,227 L 120,52" fill="none" stroke="#ced4da" stroke-width="2"/>
+                        <text x="210" y="245" fill="#d29922" font-size="8" font-weight="bold">R2: 10kΩ</text>
+                    </g>
+
+                    <!-- [C1] 100nF SUPPLY ADC FILTER CAP (Col 4 Row I &rarr; Top (-) GND Rail) -->
+                    <g id="comp_C1">
+                        <!-- Ceramic disc centered at x=275, y=140 -->
+                        <circle cx="275" cy="140" r="8" fill="#e3b341" stroke="#b08800" stroke-width="1.5"/>
+                        <text x="275" y="143" fill="#212529" font-size="6" font-weight="bold" text-anchor="middle">104</text>
+                        <!-- Leg 1 into Col 4 Row I (x=250, y=160) -->
+                        <line x1="270" y1="146" x2="250" y2="160" stroke="#ced4da" stroke-width="1.8"/>
+                        <!-- Leg 2 into Top (-) GND Rail at x=275, y=52 -->
+                        <line x1="275" y1="132" x2="275" y2="52" stroke="#ced4da" stroke-width="1.8"/>
+                        <text x="288" y="143" fill="#e3b341" font-size="7.5" font-weight="bold">C1: 100nF</text>
+                    </g>
+
+                    <!-- [R3] 1kΩ ECHO STEPPER TOP (Col 13 Row I &rarr; Col 8 Row I) -->
+                    <g id="comp_R3">
+                        <!-- Resistor Body at x=675, y=160 -->
+                        <line x1="845" y1="160" x2="690" y2="160" stroke="#ced4da" stroke-width="2"/>
+                        <rect x="660" y="152" width="30" height="16" rx="3" fill="#cfb997" stroke="#484f58"/>
+                        <!-- Bands: Brown, Black, Red -->
+                        <line x1="668" y1="152" x2="668" y2="168" stroke="#8b4513" stroke-width="2.5"/>
+                        <line x1="675" y1="152" x2="675" y2="168" stroke="#000000" stroke-width="2.5"/>
+                        <line x1="682" y1="152" x2="682" y2="168" stroke="#f85149" stroke-width="2.5"/>
+                        <line x1="660" y1="160" x2="510" y2="160" stroke="#ced4da" stroke-width="2"/>
+                        <text x="675" y="145" fill="#39c5cf" font-size="8" font-weight="bold" text-anchor="middle">R3: 1kΩ</text>
+                    </g>
+
+                    <!-- [R4] 2kΩ ECHO STEPPER BOTTOM (Col 8 Row H &rarr; Top (-) GND Rail) -->
+                    <g id="comp_R4">
+                        <line x1="510" y1="205" x2="510" y2="125" stroke="#ced4da" stroke-width="2"/>
+                        <rect x="502" y="95" width="16" height="30" rx="3" fill="#cfb997" stroke="#484f58"/>
+                        <!-- Bands: Red, Black, Red -->
+                        <line x1="502" y1="102" x2="518" y2="102" stroke="#f85149" stroke-width="2.5"/>
+                        <line x1="502" y1="109" x2="518" y2="109" stroke="#000000" stroke-width="2.5"/>
+                        <line x1="502" y1="116" x2="518" y2="116" stroke="#f85149" stroke-width="2.5"/>
+                        <!-- Lead to Top GND Rail (y=52) -->
+                        <line x1="510" y1="95" x2="510" y2="52" stroke="#ced4da" stroke-width="2"/>
+                        <text x="525" y="112" fill="#39c5cf" font-size="8" font-weight="bold">R4: 2kΩ</text>
+                    </g>
+
+                    <!-- [C2] 100nF SOIL SENSOR RF FILTER (Col 12 Row H &rarr; Col 14 Row H) -->
+                    <g id="comp_C2">
+                        <circle cx="845" cy="205" r="8" fill="#e3b341" stroke="#b08800" stroke-width="1.5"/>
+                        <text x="845" y="208" fill="#212529" font-size="6" font-weight="bold" text-anchor="middle">104</text>
+                        <!-- Leg 1 into Col 12 Row H (x=780, y=205) -->
+                        <line x1="837" y1="205" x2="780" y2="205" stroke="#ced4da" stroke-width="1.8"/>
+                        <!-- Leg 2 into Col 14 Row H (x=910, y=205) -->
+                        <line x1="853" y1="205" x2="910" y2="205" stroke="#ced4da" stroke-width="1.8"/>
+                        <text x="845" y="192" fill="#bc8cff" font-size="8" font-weight="bold" text-anchor="middle">C2: 100nF</text>
+                    </g>
+
+                    <!-- [D1] 1N4001 FLYBACK DIODE (Col 13 Row B &rarr; Col 15 Row B) -->
+                    <g id="comp_D1">
+                        <!-- Cylindrical body centered at x=910, y=540 -->
+                        <line x1="845" y1="540" x2="895" y2="540" stroke="#ced4da" stroke-width="2"/>
+                        <rect x="895" y="533" width="30" height="14" rx="2" fill="#212529" stroke="#484f58"/>
+                        <!-- Silver Cathode band at Right (Col 15 / +5V side) -->
+                        <rect x="918" y="533" width="7" height="14" fill="url(#metalSilver)"/>
+                        <line x1="925" y1="540" x2="975" y2="540" stroke="#ced4da" stroke-width="2"/>
+                        <text x="910" y="525" fill="#f85149" font-size="8" font-weight="bold" text-anchor="middle">D1: 1N4001</text>
+                    </g>
+
+                    <!-- [R5] 1kΩ PUMP GATE DAMPING (Col 6 Row A &rarr; Col 12 Row C) -->
+                    <g id="comp_R5">
+                        <line x1="380" y1="585" x2="540" y2="585" stroke="#ced4da" stroke-width="2"/>
+                        <rect x="540" y="577" width="30" height="16" rx="3" fill="#cfb997" stroke="#484f58"/>
+                        <line x1="548" y1="577" x2="548" y2="593" stroke="#8b4513" stroke-width="2.5"/>
+                        <line x1="555" y1="577" x2="555" y2="593" stroke="#000000" stroke-width="2.5"/>
+                        <line x1="562" y1="577" x2="562" y2="593" stroke="#f85149" stroke-width="2.5"/>
+                        <!-- Lead to Col 12 Row C (x=780, y=495) -->
+                        <path d="M 570,585 L 780,585 L 780,495" fill="none" stroke="#ced4da" stroke-width="2"/>
+                        <text x="555" y="570" fill="#3fb950" font-size="8" font-weight="bold" text-anchor="middle">R5: 1kΩ</text>
+                    </g>
+
+                    <!-- [R6] 100kΩ PUMP GATE PULL-DOWN (Col 12 Row D &rarr; Bottom (-) GND Rail) -->
+                    <g id="comp_R6">
+                        <line x1="780" y1="450" x2="780" y2="615" stroke="#ced4da" stroke-width="2"/>
+                        <rect x="772" y="615" width="16" height="30" rx="3" fill="#cfb997" stroke="#484f58"/>
+                        <!-- Bands: Brown, Black, Yellow -->
+                        <line x1="772" y1="622" x2="788" y2="622" stroke="#8b4513" stroke-width="2.5"/>
+                        <line x1="772" y1="629" x2="788" y2="629" stroke="#000000" stroke-width="2.5"/>
+                        <line x1="772" y1="636" x2="788" y2="636" stroke="#d29922" stroke-width="2.5"/>
+                        <!-- Lead to Bottom (-) GND Rail (y=673) -->
+                        <line x1="780" y1="645" x2="780" y2="673" stroke="#ced4da" stroke-width="2"/>
+                        <text x="765" y="632" fill="#8b949e" font-size="7.5" font-weight="bold" text-anchor="end">R6: 100kΩ</text>
+                    </g>
+
+                    <!-- [C3] 470µF BULK MOTOR CAPACITOR (Top Rails +5V &amp; GND at Col 15) -->
+                    <g id="comp_C3">
+                        <circle cx="1035" cy="40" r="14" fill="#1f2430" stroke="#f85149" stroke-width="2"/>
+                        <rect x="1023" y="37" width="6" height="6" fill="#adb5bd"/>
+                        <text x="1055" y="44" fill="#f85149" font-size="8.5" font-weight="bold">C3: 470µF</text>
+                        <!-- Physical leads into +5V rail (y=28) and GND rail (y=52) -->
+                        <line x1="1035" y1="26" x2="1035" y2="28" stroke="#ced4da" stroke-width="2.5"/>
+                        <line x1="1035" y1="54" x2="1035" y2="52" stroke="#ced4da" stroke-width="2.5"/>
+                    </g>
+                </g>
+
+                <!-- ============================================================ -->
+                <!-- 6. PHYSICAL WIRE JUMPERS                                     -->
+                <!-- ============================================================ -->
+                <g fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.95">
+
+                    <!-- [A] +5V POWER JUMPERS (RED) -->
+                    <!-- ESP32 Col 1 Top (y=295) &rarr; Top 5V Rail (y=28) -->
+                    <path d="M 115,435 L 115,168" stroke="#f85149" stroke-width="3"/>
+                    <!-- Top 5V Rail &rarr; TB1 Pin 1 (Col 9 at x=645, y=228) -->
+                    <path d="M 645,168 L 645,228" stroke="#f85149" stroke-width="3"/>
+                    <path d="M 645,208 L 92,90" stroke="#f85149" stroke-width="2.5"/> <!-- To sensor -->
+                    <!-- Top 5V Rail &rarr; TB3 Pin 2 (Col 15 at x=1035, y=705) -->
+                    <path d="M 1035,168 C 1035,360 1035,580 1035,705" stroke="#f85149" stroke-width="3"/>
+                    <path d="M 1035,725 L 1030,903" stroke="#f85149" stroke-width="3"/> <!-- To pump (+) -->
+
+                    <!-- [B] SWITCHED SOIL SENSOR POWER (GREEN / DUTY-CYCLED via GPIO 2) -->
+                    <!-- ESP32 Col 6 Top (GPIO 2 at Col 6 Row G: x=440, y=390) &rarr; TB2 Pin 1 (Col 10 Row G: x=710, y=390) -->
+                    <path d="M 440,390 L 710,390" stroke="#3fb950" stroke-width="3"/>
+                    <!-- TB2 Pin 1 (x=710, y=415) &rarr; Soil VCC probe cable -->
+                    <path d="M 710,415 C 710,830 447,830 447,922" stroke="#3fb950" stroke-width="2.5"/>
+                    <!-- ESP32 Col 3 Top (3V3 at x=245) &rarr; Bottom 3.3V Rail (y=789) (Aux 3.3V) -->
+                    <path d="M 245,435 C 245,740 245,740 245,789" stroke="#d29922" stroke-width="2" stroke-dasharray="4"/>
+
+                    <!-- [C] COMMON GROUND JUMPERS (BLUE) -->
+                    <!-- ESP32 Col 2 Top &rarr; Top GND Rail -->
+                    <path d="M 180,435 L 180,192" stroke="#0969da" stroke-width="3"/>
+                    <!-- Top GND Rail to Bottom GND Rail (Bridged under board) -->
+                    <path d="M 85,192 C 40,192 40,813 85,813" stroke="#0969da" stroke-width="3.5" stroke-dasharray="6"/>
+                    <text x="32" y="500" fill="#58a6ff" font-size="8" font-weight="bold" transform="rotate(-90 32 500)" text-anchor="middle">BRIDGED GND (UNDER BOARD)</text>
+                    <!-- Top GND &rarr; TB1 Pin 4 (Col 15 at x=1035, y=228) -->
+                    <path d="M 1035,192 L 1035,228" stroke="#0969da" stroke-width="2.5"/>
+                    <path d="M 1035,208 L 210,90" stroke="#0969da" stroke-width="2"/>
+                    <!-- Top GND &rarr; TB2 Pin 3 (Col 14 at x=970, y=390) -->
+                    <path d="M 970,192 L 970,390" stroke="#0969da" stroke-width="2.5"/>
+                    <!-- TB2 Pin 3 &rarr; Soil probe GND cable -->
+                    <path d="M 970,415 C 970,850 463,850 463,922" stroke="#0969da" stroke-width="2"/>
+                    <!-- MOSFET Source (Col 14 at x=970, y=535) &rarr; Bottom GND Rail -->
+                    <path d="M 970,535 L 970,813" stroke="#0969da" stroke-width="3.5"/>
+
+                    <!-- [D] TRIG SIGNAL (BLUE) -->
+                    <!-- ESP32 Col 7 Top (G3 at x=505) &rarr; TB1 Pin 2 (Col 11 at x=775) -->
+                    <path d="M 505,435 C 505,290 775,290 775,228" stroke="#58a6ff" stroke-width="3"/>
+                    <path d="M 775,208 L 130,90" stroke="#58a6ff" stroke-width="2.5"/>
+
+                    <!-- [E] ECHO SIGNAL (CYAN) -->
+                    <!-- HC-SR04 ECHO &rarr; TB1 Pin 3 (Col 13 at x=905, y=208) -->
+                    <path d="M 170,90 L 905,208" stroke="#39c5cf" stroke-width="2.5"/>
+
+                    <!-- [F] SWAPPED SOIL AOUT (YELLOW &rarr; GPIO 1) -->
+                    <!-- Soil Probe AOUT &rarr; TB2 Pin 2 (Col 12 at x=840, y=415) -->
+                    <path d="M 455,922 C 455,830 840,830 840,415" stroke="#e3b341" stroke-width="2.5"/>
+                    <!-- TB2 Pin 2 (Col 12 Row G at x=840, y=390) &rarr; ESP32 Col 5 Top (GPIO 1 at x=375, y=390) -->
+                    <path d="M 840,390 C 840,345 375,345 375,390" stroke="#e3b341" stroke-width="3"/>
+
+                    <!-- [G] PUMP DRAIN RETURN (DARK SLATE) -->
+                    <!-- Pump (-) &rarr; TB3 Pin 1 (Col 13 at x=905, y=725) -->
+                    <path d="M 970,903 L 905,725" stroke="#6e7681" stroke-width="3"/>
+                    <!-- Col 13 is shared internally between TB3 Pin 1 and MOSFET Drain! -->
+                    <path d="M 905,705 L 905,535" stroke="#6e7681" stroke-width="3.5" stroke-dasharray="3"/>
+                </g>
+
+                <!-- Connection Dots at specific tie-points -->
+                <g fill="#f0f6fc">
+                    <circle cx="115" cy="415" r="3.5"/><circle cx="180" cy="415" r="3.5"/><circle cx="245" cy="415" r="3.5"/>
+                    <circle cx="310" cy="415" r="3.5"/><circle cx="375" cy="415" r="3.5"/><circle cx="440" cy="415" r="3.5"/>
+                    <circle cx="505" cy="415" r="3.5"/><circle cx="570" cy="415" r="3.5"/><circle cx="440" cy="725" r="3.5"/>
+                    <circle cx="645" cy="228" r="3.5"/><circle cx="775" cy="228" r="3.5"/><circle cx="905" cy="228" r="3.5"/><circle cx="1035" cy="228" r="3.5"/>
+                    <circle cx="550" cy="705" r="3.5"/><circle cx="710" cy="705" r="3.5"/><circle cx="840" cy="705" r="3.5"/>
+                    <circle cx="905" cy="705" r="3.5"/><circle cx="1035" cy="705" r="3.5"/>
+                </g>
+            </svg>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- 7. SIDEBAR: COMPONENT FUNCTIONS & PINOUT MAPPING             -->
+        <!-- ============================================================ -->
+        <div class="sidebar">
+            <div class="info-card">
+                <h3>Passive Components &amp; Functions</h3>
+                <table class="comp-table">
+                    <thead>
+                        <tr>
+                            <th>Part</th>
+                            <th>Value / Location</th>
+                            <th>Circuit Function</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>R1</strong></td>
+                            <td>10 kΩ &bull; Top 5V Rail &rarr; Col 4</td>
+                            <td><strong>Voltage Divider Top</strong>: Drops the 5V USB rail down to safe 2.5V.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>R2</strong></td>
+                            <td>10 kΩ &bull; Col 4 &rarr; GND Rail</td>
+                            <td><strong>Voltage Divider Bottom</strong>: Sets the exact 1/2 division ratio for ADC1.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>C1</strong></td>
+                            <td>100 nF &bull; Col 4 &rarr; GND Rail</td>
+                            <td><strong>ADC Filter Capacitor</strong>: Low-pass filter to smooth 5V readings and prevent ADC sampling droop.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>R3</strong></td>
+                            <td>1 kΩ &bull; Col 13 &rarr; Col 8</td>
+                            <td><strong>Echo Stepper Top</strong>: Current limiter and upper divider leg from 5V HC-SR04 Echo.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>R4</strong></td>
+                            <td>2 kΩ &bull; Col 8 &rarr; GND Rail</td>
+                            <td><strong>Echo Stepper Bottom</strong>: Steps 5V Echo pulse down to $3.33\,\text{V}$ to protect GPIO 4.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>C2</strong></td>
+                            <td>100 nF &bull; Col 12 Row H &rarr; Col 14 Row H</td>
+                            <td><strong>Soil Sensor RF Filter</strong>: Absorbs high-frequency Wi-Fi transmission bursts from distorting soil readings.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>R5</strong></td>
+                            <td>1 kΩ &bull; Col 6 &rarr; Col 12</td>
+                            <td><strong>Gate Damping Resistor</strong>: Suppresses high-frequency parasitic ringing on MOSFET Gate.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>R6</strong></td>
+                            <td>100 kΩ &bull; Col 12 &rarr; GND Rail</td>
+                            <td><strong>Gate Pull-Down Resistor</strong>: Holds Gate firmly at 0V during boot/reset so pump stays strictly OFF.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Q1</strong></td>
+                            <td>FQP30N06L &bull; Cols 12, 13, 14</td>
+                            <td><strong>Logic-Level N-MOSFET</strong>: Low-side pump motor switch across 3 adjacent holes (Pin 1 G: Col 12, Pin 2 D: Col 13, Pin 3 S: Col 14). Fully saturated at 3.3V logic level ($V_{GS(th)} \le 2.5\text{V}$, $R_{DS(on)} &lt; 0.05\,\Omega$).</td>
+                        </tr>
+                        <tr>
+                            <td><strong>D1</strong></td>
+                            <td>1N4001 &bull; Col 13 &rarr; Col 15</td>
+                            <td><strong>Flyback Snubber Diode</strong>: Clamps reverse inductive voltage spikes from pump motor coils.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>C3</strong></td>
+                            <td>470 µF &bull; Top Rails (+ &amp; -)</td>
+                            <td><strong>Bulk Decoupling Capacitor</strong>: Supplies inrush current surges to prevent ESP32 brownouts.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="info-card">
+                <h3>Pin Allocations &amp; Switched Power</h3>
+                <table class="comp-table">
+                    <thead>
+                        <tr><th>Pin</th><th>Peripheral</th><th>Target</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><strong>GPIO 0 (Col 4)</strong></td><td>ADC1_CH0</td><td><span class="badge badge-adc">5V Supply Monitor</span> (10k Divider)</td></tr>
+                        <tr><td><strong>GPIO 1 (Col 5)</strong></td><td>ADC1_CH1</td><td><span class="badge badge-adc">Soil Moisture Probe</span> (AOUT)</td></tr>
+                        <tr><td><strong>GPIO 2 (Col 6 Top)</strong></td><td>Digital OUT</td><td><span class="badge badge-dig">Switched Soil VCC</span> (Duty-cycled 3.3V)</td></tr>
+                        <tr><td><strong>GPIO 3 (Col 7)</strong></td><td>Digital OUT</td><td><span class="badge badge-dig">HC-SR04 TRIG</span></td></tr>
+                        <tr><td><strong>GPIO 4 (Col 8)</strong></td><td>Digital IN</td><td><span class="badge badge-dig">HC-SR04 ECHO</span> (via 1k/2k)</td></tr>
+                        <tr><td><strong>GPIO 7 (Col 6 Bot)</strong></td><td>Digital OUT</td><td><span class="badge badge-dig">Pump MOSFET Gate</span> (via 1k into Col 12)</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="info-card">
+                <h3>Terminal Orientation (Unobstructed Access)</h3>
+                <ul style="padding-left:14px; margin:0; line-height:1.5; font-size:11.5px;">
+                    <li><strong>TB1 (Top Edge &bull; Row J)</strong>: Faces <strong>UPWARDS</strong> off top edge. 4-pin Ultrasonic (5V, TRIG, ECHO, GND).</li>
+                    <li><strong>TB2 (Top Half &bull; Row F)</strong>: Faces <strong>DOWNWARDS</strong> into open Center Trench. 3-pin Soil (Cols 10, 12, 14: VCC via G2, AOUT, GND).</li>
+                    <li><strong>TB3 (Bottom Edge &bull; Row A)</strong>: Faces <strong>DOWNWARDS</strong> off bottom edge. 2-pin Pump (DRAIN, +5V).</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interactive Canvas & Zoom Controller -->
+    <script>
+        (function() {
+            const svg = document.getElementById('circuitSvg');
+            const container = document.getElementById('svgContainer');
+            const btnFitWidth = document.getElementById('btnFitWidth');
+            const btnFitScreen = document.getElementById('btnFitScreen');
+            const btnNative = document.getElementById('btnNative');
+            const btnZoomIn = document.getElementById('btnZoomIn');
+            const btnZoomOut = document.getElementById('btnZoomOut');
+            const zoomLabel = document.getElementById('zoomLabel');
+            const canvasDims = document.getElementById('canvasDims');
+            const btnFullscreen = document.getElementById('btnFullscreen');
+            const canvasCard = document.querySelector('.canvas-card');
+
+            let currentMode = localStorage.getItem('circuit_diagram_view_mode') || 'fit-width';
+            let customScale = 1.0;
+
+            function updateUI() {
+                btnFitWidth.classList.toggle('active', currentMode === 'fit-width');
+                btnFitScreen.classList.toggle('active', currentMode === 'fit-screen');
+                btnNative.classList.toggle('active', currentMode === 'native');
+
+                container.classList.remove('mode-fitscreen', 'mode-native', 'mode-custom');
+                if (currentMode === 'fit-screen') {
+                    container.classList.add('mode-fitscreen');
+                    svg.style.width = 'auto';
+                    svg.style.height = 'auto';
+                } else if (currentMode === 'native') {
+                    container.classList.add('mode-native');
+                    svg.style.width = '1240px';
+                    svg.style.height = '980px';
+                } else if (currentMode === 'custom') {
+                    container.classList.add('mode-custom');
+                    svg.style.width = Math.round(1240 * customScale) + 'px';
+                    svg.style.height = Math.round(980 * customScale) + 'px';
+                } else {
+                    // Default: fit-width (fluid across wide screens)
+                    svg.style.width = '100%';
+                    svg.style.height = 'auto';
+                }
+
+                requestAnimationFrame(() => {
+                    const rect = svg.getBoundingClientRect();
+                    const pct = Math.round((rect.width / 1240) * 100);
+                    zoomLabel.textContent = pct + '%';
+                    canvasDims.textContent = Math.round(rect.width) + ' × ' + Math.round(rect.height) + ' px';
+                });
+
+                if (currentMode !== 'custom') {
+                    localStorage.setItem('circuit_diagram_view_mode', currentMode);
+                }
+            }
+
+            btnFitWidth.addEventListener('click', () => {
+                currentMode = 'fit-width';
+                updateUI();
+            });
+
+            btnFitScreen.addEventListener('click', () => {
+                currentMode = 'fit-screen';
+                updateUI();
+            });
+
+            btnNative.addEventListener('click', () => {
+                currentMode = 'native';
+                updateUI();
+            });
+
+            btnZoomIn.addEventListener('click', () => {
+                const currentWidth = svg.getBoundingClientRect().width;
+                customScale = Math.min(3.0, (currentWidth / 1240) + 0.15);
+                currentMode = 'custom';
+                updateUI();
+            });
+
+            btnZoomOut.addEventListener('click', () => {
+                const currentWidth = svg.getBoundingClientRect().width;
+                customScale = Math.max(0.35, (currentWidth / 1240) - 0.15);
+                currentMode = 'custom';
+                updateUI();
+            });
+
+            btnFullscreen.addEventListener('click', () => {
+                if (!document.fullscreenElement) {
+                    canvasCard.requestFullscreen().catch(err => console.error(err));
+                } else {
+                    document.exitFullscreen();
+                }
+            });
+
+            window.addEventListener('resize', () => {
+                if (currentMode === 'fit-width' || currentMode === 'fit-screen') {
+                    updateUI();
+                }
+            });
+
+            // Keyboard Shortcuts: +, -, 0 (reset), f (fullscreen)
+            window.addEventListener('keydown', (e) => {
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+                if (e.key === '+' || e.key === '=') {
+                    btnZoomIn.click();
+                } else if (e.key === '-' || e.key === '_') {
+                    btnZoomOut.click();
+                } else if (e.key === '0') {
+                    btnFitWidth.click();
+                } else if (e.key === 'f' || e.key === 'F') {
+                    if (!e.ctrlKey && !e.metaKey) {
+                        btnFullscreen.click();
+                    }
+                }
+            });
+
+            // Initialize
+            updateUI();
+        })();
+    </script>
+</body>
+</html>

@@ -24,6 +24,7 @@ public:
     int readSoilMoistureRaw();
     float readSoilMoisturePercent();
     float readSupplyVoltage();
+    float readBatteryVoltage();
     float readChipTemperature();
 
     // Stuck-sensor active recovery

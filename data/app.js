@@ -155,7 +155,7 @@ function updateTelemetryUI(t) {
     document.getElementById('sub-water').innerText = `Depth: ${t.water_level_cm} cm`;
     document.getElementById('bar-water').style.width = `${Math.min(100, Math.max(0, t.water_percent))}%`;
 
-    // Voltage
+    // Voltage (5V Supply Rail)
     document.getElementById('val-voltage').innerText = `${t.supply_voltage.toFixed(2)} V`;
     const voltBar = document.getElementById('bar-voltage');
     const voltHealth = document.getElementById('sub-voltage');
@@ -166,8 +166,27 @@ function updateTelemetryUI(t) {
         voltHealth.innerText = 'Warning: Weak Power (<4.5V)';
         voltHealth.style.color = '#ef4444';
     } else {
-        voltHealth.innerText = 'Health: Healthy (5V USB)';
+        voltHealth.innerText = 'Health: Healthy (5V USB/Solar)';
         voltHealth.style.color = '#10b981';
+    }
+
+    // Battery Voltage (18650 Cell)
+    if (t.battery_voltage !== undefined && document.getElementById('val-battery')) {
+        document.getElementById('val-battery').innerText = `${t.battery_voltage.toFixed(2)} V`;
+        const battBar = document.getElementById('bar-battery');
+        const battHealth = document.getElementById('sub-battery');
+        const battPct = Math.min(100, Math.max(0, ((t.battery_voltage - 3.0) / 1.2) * 100));
+        battBar.style.width = `${battPct}%`;
+        if (t.battery_voltage < 0.5) {
+            battHealth.innerText = 'No Battery (USB Only)';
+            battHealth.style.color = '#768390';
+        } else if (t.battery_voltage < 3.3) {
+            battHealth.innerText = 'Low Battery (<3.3V)';
+            battHealth.style.color = '#ef4444';
+        } else {
+            battHealth.innerText = `Charge: ~${Math.round(battPct)}%`;
+            battHealth.style.color = '#10b981';
+        }
     }
 
     // Temp
@@ -226,7 +245,7 @@ function renderLogTable(logs) {
             <td>+${r.timestamp}s</td>
             <td>${r.soil_percent}%</td>
             <td>${r.water_level_cm} cm</td>
-            <td>${r.supply_voltage.toFixed(2)}V</td>
+            <td>${r.supply_voltage.toFixed(2)}V${r.battery_voltage > 0.5 ? ' / ' + r.battery_voltage.toFixed(2) + 'V Bat' : ''}</td>
             <td>${r.chip_temp.toFixed(1)}°C</td>
         </tr>
     `).join('');

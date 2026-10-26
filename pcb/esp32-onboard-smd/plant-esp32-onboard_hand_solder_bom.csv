@@ -1,0 +1,9 @@
+Designator,Value,Package,Notes
+TB1,KF301-4P,TerminalBlock_5.00mm,Ultrasonic Sensor Header
+TB2,KF301-3P,TerminalBlock_5.00mm,Soil Moisture Sensor Header
+TB3,KF301-2P,TerminalBlock_5.00mm,5V Submersible Pump Header
+TB4,KF301-3P,TerminalBlock_5.00mm,External Solar/Battery Power Terminal
+MOD1,SHT30,PinHeader_1x04_P2.54mm,Temp & Humidity Sensor Socket (DNP)
+MOD2,BH1750,PinHeader_1x05_P2.54mm,Ambient Light Sensor Socket (DNP)
+LDR1,GL55xx,Through-Hole 2-Pin,Photoresistor Sensor (DNP)
+C_EXT,100uF-470uF,Radial_D6.3mm_P2.50mm,Optional Bulk Brownout Capacitor (DNP)

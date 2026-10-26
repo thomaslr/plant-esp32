@@ -1,0 +1,10 @@
+Comment,Designator,Footprint,LCSC Part Number,Notes
+KF301-4P,TB1,5.00mm,C8354,Hand Solder (Ultrasonic)
+KF301-3P,TB2,5.00mm,C8353,Hand Solder (Soil Moisture)
+KF301-3P,TB4,5.00mm,C8353,Hand Solder (External Power)
+KF301-2P,TB3,5.00mm,C8352,Hand Solder (Water Pump)
+1x08 Female Header,J1 J2,2.54mm,C224346,Hand Solder (ESP32 Sockets)
+GL55xx LDR,LDR1,2.54mm,,Hand Solder / DNP (Photoresistor)
+SHT30 Module,MOD1,2.54mm,,Hand Solder / DNP (Temp/Hum Socket)
+BH1750 Module,MOD2,2.54mm,,Hand Solder / DNP (Light Socket)
+100uF-470uF Radial,C_EXT,2.54mm,,Hand Solder / DNP (Optional Bulk Cap)

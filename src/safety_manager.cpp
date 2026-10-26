@@ -4,11 +4,11 @@ SafetyManager::SafetyManager(const AppConfig& config)
     : config_(config) {}
 
 void SafetyManager::begin() {
-    pinMode(PIN_PUMP_GATE, OUTPUT);
     digitalWrite(PIN_PUMP_GATE, LOW);
+    pinMode(PIN_PUMP_GATE, OUTPUT);
 
-    pinMode(PIN_STATUS_LED, OUTPUT);
     digitalWrite(PIN_STATUS_LED, LED_OFF);
+    pinMode(PIN_STATUS_LED, OUTPUT);
 
     pump_active_ = false;
     last_pump_stop_ms_ = 0;

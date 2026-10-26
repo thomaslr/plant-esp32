@@ -1,10 +1,81 @@
-.pio
-.pio_core
-.vscode
-.idea
-*.pyc
+# ==============================================================================
+# Git Ignore for Plant ESP32 Project (C++, Rust, KiCad, FreeCAD, Python, OS)
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. Rust & Cargo Build Artifacts (Accounts for 65,000+ files in firmware-rust)
+# ------------------------------------------------------------------------------
+target/
+**/target/
+.embuild/
+**/.embuild/
+**/*.rs.bk
+Cargo.lock
+
+# ------------------------------------------------------------------------------
+# 2. PlatformIO & C++ Firmware
+# ------------------------------------------------------------------------------
+.pio/
+.pio_core/
 *.bin
 *.elf
+*.hex
+
+# ------------------------------------------------------------------------------
+# 3. Credentials & Secrets (Never commit Wi-Fi passwords)
+# ------------------------------------------------------------------------------
 secrets.h
-.DS_Store
+**/secrets.h
+secrets.rs
+**/secrets.rs
+.env
+*.env
+
+# ------------------------------------------------------------------------------
+# 4. KiCad EDA Files
+# ------------------------------------------------------------------------------
+# KiCad project local settings (window size, zoom level, active layer)
+*.kicad_prl
+# KiCad auto-backups and recovery files
+*-backups/
+*.kicad_pcb-bak
+*.sch-bak
+# ERC and DRC test reports
+*.rpt
+*.drc
+# KiCad file lock handles
 *.lck
+
+# ------------------------------------------------------------------------------
+# 5. FreeCAD & 3D CAD Artifacts
+# ------------------------------------------------------------------------------
+*.FCBak
+*.FCStd1
+*.FCStd2
+*.FCStd3
+*.FCParam
+*.swp
+
+# ------------------------------------------------------------------------------
+# 6. Python Environments & Bytecode
+# ------------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+.pytest_cache/
+
+# ------------------------------------------------------------------------------
+# 7. Operating System & IDE Configurations
+# ------------------------------------------------------------------------------
+.DS_Store
+**/.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+.history/
+**/.history/
+*.sublime-workspace
+*.sublime-project

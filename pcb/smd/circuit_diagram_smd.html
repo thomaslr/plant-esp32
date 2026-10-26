@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plant Monitor — Turnkey SMD Circuit Diagram & Interactive PCB Visualizer (Rev 2.3)</title>
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --card-bg: #161b22;
+            --text-color: #c9d1d9;
+            --heading-color: #f0f6fc;
+            --border-color: #30363d;
+            --accent-blue: #58a6ff;
+            --accent-green: #3fb950;
+            --accent-red: #f85149;
+            --accent-purple: #bc8cff;
+            --accent-yellow: #d29922;
+            --accent-cyan: #39c5cf;
+            --accent-orange: #f0883e;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 20px 24px;
+        }
+
+        .header {
+            max-width: 1400px;
+            margin: 0 auto 16px auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .header h1 {
+            color: var(--heading-color);
+            font-size: 22px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header .badge {
+            background: rgba(56, 139, 253, 0.15);
+            border: 1px solid rgba(56, 139, 253, 0.4);
+            color: var(--accent-blue);
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        .header p {
+            font-size: 13px;
+            color: #8b949e;
+            margin-top: 4px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 420px;
+            gap: 20px;
+            align-items: start;
+        }
+
+        .canvas-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.4);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .canvas-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 12px;
+            margin-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .btn-filter {
+            background: #21262d;
+            color: #c9d1d9;
+            border: 1px solid #30363d;
+            padding: 5px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 500;
+            transition: all 0.15s ease;
+        }
+
+        .btn-filter:hover {
+            background: #30363d;
+            color: #fff;
+            border-color: #8b949e;
+        }
+
+        .btn-filter.active {
+            background: #1f6feb;
+            color: #ffffff;
+            border-color: #388bfd;
+        }
+
+        .svg-container {
+            width: 100%;
+            height: 600px;
+            background: #090d13;
+            border-radius: 6px;
+            border: 1px solid #21262d;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        svg {
+            width: 100%;
+            height: 100%;
+            cursor: grab;
+        }
+
+        svg:active { cursor: grabbing; }
+
+        /* Component styling */
+        .pcb-board { fill: #0d2818; stroke: #1b4332; stroke-width: 2; }
+        .mount-hole { fill: #1f242c; stroke: #8b949e; stroke-width: 1.5; }
+        .trace { stroke-linecap: round; stroke-linejoin: round; transition: opacity 0.2s, stroke-width 0.2s; }
+        .pad { cursor: pointer; transition: transform 0.1s; }
+        .pad:hover { filter: brightness(1.3); }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .panel {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .panel h2 {
+            font-size: 15px;
+            color: var(--heading-color);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            padding-bottom: 8px;
+        }
+
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .info-table th {
+            text-align: left;
+            color: #8b949e;
+            padding: 6px 8px;
+            border-bottom: 1px solid #30363d;
+            font-weight: 600;
+        }
+
+        .info-table td {
+            padding: 6px 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+
+        .badge-basic {
+            background: rgba(63, 185, 80, 0.15);
+            color: var(--accent-green);
+            border: 1px solid rgba(63, 185, 80, 0.4);
+            border-radius: 4px;
+            padding: 1px 6px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .badge-pin {
+            font-family: monospace;
+            background: rgba(56, 139, 253, 0.15);
+            color: var(--accent-blue);
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 11px;
+        }
+
+        .highlight-box {
+            background: rgba(56, 139, 253, 0.08);
+            border-left: 3px solid var(--accent-blue);
+            padding: 10px 12px;
+            border-radius: 0 4px 4px 0;
+            font-size: 12px;
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+
+        .tooltip {
+            position: absolute;
+            background: #1c2128;
+            border: 1px solid #444c56;
+            color: #f0f6fc;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            pointer-events: none;
+            display: none;
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div>
+            <h1>Plant Monitor ESP32-C3 <span class="badge">SMD Rev 2.3</span></h1>
+            <p>Turnkey Surface Mount (PCBA) Edition with Dedicated Dual ADC Channels & Anti-Backfeeding Protection</p>
+        </div>
+        <div style="font-size: 12px; color: #8b949e;">
+            PCB Dimensions: <strong>74.0 × 54.0 mm</strong> | JLCPCB Setup Fee: <strong>$0.00</strong>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Interactive PCB / Circuit Diagram Card -->
+        <div class="canvas-card">
+            <div class="canvas-toolbar">
+                <span style="font-size: 12px; font-weight: 600; color: #8b949e;">FILTER BY CIRCUIT NET:</span>
+                <div class="filter-group">
+                    <button class="btn-filter active" onclick="filterNet('all')">All Nets</button>
+                    <button class="btn-filter" onclick="filterNet('v5')">+5V Power</button>
+                    <button class="btn-filter" onclick="filterNet('gnd')">GND Ground</button>
+                    <button class="btn-filter" onclick="filterNet('v33')">+3.3V Logic</button>
+                    <button class="btn-filter" onclick="filterNet('adc0')">5V Sense (G0)</button>
+                    <button class="btn-filter" onclick="filterNet('adc4')">Bat Sense (G4)</button>
+                    <button class="btn-filter" onclick="filterNet('soil')">Soil (G1/G5)</button>
+                    <button class="btn-filter" onclick="filterNet('ultra')">Echo/Trig (G6/G10)</button>
+                    <button class="btn-filter" onclick="filterNet('pump')">Pump Gate (G7)</button>
+                    <button class="btn-filter" onclick="filterNet('ldr')">LDR Light (G3)</button>
+                    <button class="btn-filter" onclick="filterNet('i2c')">I2C (G20/G21)</button>
+                </div>
+            </div>
+
+            <div class="svg-container">
+                <div class="tooltip" id="tooltip"></div>
+                <!-- SVG Board Rendering: 74mm x 54mm with 10x scale -> 740 x 540 viewBox -->
+                <svg id="pcb-svg" viewBox="-20 -20 780 580">
+                    <defs>
+                        <!-- Glow filters -->
+                        <filter id="glow-blue" x="-20%" y="-20%" width="140%" height="140%">
+                            <feGaussianBlur stdDeviation="3" result="blur" />
+                            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                        </filter>
+                    </defs>
+
+                    <!-- 1. PCB FR4 Board Substrate (Green Solder Mask) -->
+                    <rect class="pcb-board" x="0" y="0" width="740" height="540" rx="20" />
+
+                    <!-- Corner Mounting Holes (M3 - 3.2mm drill, 5.0mm pad) at (3.5, 3.5), (70.5, 3.5), (3.5, 50.5), (70.5, 50.5) -->
+                    <circle class="mount-hole" cx="35" cy="35" r="25" />
+                    <circle cx="35" cy="35" r="16" fill="#000" />
+                    <circle class="mount-hole" cx="705" cy="35" r="25" />
+                    <circle cx="705" cy="35" r="16" fill="#000" />
+                    <circle class="mount-hole" cx="35" cy="505" r="25" />
+                    <circle cx="35" cy="505" r="16" fill="#000" />
+                    <circle class="mount-hole" cx="705" cy="505" r="25" />
+                    <circle cx="705" cy="505" r="16" fill="#000" />
+
+                    <!-- Silkscreen Markings -->
+                    <text x="210" y="525" fill="#f0f6fc" font-size="12" font-weight="bold" letter-spacing="1">PLANT CONTROLLER</text>
+                    <text x="520" y="525" fill="#8b949e" font-size="11">ESP32-C3 SuperMini • Rev 2.3</text>
+                    <text x="55" y="380" fill="#f0f6fc" font-size="14" font-weight="bold" transform="rotate(-90 55 380)">USB-C</text>
+
+                    <!-- Voltage Sense Silkscreen Labels -->
+                    <text x="115" y="165" fill="#58a6ff" font-size="10" font-weight="bold">5V SENSE</text>
+                    <text x="470" y="165" fill="#3fb950" font-size="10" font-weight="bold">BAT SENSE</text>
+
+                    <!-- 2. COPPER TRACES -->
+                    <g id="traces">
+                        <!-- +5V Power Bus (Red) -->
+                        <g class="net-v5">
+                            <path class="trace" d="M 45 80 L 45 280 L 140 280 L 140 300" stroke="#f85149" stroke-width="8" fill="none" opacity="0.85"/>
+                            <path class="trace" d="M 45 80 L 75 50 L 75 15 L 315 15 L 315 100" stroke="#f85149" stroke-width="8" fill="none" opacity="0.85"/>
+                            <path class="trace" d="M 315 15 L 535 15 L 535 100" stroke="#f85149" stroke-width="8" fill="none" opacity="0.85"/>
+                            <path class="trace" d="M 535 100 L 535 190 L 540 195" stroke="#f85149" stroke-width="8" fill="none" opacity="0.85"/>
+                            <path class="trace" d="M 535 15 L 650 15 L 650 188" stroke="#f85149" stroke-width="8" fill="none" opacity="0.85"/>
+                            <path class="trace" d="M 645 260 L 625 260 L 625 188 L 650 188" stroke="#f85149" stroke-width="8" fill="none" opacity="0.85"/>
+                            <path class="trace" d="M 45 130 L 80 130 L 105.5 155 L 105.5 195" stroke="#f85149" stroke-width="5" fill="none" opacity="0.85"/>
+                        </g>
+
+                        <!-- EXT_5V from TB4 Pin 1 to D2 Anode (Orange) -->
+                        <g class="net-v5">
+                            <path class="trace" d="M 665 310 L 685 290 L 685 260" stroke="#f0883e" stroke-width="8" fill="none" opacity="0.9"/>
+                        </g>
+
+                        <!-- VBAT_SENSE from TB4 Pin 3 to R8 Pad 1 (Green) -->
+                        <g class="net-adc4">
+                            <path class="trace" d="M 665 410 L 635 410 L 635 150 L 460.5 150 L 460.5 195" stroke="#3fb950" stroke-width="4" stroke-dasharray="6,4" fill="none" opacity="0.85"/>
+                        </g>
+
+                        <!-- 5V Sense (GPIO 0 ADC) from R1/R2/C1 to J1-4 (Cyan) -->
+                        <g class="net-adc0">
+                            <path class="trace" d="M 124.5 195 L 124.5 240 L 165.5 240 L 216.2 291 L 216.2 300" stroke="#39c5cf" stroke-width="4" fill="none" opacity="0.85"/>
+                        </g>
+
+                        <!-- 18650 Battery Sense (GPIO 4 ADC) from R8/R9/C6 to J1-8 (Green) -->
+                        <g class="net-adc4">
+                            <path class="trace" d="M 479.5 195 L 479.5 240 L 317.8 240 L 317.8 300" stroke="#2ea043" stroke-width="4" fill="none" opacity="0.85"/>
+                            <path class="trace" d="M 479.5 240 L 479.5 285" stroke="#2ea043" stroke-width="4" fill="none" opacity="0.85"/>
+                        </g>
+
+                        <!-- Ultrasonic Echo (GPIO 6) from R3/R4 to J2-7 (Purple) -->
+                        <g class="net-ultra">
+                            <path class="trace" d="M 415 100 L 415 175 L 439.5 175 L 439.5 195" stroke="#bc8cff" stroke-width="4" fill="none" opacity="0.85"/>
+                            <path class="trace" d="M 420.5 195 L 420.5 240" stroke="#bc8cff" stroke-width="4" fill="none" opacity="0.85"/>
+                            <path class="trace" d="M 420.5 240 L 420.5 350 L 292.4 350 L 292.4 452.4" stroke="#bc8cff" stroke-width="4" fill="none" opacity="0.85"/>
+                            <path class="trace" d="M 365 100 L 365 300 L 190.8 300 L 190.8 452.4" stroke="#d29922" stroke-width="4" fill="none" opacity="0.7"/>
+                        </g>
+
+                        <!-- Soil Moisture (GPIO 1 DATA & GPIO 5 VCC) (Yellow / Blue) -->
+                        <g class="net-soil">
+                            <path class="trace" d="M 140 100 L 140 170 L 190 170 L 190 195" stroke="#d29922" stroke-width="4" fill="none" opacity="0.85"/>
+                            <path class="trace" d="M 190 195 L 241.6 246.6 L 241.6 300" stroke="#d29922" stroke-width="4" fill="none" opacity="0.85"/>
+                            <path class="trace" d="M 190 100 L 120 100 L 120 435 L 317.8 435 L 317.8 452.4" stroke="#58a6ff" stroke-width="5" stroke-dasharray="6,4" fill="none" opacity="0.85"/>
+                        </g>
+
+                        <!-- MOSFET Gate & Pump Drain (Red/Orange) -->
+                        <g class="net-pump">
+                            <path class="trace" d="M 267 452.4 L 267 380 L 380.5 380" stroke="#ff7b72" stroke-width="4" fill="none" opacity="0.85"/>
+                            <path class="trace" d="M 399.5 380 L 570.5 310" stroke="#ff7b72" stroke-width="4" fill="none" opacity="0.85"/>
+                            <path class="trace" d="M 585 100 L 585 190 L 580 195 L 580 290" stroke="#f0883e" stroke-width="8" fill="none" opacity="0.9"/>
+                        </g>
+
+                        <!-- Ambient Light Sensor LDR on GPIO 3 (Light Yellow) -->
+                        <g class="net-ldr">
+                            <path class="trace" d="M 292.4 195 L 292.4 235 L 292.4 300" stroke="#e3b341" stroke-width="4" fill="none" opacity="0.85"/>
+                        </g>
+                    </g>
+
+                    <!-- 3. TERMINAL BLOCKS -->
+                    <!-- TB2 (Soil Sensor, KF301-3P) at X=140, Y=100 -->
+                    <g id="comp-TB2" transform="translate(140, 100)">
+                        <rect x="-25" y="-38" width="150" height="76" fill="#1b4332" stroke="#2d6a4f" stroke-width="2" rx="4"/>
+                        <circle cx="0" cy="0" r="13" fill="#e3b341" stroke="#fff" stroke-width="1.5" class="pad" onmouseover="showTip('TB2 Pin 1: DATA (Soil Moisture Analog Out -> GPIO 1)')" onmouseout="hideTip()"/>
+                        <circle cx="50" cy="0" r="13" fill="#58a6ff" stroke="#fff" stroke-width="1.5" class="pad" onmouseover="showTip('TB2 Pin 2: VCC (Switched 3.3V Power <- GPIO 5)')" onmouseout="hideTip()"/>
+                        <circle cx="100" cy="0" r="13" fill="#30363d" stroke="#fff" stroke-width="1.5" class="pad" onmouseover="showTip('TB2 Pin 3: GND (System Ground)')" onmouseout="hideTip()"/>
+                        <text x="50" y="-45" fill="#f0f6fc" font-size="11" font-weight="bold" text-anchor="middle">TB2 - Soil</text>
+                        <text x="0" y="30" fill="#e3b341" font-size="9" text-anchor="middle">DATA</text>
+                        <text x="50" y="30" fill="#58a6ff" font-size="9" text-anchor="middle">VCC</text>
+                        <text x="100" y="30" fill="#8b949e" font-size="9" text-anchor="middle">GND</text>
+                    </g>
+
+                    <!-- TB1 (Ultrasonic Sensor, KF301-4P) at X=315, Y=100 -->
+                    <g id="comp-TB1" transform="translate(315, 100)">
+                        <rect x="-25" y="-38" width="200" height="76" fill="#1b4332" stroke="#2d6a4f" stroke-width="2" rx="4"/>
+                        <circle cx="0" cy="0" r="13" fill="#f85149" stroke="#fff" stroke-width="1.5" class="pad" onmouseover="showTip('TB1 Pin 1: +5V Power')" onmouseout="hideTip()"/>
+                        <circle cx="50" cy="0" r="13" fill="#d29922" stroke="#fff" stroke-width="1.5" class="pad" onmouseover="showTip('TB1 Pin 2: TRIG (Trigger Pulse <- GPIO 10)')" onmouseout="hideTip()"/>
+                        <circle cx="100" cy="0" r="13" fill="#bc8cff" stroke="#fff" stroke-width="1.5" class="pad" onmouseover="showTip('TB1 Pin 3: ECHO (5V Echo Pulse -> R3/R4 Divider -> GPIO 6)')" onmouseout="hideTip()"/>
+                        <circle cx="150" cy="0" r="13" fill="#30363d" stroke="#fff" stroke-width="1.5" class="pad" onmouseover="showTip('TB1 Pin 4: GND')" onmouseout="hideTip()"/>
+                        <text x="75" y="-45" fill="#f0f6fc" font-size="11" font-weight="bold" text-anchor="middle">TB1 - Ultra</text>
+                        <text x="0" y="30" fill="#f85149" font-size="9" text-anchor="middle">5V</text>
+                        <text x="50" y="30" fill="#d29922" font-size="9" text-anchor="middle">TRIG</text>
+                        <text x="100" y="30" fill="#bc8cff" font-size="9" text-anchor="middle">ECHO</text>
+                        <text x="150" y="30" fill="#8b949e" font-size="9" text-anchor="middle">GND</text>
+                    </g>
+
+                    <!-- TB3 (Water Pump, KF301-2P) at X=535, Y=100 -->
+                    <g id="comp-TB3" transform="translate(535, 100)">
+                        <rect x="-25" y="-38" width="100" height="76" fill="#1b4332" stroke="#2d6a4f" stroke-width="2" rx="4"/>
+                        <circle cx="0" cy="0" r="13" fill="#f85149" stroke="#fff" stroke-width="1.5" class="pad" onmouseover="showTip('TB3 Pin 1: +5V Motor Lead')" onmouseout="hideTip()"/>
+                        <circle cx="50" cy="0" r="13" fill="#f0883e" stroke="#fff" stroke-width="1.5" class="pad" onmouseover="showTip('TB3 Pin 2: Motor Drain - (Switched to GND via Q1 AO3400A)')" onmouseout="hideTip()"/>
+                        <text x="25" y="-45" fill="#f0f6fc" font-size="11" font-weight="bold" text-anchor="middle">TB3 - Motor</text>
+                        <text x="0" y="30" fill="#f85149" font-size="10" text-anchor="middle">+</text>
+                        <text x="50" y="30" fill="#f0883e" font-size="10" text-anchor="middle">-</text>
+                    </g>
+
+                    <!-- TB4 (External Solar / 18650 Battery, KF301-3P) at X=665, Y=310 (Vertical) -->
+                    <g id="comp-TB4" transform="translate(665, 310)">
+                        <rect x="-38" y="-25" width="76" height="150" fill="#1b4332" stroke="#2d6a4f" stroke-width="2" rx="4"/>
+                        <circle cx="0" cy="0" r="13" fill="#f0883e" stroke="#fff" stroke-width="1.5" class="pad" onmouseover="showTip('TB4 Pin 1: EXT_5V (Solar 5V Boost Input -> D2 SS34)')" onmouseout="hideTip()"/>
+                        <circle cx="0" cy="50" r="13" fill="#30363d" stroke="#fff" stroke-width="1.5" class="pad" onmouseover="showTip('TB4 Pin 2: GND (System Ground)')" onmouseout="hideTip()"/>
+                        <circle cx="0" cy="100" r="13" fill="#3fb950" stroke="#fff" stroke-width="1.5" class="pad" onmouseover="showTip('TB4 Pin 3: BAT (18650 Battery Direct -> R8/R9 Divider -> GPIO 4)')" onmouseout="hideTip()"/>
+                        <text x="0" y="145" fill="#f0f6fc" font-size="11" font-weight="bold" text-anchor="middle">TB4 (EXT PWR)</text>
+                        <text x="-25" y="4" fill="#f0883e" font-size="9" text-anchor="end">5V</text>
+                        <text x="-25" y="54" fill="#8b949e" font-size="9" text-anchor="end">GND</text>
+                        <text x="-25" y="104" fill="#3fb950" font-size="9" text-anchor="end">BAT</text>
+                    </g>
+
+                    <!-- 4. ESP32-C3 SUPERMINI HEADERS (J1 & J2) -->
+                    <!-- Outer Outline Box -->
+                    <rect x="105" y="278" width="240" height="196" fill="#161b22" stroke="#388bfd" stroke-width="1.5" stroke-dasharray="4,4" rx="6" opacity="0.6"/>
+                    <text x="225" y="380" fill="#79c0ff" font-size="14" font-weight="bold" text-anchor="middle">ESP32-C3 SuperMini</text>
+
+                    <!-- J1 Header (Top: 5V, GND, 3V3, G0, G1, G2, G3, G4) at Y=300 -->
+                    <g id="comp-J1" transform="translate(140, 300)">
+                        <rect x="-10" y="-10" width="198" height="20" fill="#21262d" stroke="#30363d" rx="3"/>
+                        <!-- 8 Pins with 25.4 spacing -->
+                        <circle cx="0" cy="0" r="8" fill="#f85149" class="pad" onmouseover="showTip('J1-1: +5V Power Input')" onmouseout="hideTip()"/>
+                        <circle cx="25.4" cy="0" r="8" fill="#30363d" class="pad" onmouseover="showTip('J1-2: GND')" onmouseout="hideTip()"/>
+                        <circle cx="50.8" cy="0" r="8" fill="#388bfd" class="pad" onmouseover="showTip('J1-3: +3.3V Regulated Output')" onmouseout="hideTip()"/>
+                        <circle cx="76.2" cy="0" r="8" fill="#39c5cf" class="pad" onmouseover="showTip('J1-4: GPIO 0 (ADC1_CH0: Dedicated 5V Supply Rail Monitor)')" onmouseout="hideTip()"/>
+                        <circle cx="101.6" cy="0" r="8" fill="#d29922" class="pad" onmouseover="showTip('J1-5: GPIO 1 (ADC1_CH1: Soil Moisture Sensor Analog Read)')" onmouseout="hideTip()"/>
+                        <circle cx="127" cy="0" r="8" fill="#484f58" class="pad" onmouseover="showTip('J1-6: GPIO 2 (NC / Protected Strapping Pin - Never Pulled Down)')" onmouseout="hideTip()"/>
+                        <circle cx="152.4" cy="0" r="8" fill="#e3b341" class="pad" onmouseover="showTip('J1-7: GPIO 3 (ADC1_CH3: Ambient Light LDR Voltage Divider)')" onmouseout="hideTip()"/>
+                        <circle cx="177.8" cy="0" r="8" fill="#3fb950" class="pad" onmouseover="showTip('J1-8: GPIO 4 (ADC1_CH4: Dedicated 18650 Battery Monitor)')" onmouseout="hideTip()"/>
+                        <text x="0" y="-14" fill="#f85149" font-size="8" text-anchor="middle">5V</text>
+                        <text x="25.4" y="-14" fill="#8b949e" font-size="8" text-anchor="middle">GND</text>
+                        <text x="50.8" y="-14" fill="#388bfd" font-size="8" text-anchor="middle">3V3</text>
+                        <text x="76.2" y="-14" fill="#39c5cf" font-size="8" text-anchor="middle">G0</text>
+                        <text x="101.6" y="-14" fill="#d29922" font-size="8" text-anchor="middle">G1</text>
+                        <text x="127" y="-14" fill="#484f58" font-size="8" text-anchor="middle">G2(NC)</text>
+                        <text x="152.4" y="-14" fill="#e3b341" font-size="8" text-anchor="middle">G3</text>
+                        <text x="177.8" y="-14" fill="#3fb950" font-size="8" text-anchor="middle">G4</text>
+                    </g>
+
+                    <!-- J2 Header (Bottom: G21, G20, G10, G9, G8, G7, G6, G5) at Y=452.4 -->
+                    <g id="comp-J2" transform="translate(140, 452.4)">
+                        <rect x="-10" y="-10" width="198" height="20" fill="#21262d" stroke="#30363d" rx="3"/>
+                        <circle cx="0" cy="0" r="8" fill="#39c5cf" class="pad" onmouseover="showTip('J2-1: GPIO 21 (I2C SCL Clock)')" onmouseout="hideTip()"/>
+                        <circle cx="25.4" cy="0" r="8" fill="#39c5cf" class="pad" onmouseover="showTip('J2-2: GPIO 20 (I2C SDA Data)')" onmouseout="hideTip()"/>
+                        <circle cx="50.8" cy="0" r="8" fill="#d29922" class="pad" onmouseover="showTip('J2-3: GPIO 10 (Ultrasonic TRIG Pulse)')" onmouseout="hideTip()"/>
+                        <circle cx="76.2" cy="0" r="8" fill="#484f58" class="pad" onmouseover="showTip('J2-4: GPIO 9 (Boot Button / Spare)')" onmouseout="hideTip()"/>
+                        <circle cx="101.6" cy="0" r="8" fill="#388bfd" class="pad" onmouseover="showTip('J2-5: GPIO 8 (Onboard Blue LED)')" onmouseout="hideTip()"/>
+                        <circle cx="127" cy="0" r="8" fill="#ff7b72" class="pad" onmouseover="showTip('J2-6: GPIO 7 (Pump MOSFET Gate)')" onmouseout="hideTip()"/>
+                        <circle cx="152.4" cy="0" r="8" fill="#bc8cff" class="pad" onmouseover="showTip('J2-7: GPIO 6 (Ultrasonic ECHO Input via 1k/2k Divider)')" onmouseout="hideTip()"/>
+                        <circle cx="177.8" cy="0" r="8" fill="#58a6ff" class="pad" onmouseover="showTip('J2-8: GPIO 5 (Switched VCC Power for Soil Sensor)')" onmouseout="hideTip()"/>
+                        <text x="0" y="22" fill="#39c5cf" font-size="8" text-anchor="middle">G21</text>
+                        <text x="25.4" y="22" fill="#39c5cf" font-size="8" text-anchor="middle">G20</text>
+                        <text x="50.8" y="22" fill="#d29922" font-size="8" text-anchor="middle">G10</text>
+                        <text x="76.2" y="22" fill="#484f58" font-size="8" text-anchor="middle">G9</text>
+                        <text x="101.6" y="22" fill="#388bfd" font-size="8" text-anchor="middle">G8</text>
+                        <text x="127" y="22" fill="#ff7b72" font-size="8" text-anchor="middle">G7</text>
+                        <text x="152.4" y="22" fill="#bc8cff" font-size="8" text-anchor="middle">G6</text>
+                        <text x="177.8" y="22" fill="#58a6ff" font-size="8" text-anchor="middle">G5</text>
+                    </g>
+
+                    <!-- 5. SURFACE MOUNT PASSIVES (0805 & SMA & SOT-23) -->
+                    <!-- D2: SS34 Schottky Diode (Anti-Backfeeding) at X=665, Y=260 -->
+                    <g id="comp-D2" transform="translate(665, 260)" class="pad" onmouseover="showTip('D2: SS34 Schottky Diode (3A 40V, SMA C8678) — Blocks USB backfeed into solar charger/battery')" onmouseout="hideTip()">
+                        <rect x="-22" y="-14" width="44" height="28" fill="#21262d" stroke="#f0883e" stroke-width="1.5" rx="3"/>
+                        <line x1="-10" y1="-14" x2="-10" y2="14" stroke="#fff" stroke-width="3"/>
+                        <text x="0" y="24" fill="#f0883e" font-size="9" text-anchor="middle" font-weight="bold">D2 (SS34)</text>
+                    </g>
+
+                    <!-- D1: SS34 Schottky Diode (Pump Flyback) at X=560, Y=195 -->
+                    <g id="comp-D1" transform="translate(560, 195)" class="pad" onmouseover="showTip('D1: SS34 Schottky Diode (3A 40V, SMA C8678) — Motor inductive flyback spike clamp')" onmouseout="hideTip()">
+                        <rect x="-22" y="-14" width="44" height="28" fill="#21262d" stroke="#f85149" stroke-width="1.5" rx="3"/>
+                        <line x1="-10" y1="-14" x2="-10" y2="14" stroke="#fff" stroke-width="3"/>
+                        <text x="0" y="-18" fill="#f85149" font-size="9" text-anchor="middle" font-weight="bold">D1 (SS34)</text>
+                    </g>
+
+                    <!-- Q1: AO3400A N-MOSFET (SOT-23) at X=580, Y=300 -->
+                    <g id="comp-Q1" transform="translate(580, 300)" class="pad" onmouseover="showTip('Q1: AO3400A N-MOSFET (30V 5.7A, SOT-23 C20917) — Submersible pump low-side switch')" onmouseout="hideTip()">
+                        <rect x="-15" y="-10" width="30" height="20" fill="#21262d" stroke="#ff7b72" stroke-width="1.5" rx="2"/>
+                        <!-- Gate (1), Source (2), Drain (3) pads -->
+                        <rect x="-10" y="8" width="6" height="8" fill="#ff7b72"/>
+                        <rect x="4" y="8" width="6" height="8" fill="#30363d"/>
+                        <rect x="-3" y="-16" width="6" height="8" fill="#f0883e"/>
+                        <text x="0" y="26" fill="#ff7b72" font-size="9" text-anchor="middle" font-weight="bold">Q1 (AO3400A)</text>
+                    </g>
+
+                    <!-- 5V Supply Divider: R1 (100k) & R2 (100k) & C1 (100nF) at X=115, Y=195/240 -->
+                    <g id="comp-R1" transform="translate(115, 195)" class="pad" onmouseover="showTip('R1: 100kΩ 0805 (C149504) — 5V Supply Divider High-Side')" onmouseout="hideTip()">
+                        <rect x="-10" y="-6" width="20" height="12" fill="#21262d" stroke="#58a6ff" stroke-width="1.2" rx="2"/>
+                        <text x="0" y="-10" fill="#58a6ff" font-size="8" text-anchor="middle">R1: 100k</text>
+                    </g>
+                    <g id="comp-R2" transform="translate(115, 240)" class="pad" onmouseover="showTip('R2: 100kΩ 0805 (C149504) — 5V Supply Divider Low-Side to GND')" onmouseout="hideTip()">
+                        <rect x="-10" y="-6" width="20" height="12" fill="#21262d" stroke="#58a6ff" stroke-width="1.2" rx="2"/>
+                        <text x="0" y="16" fill="#58a6ff" font-size="8" text-anchor="middle">R2: 100k</text>
+                    </g>
+                    <g id="comp-C1" transform="translate(175, 240)" class="pad" onmouseover="showTip('C1: 100nF 0805 (C28233) — 5V ADC Smoothing Filter')" onmouseout="hideTip()">
+                        <rect x="-10" y="-6" width="20" height="12" fill="#21262d" stroke="#39c5cf" stroke-width="1.2" rx="2"/>
+                        <text x="0" y="16" fill="#39c5cf" font-size="8" text-anchor="middle">C1: 100nF</text>
+                    </g>
+
+                    <!-- 18650 Battery Divider: R8 (100k) & R9 (100k) & C6 (100nF) at X=470, Y=195/240/285 -->
+                    <g id="comp-R8" transform="translate(470, 195)" class="pad" onmouseover="showTip('R8: 100kΩ 0805 (C149504) — 18650 Battery Divider High-Side (21µA drain)')" onmouseout="hideTip()">
+                        <rect x="-10" y="-6" width="20" height="12" fill="#21262d" stroke="#3fb950" stroke-width="1.2" rx="2"/>
+                        <text x="0" y="-10" fill="#3fb950" font-size="8" text-anchor="middle">R8: 100k</text>
+                    </g>
+                    <g id="comp-R9" transform="translate(470, 240)" class="pad" onmouseover="showTip('R9: 100kΩ 0805 (C149504) — 18650 Battery Divider Low-Side to GND')" onmouseout="hideTip()">
+                        <rect x="-10" y="-6" width="20" height="12" fill="#21262d" stroke="#3fb950" stroke-width="1.2" rx="2"/>
+                        <text x="0" y="16" fill="#3fb950" font-size="8" text-anchor="middle">R9: 100k</text>
+                    </g>
+                    <g id="comp-C6" transform="translate(470, 285)" class="pad" onmouseover="showTip('C6: 100nF 0805 (C28233) — Battery ADC Smoothing Filter on GPIO 4')" onmouseout="hideTip()">
+                        <rect x="-10" y="-6" width="20" height="12" fill="#21262d" stroke="#3fb950" stroke-width="1.2" rx="2"/>
+                        <text x="0" y="16" fill="#3fb950" font-size="8" text-anchor="middle">C6: 100nF</text>
+                    </g>
+
+                    <!-- Ultrasonic Echo Divider: R3 (1k) & R4 (2k) at X=430, Y=195/240 -->
+                    <g id="comp-R3" transform="translate(430, 195)" class="pad" onmouseover="showTip('R3: 1kΩ 0805 (C17513) — Echo Level Divider High-Side (5V -> 3.3V)')" onmouseout="hideTip()">
+                        <rect x="-10" y="-6" width="20" height="12" fill="#21262d" stroke="#bc8cff" stroke-width="1.2" rx="2"/>
+                        <text x="0" y="-10" fill="#bc8cff" font-size="8" text-anchor="middle">R3: 1k</text>
+                    </g>
+                    <g id="comp-R4" transform="translate(430, 240)" class="pad" onmouseover="showTip('R4: 2kΩ 0805 (C17604) — Echo Level Divider Low-Side to GND')" onmouseout="hideTip()">
+                        <rect x="-10" y="-6" width="20" height="12" fill="#21262d" stroke="#bc8cff" stroke-width="1.2" rx="2"/>
+                        <text x="0" y="16" fill="#bc8cff" font-size="8" text-anchor="middle">R4: 2k</text>
+                    </g>
+
+                    <!-- MOSFET Gate Resistors: R5 (1k) & R6 (100k) at X=390, Y=380/420 -->
+                    <g id="comp-R5" transform="translate(390, 380)" class="pad" onmouseover="showTip('R5: 1kΩ 0805 (C17513) — MOSFET Gate Inrush Damping Resistor')" onmouseout="hideTip()">
+                        <rect x="-10" y="-6" width="20" height="12" fill="#21262d" stroke="#ff7b72" stroke-width="1.2" rx="2"/>
+                        <text x="0" y="-10" fill="#ff7b72" font-size="8" text-anchor="middle">R5: 1k</text>
+                    </g>
+                    <g id="comp-R6" transform="translate(390, 420)" class="pad" onmouseover="showTip('R6: 100kΩ 0805 (C149504) — MOSFET Gate Pull-Down to GND (Zero-Float Protection)')" onmouseout="hideTip()">
+                        <rect x="-10" y="-6" width="20" height="12" fill="#21262d" stroke="#ff7b72" stroke-width="1.2" rx="2"/>
+                        <text x="0" y="16" fill="#ff7b72" font-size="8" text-anchor="middle">R6: 100k</text>
+                    </g>
+
+                    <!-- LDR Passives: R7 (10k) & C4 (100nF) at X=292.4, Y=235/265 -->
+                    <g id="comp-R7" transform="translate(292.4, 235)" class="pad" onmouseover="showTip('R7: 10kΩ 0805 (C17414) — Ambient Light LDR Divider Pull-Down to GND')" onmouseout="hideTip()">
+                        <rect x="-10" y="-6" width="20" height="12" fill="#21262d" stroke="#e3b341" stroke-width="1.2" rx="2"/>
+                        <text x="0" y="-10" fill="#e3b341" font-size="8" text-anchor="middle">R7: 10k</text>
+                    </g>
+                    <g id="comp-C4" transform="translate(292.4, 265)" class="pad" onmouseover="showTip('C4: 100nF 0805 (C28233) — LDR Ambient Light 50Hz/60Hz Flicker Filter')" onmouseout="hideTip()">
+                        <rect x="-10" y="-6" width="20" height="12" fill="#21262d" stroke="#e3b341" stroke-width="1.2" rx="2"/>
+                        <text x="0" y="16" fill="#e3b341" font-size="8" text-anchor="middle">C4: 100nF</text>
+                    </g>
+
+                    <!-- Decoupling Capacitors: C3 (10uF) & C5 (10uF) at X=65, Y=220/250 -->
+                    <g id="comp-C3" transform="translate(65, 220)" class="pad" onmouseover="showTip('C3: 10µF 0805 MLCC (C15850) — High-Frequency +5V Transient Decoupling')" onmouseout="hideTip()">
+                        <rect x="-10" y="-6" width="20" height="12" fill="#21262d" stroke="#f85149" stroke-width="1.2" rx="2"/>
+                        <text x="0" y="-10" fill="#f85149" font-size="8" text-anchor="middle">C3: 10uF</text>
+                    </g>
+                    <g id="comp-C5" transform="translate(65, 250)" class="pad" onmouseover="showTip('C5: 10µF 0805 MLCC (C15850) — High-Frequency +5V Transient Decoupling')" onmouseout="hideTip()">
+                        <rect x="-10" y="-6" width="20" height="12" fill="#21262d" stroke="#f85149" stroke-width="1.2" rx="2"/>
+                        <text x="0" y="16" fill="#f85149" font-size="8" text-anchor="middle">C5: 10uF</text>
+                    </g>
+
+                    <!-- Through-Hole Expansion Footprints (DNP) -->
+                    <!-- LDR1 Photoresistor Socket at X=292.4, Y=195 -->
+                    <g id="comp-LDR1" transform="translate(292.4, 195)" class="pad" onmouseover="showTip('LDR1: GL55xx Light Dependent Resistor Socket (DNP)')" onmouseout="hideTip()">
+                        <rect x="-25" y="-15" width="50" height="30" fill="none" stroke="#e3b341" stroke-dasharray="3,3" stroke-width="1"/>
+                        <circle cx="-12.7" cy="0" r="6" fill="#388bfd"/>
+                        <circle cx="12.7" cy="0" r="6" fill="#e3b341"/>
+                        <text x="0" y="-18" fill="#e3b341" font-size="8" text-anchor="middle">LDR1 (DNP)</text>
+                    </g>
+
+                    <!-- MOD1 SHT30 Socket at X=480, Y=380 -->
+                    <g id="comp-MOD1" transform="translate(480, 380)" class="pad" onmouseover="showTip('MOD1: SHT30 Temp & Humidity I2C Module Header (DNP)')" onmouseout="hideTip()">
+                        <rect x="-10" y="-10" width="86" height="20" fill="none" stroke="#39c5cf" stroke-dasharray="3,3" stroke-width="1"/>
+                        <circle cx="0" cy="0" r="5" fill="#388bfd"/>
+                        <circle cx="20" cy="0" r="5" fill="#30363d"/>
+                        <circle cx="40" cy="0" r="5" fill="#39c5cf"/>
+                        <circle cx="60" cy="0" r="5" fill="#39c5cf"/>
+                        <text x="33" y="-14" fill="#39c5cf" font-size="8" text-anchor="middle">MOD1: SHT30 (DNP)</text>
+                    </g>
+
+                    <!-- MOD2 BH1750 Socket at X=460, Y=445 -->
+                    <g id="comp-MOD2" transform="translate(460, 445)" class="pad" onmouseover="showTip('MOD2: BH1750 Ambient Light I2C Module Header (DNP)')" onmouseout="hideTip()">
+                        <rect x="-10" y="-10" width="105" height="20" fill="none" stroke="#39c5cf" stroke-dasharray="3,3" stroke-width="1"/>
+                        <circle cx="0" cy="0" r="5" fill="#388bfd"/>
+                        <circle cx="20" cy="0" r="5" fill="#30363d"/>
+                        <circle cx="40" cy="0" r="5" fill="#39c5cf"/>
+                        <circle cx="60" cy="0" r="5" fill="#39c5cf"/>
+                        <circle cx="80" cy="0" r="5" fill="#30363d"/>
+                        <text x="42" y="20" fill="#39c5cf" font-size="8" text-anchor="middle">MOD2: BH1750 (DNP)</text>
+                    </g>
+
+                    <!-- C_EXT Bulk Cap Socket at X=650, Y=200 -->
+                    <g id="comp-CEXT" transform="translate(650, 200)" class="pad" onmouseover="showTip('C_EXT: 100µF–470µF Radial Bulk Electrolytic Can (DNP)')" onmouseout="hideTip()">
+                        <circle cx="0" cy="0" r="28" fill="none" stroke="#f85149" stroke-dasharray="3,3" stroke-width="1"/>
+                        <circle cx="0" cy="-12.5" r="7" fill="#f85149"/>
+                        <circle cx="0" cy="12.5" r="7" fill="#30363d"/>
+                        <text x="0" y="-32" fill="#f85149" font-size="8" text-anchor="middle">C_EXT (OPT BULK)</text>
+                    </g>
+                </svg>
+            </div>
+        </div>
+
+        <!-- Sidebar Architecture & Pin Reference Panel -->
+        <div class="sidebar">
+            <div class="panel">
+                <h2>⚡ Rev 2.3 Turnkey Architecture</h2>
+                <div class="highlight-box">
+                    <strong>🎯 Dual Independent ADC Channels (No Jumpers!):</strong><br>
+                    • <strong>5V Supply Rail:</strong> Monitored on <strong>GPIO 0</strong> (ADC1_CH0) via R1/R2 (100k/100k) + C1.<br>
+                    • <strong>18650 Battery:</strong> Monitored on <strong>GPIO 4</strong> (ADC1_CH4) via R8/R9 (100k/100k) + C6.<br>
+                    • <strong>Ultrasonic ECHO:</strong> Digital input moved to <strong>GPIO 6</strong> via R3/R4 (1k/2k).<br>
+                    • <strong>Strapping Protection:</strong> GPIO 2 left unconnected to guarantee 100% reliable booting.
+                </div>
+                <div class="highlight-box" style="border-left-color: var(--accent-orange); background: rgba(240, 136, 62, 0.08);">
+                    <strong>🛡️ Anti-Backfeeding Schottky Diode (D2):</strong><br>
+                    SS34 (3A 40V, SMA package) physically blocks USB-C current from backfeeding into the external battery charger or solar boost module when flashing firmware.
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>📍 ESP32-C3 Pin Allocations</h2>
+                <table class="info-table">
+                    <thead>
+                        <tr>
+                            <th>Pin</th>
+                            <th>Function</th>
+                            <th>Role & Conditioning</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="badge-pin">GPIO 0</span></td>
+                            <td>ADC1_CH0</td>
+                            <td>Dedicated 5V Supply Rail Monitor (100k/100k)</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge-pin">GPIO 1</span></td>
+                            <td>ADC1_CH1</td>
+                            <td>Capacitive Soil Sensor AOUT (from TB2-1)</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge-pin">GPIO 2</span></td>
+                            <td>Strapping</td>
+                            <td><strong>Unconnected / Free</strong> (Boot-hang immune)</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge-pin">GPIO 3</span></td>
+                            <td>ADC1_CH3</td>
+                            <td>Ambient Light Sensor (LDR1 + 10k R7)</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge-pin">GPIO 4</span></td>
+                            <td>ADC1_CH4</td>
+                            <td><strong>Dedicated 18650 Battery Monitor</strong> (from TB4-3)</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge-pin">GPIO 5</span></td>
+                            <td>Digital OUT</td>
+                            <td>Switched VCC Power for Soil Sensor (TB2-2)</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge-pin">GPIO 6</span></td>
+                            <td>Digital IN</td>
+                            <td><strong>Ultrasonic ECHO</strong> (TB1-3 via 1k/2k divider)</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge-pin">GPIO 7</span></td>
+                            <td>Digital OUT</td>
+                            <td>Pump MOSFET Gate Drive (AO3400A)</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge-pin">GPIO 8</span></td>
+                            <td>Output</td>
+                            <td>Onboard Blue LED (Active LOW)</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge-pin">GPIO 10</span></td>
+                            <td>Digital OUT</td>
+                            <td>Ultrasonic TRIG Trigger Pulse (TB1-2)</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge-pin">GPIO 20</span></td>
+                            <td>I2C SDA</td>
+                            <td>I2C Expansion Bus Data (MOD1/MOD2)</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge-pin">GPIO 21</span></td>
+                            <td>I2C SCL</td>
+                            <td>I2C Expansion Bus Clock (MOD1/MOD2)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="panel">
+                <h2>📋 JLCPCB SMT Basic BOM ($0 Setup Fees)</h2>
+                <table class="info-table">
+                    <thead>
+                        <tr>
+                            <th>Part</th>
+                            <th>Designators</th>
+                            <th>LCSC Part #</th>
+                            <th>Type</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>100kΩ 0805</td>
+                            <td>R1, R2, R6, R8, R9</td>
+                            <td><strong>C149504</strong></td>
+                            <td><span class="badge-basic">Basic</span></td>
+                        </tr>
+                        <tr>
+                            <td>10kΩ 0805</td>
+                            <td>R7</td>
+                            <td><strong>C17414</strong></td>
+                            <td><span class="badge-basic">Basic</span></td>
+                        </tr>
+                        <tr>
+                            <td>1kΩ 0805</td>
+                            <td>R3, R5</td>
+                            <td><strong>C17513</strong></td>
+                            <td><span class="badge-basic">Basic</span></td>
+                        </tr>
+                        <tr>
+                            <td>2kΩ 0805</td>
+                            <td>R4</td>
+                            <td><strong>C17604</strong></td>
+                            <td><span class="badge-basic">Basic</span></td>
+                        </tr>
+                        <tr>
+                            <td>100nF 0805</td>
+                            <td>C1, C2, C4, C6</td>
+                            <td><strong>C28233</strong></td>
+                            <td><span class="badge-basic">Basic</span></td>
+                        </tr>
+                        <tr>
+                            <td>10µF 0805</td>
+                            <td>C3, C5</td>
+                            <td><strong>C15850</strong></td>
+                            <td><span class="badge-basic">Basic</span></td>
+                        </tr>
+                        <tr>
+                            <td>SS34 SMA</td>
+                            <td>D1, D2</td>
+                            <td><strong>C8678</strong></td>
+                            <td><span class="badge-basic">Basic</span></td>
+                        </tr>
+                        <tr>
+                            <td>AO3400A SOT-23</td>
+                            <td>Q1</td>
+                            <td><strong>C20917</strong></td>
+                            <td><span class="badge-basic">Basic</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showTip(text) {
+            const tip = document.getElementById('tooltip');
+            tip.innerText = text;
+            tip.style.display = 'block';
+            window.onmousemove = function(e) {
+                tip.style.left = (e.pageX + 15) + 'px';
+                tip.style.top = (e.pageY + 15) + 'px';
+            };
+        }
+
+        function hideTip() {
+            const tip = document.getElementById('tooltip');
+            tip.style.display = 'none';
+            window.onmousemove = null;
+        }
+
+        function filterNet(netClass) {
+            document.querySelectorAll('.btn-filter').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            const allTraces = document.querySelectorAll('#traces g');
+            if (netClass === 'all') {
+                allTraces.forEach(g => {
+                    g.style.opacity = '1';
+                    g.querySelectorAll('.trace').forEach(t => t.style.strokeWidth = '');
+                });
+            } else {
+                allTraces.forEach(g => {
+                    if (g.classList.contains('net-' + netClass)) {
+                        g.style.opacity = '1';
+                        g.querySelectorAll('.trace').forEach(t => t.style.strokeWidth = '8');
+                    } else {
+                        g.style.opacity = '0.12';
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html>
