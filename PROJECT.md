@@ -1,318 +1,262 @@
-# Plant Monitor ESP32-C3: Project Specification & Architecture
+# Plant Monitor ESP32-C3: System Specification & Architecture
 
 ## 1. Executive Summary & Objective
 
-The **Plant Monitor ESP32-C3** project is the next-generation evolution of the original `plant-p2` system (previously built on Raspberry Pi Pico W with MicroPython). 
+The **Plant Monitor ESP32-C3** project is an industrial-grade automated plant irrigation, soil health telemetry, and environmental monitoring system. Originally conceived on the Raspberry Pi Pico W (MicroPython) and later prototyped in C++/PlatformIO, the project has matured into a **bare-metal, memory-safe Rust** implementation targeting the **ESP32-C3 SuperMini** (32-bit RISC-V) running on **ESP-IDF**.
 
-This project migrates the entire system to an **ESP32-C3 SuperMini** microcontroller programmed in **C++ using FreeRTOS** within the **PlatformIO** ecosystem. It resolves the core limitations of the previous implementation (MicroPython heap exhaustion, garbage collection stalls, SPI flash wear from synchronous file logging, sensor echo lockups, and hardcoded LAN IP links breaking external DDNS reverse proxies) while adding modern IoT capabilities like **mDNS (`http://plants.local`)**, **Over-The-Air (OTA) firmware updates**, and **hardware watchdog timer (WDT)** fail-safes.
+The system addresses the historical pitfalls of microcontroller IoT (heap exhaustion, blocking garbage collection, SPI flash degradation, router reconnection drops, and risky firmware updates) by introducing:
+1. **Memory-Safe Bare-Metal Rust:** Zero heap fragmentation, deterministic concurrency, compile-time safety invariants, and strict separation between domain logic (`plant-core`) and peripheral drivers (`plant-firmware`).
+2. **Dual-Slot A/B Over-The-Air (OTA) Updates:** Custom 4MB partition table (`ota_0` and `ota_1`) with hardware bootloader rollback (`CONFIG_BOOTLOADER_APP_ROLLBACK_ENABLE`). If a newly flashed firmware panics or fails to validate itself, the bootloader automatically reverts to the previous working slot.
+3. **GitHub Releases Cloud Deployment:** Web UI integrates directly with the GitHub Releases API to display release notes and target versions in an interactive confirmation modal, downloading and streaming signed HTTPS firmware directly into flash.
+4. **Resilient Networking & NVS Persistence:** Saved Wi-Fi credentials and full device configuration are stored in ESP32 NVS flash, surviving OTA transitions. A 5-attempt WPA3-SAE retry loop prevents connection drops after warm reboots, with an automatic SoftAP fallback and 5-minute self-healing recovery timer.
+5. **Deterministic Multi-Fault Visual Telemetry:** Dedicated round-robin status LED supervisor communicating active hardware faults, pump activity, Wi-Fi status, and a 10 Hz strobe during flash writing.
+6. **Automated CI/CD Release Automation:** GitHub Actions runner compiles release binaries on tag push (`v*.*.*`), leverages dual-tier build caching (`rust-cache` and `.embuild`), and publishes `.bin` assets directly to GitHub Releases.
 
 ---
 
 ## 2. Hardware Architecture & Electrical Specifications
 
 ### 2.1 Microcontroller: ESP32-C3 SuperMini
-* **Architecture:** 32-bit single-core RISC-V processor clocked at 160 MHz.
-* **Memory:** 400 KB SRAM, 4 MB SPI Flash.
-* **Connectivity:** Integrated 2.4 GHz 802.11b/g/n Wi-Fi & Bluetooth 5 (LE).
-* **Power:** 5V via USB-C or VIN pin; on-board 3.3V low-dropout regulator (LDO).
-* **Onboard LED:** Blue LED tied to **GPIO 8 (Active LOW)**.
-* **USB Interface:** Native USB Serial/JTAG on GPIO 18 (D-) and GPIO 19 (D+). *These pins are reserved exclusively for USB communication and are not broken out or used for sensors.*
-* **Internal Sensors:** Built-in silicon temperature sensor read via `temperatureRead()`.
+* **Core:** 32-bit single-core RISC-V processor clocked at 80 MHz / 160 MHz.
+* **Memory:** 400 KB SRAM, 4 MB embedded SPI Flash (DIO mode, 40 MHz).
+* **Connectivity:** Integrated 2.4 GHz 802.11b/g/n Wi-Fi (WPA2/WPA3-SAE) & Bluetooth 5 (LE).
+* **Power Source:** 5V via USB-C or external VIN; onboard 3.3V low-dropout regulator (LDO).
+* **Status LED:** Single blue LED tied to **GPIO 8 (Active LOW)**.
+* **Hardware USB:** Native USB Serial/JTAG on GPIO 18 (D-) and GPIO 19 (D+). *Reserved exclusively for debugging and USB flashing.*
+* **Internal Silicon Telemetry:** Silicon junction temperature read via internal sensors.
 
-### 2.2 Breadboard Layout & Physical Geometry
-* **Board Form Factor:** Compact quarter-size breadboard (15 columns, numbered 1 to 15; rows A–E on bottom half, rows F–J on top half).
-* **Power Rails:** Dual power rails:
-  * **Top Power Rails:** +5V (VBUS / USB power source) and GND.
-  * **Bottom Power Rails:** +3.3V (regulated out from ESP32 3V3 pin) and GND (bridged to Top GND).
-* **ESP32-C3 SuperMini Placement:**
-  * Straddles the center divider across **Columns 1 to 8**.
-  * **Top Header (Pins 5V, GND, 3V3, G0, G1, G2, G3, G4):** Inserted into **Row F**.
-  * **Bottom Header (Pins G5, G6, G7, G8, G9, G10, G20, G21):** Inserted into **Row B**.
-  * *Row A (bottom) and Row J (top) remain completely open for terminal block insertion.*
+### 2.2 Complete Pin & Peripheral Mapping
 
-### 2.3 Terminal Blocks (5.08 mm Pitch / 0.2" Spacing)
-All terminal blocks are mounted with screw openings facing **100% OUTWARDS** off the edges of the breadboard:
-* **TB1 (4-pin, HC-SR04 Ultrasonic Sensor):** Located on **Row J** (Top edge) spanning **Columns 9, 11, 13, 15** (facing **UPWARDS** off top edge).
-  * Pin 1 (Col 9): `+5V` (Top 5V Rail)
-  * Pin 2 (Col 11): `TRIG` (jumper to Col 7 Top / GPIO 3)
-  * Pin 3 (Col 13): `ECHO` (connects to 1k/2k voltage divider input)
-  * Pin 4 (Col 15): `GND` (Top GND Rail)
-* **TB2 (3-pin, Capacitive Soil Moisture Sensor v1.2):** Located on **Row F** (Top half inner edge) spanning **Columns 10, 12, 14** (facing **DOWNWARDS** into open center trench).
-  * Pin 1 (Col 10): `VCC` (jumper to Col 6 Top / GPIO 2 for duty-cycled 3.3V switched power)
-  * Pin 2 (Col 12): `AOUT` (jumper to Col 5 Top / GPIO 1)
-  * Pin 3 (Col 14): `GND` (jumper to Top GND Rail; C2 100nF across Col 12 & 14)
-* **TB3 (2-pin, 5V Submersible Pump Motor):** Located on **Row A** (Bottom edge) spanning **Columns 13, 15** (facing **DOWNWARDS** off bottom edge).
-  * Pin 1 (Col 13): `Drain (-)` (Directly connects to MOSFET Drain via Column 13 breadboard trace)
-  * Pin 2 (Col 15): `+5V (+)` (Jumper to +5V Rail)
+| ESP32-C3 Pin | Connected Component | Function & Conditioning | Direction / Mode |
+| :--- | :--- | :--- | :--- |
+| **GPIO 0** | 5V Supply Rail Monitor | ADC1_CH0 via 100kΩ/100kΩ divider (R1/R2) + 100nF filter (C1) | Analog IN |
+| **GPIO 1** | Capacitive Soil Sensor | ADC1_CH1 connected to TB2 Pin 1 (`AOUT`) + 100nF filter (C2) | Analog IN |
+| **GPIO 2** | Strapping Protected | **Unconnected / High-Z** (Guarantees zero boot hangs) | High-Z |
+| **GPIO 3** | Ambient Light Sensor | ADC1_CH3 via LDR1 + 10kΩ divider (R7) + 100nF (C4) | Analog IN |
+| **GPIO 4** | 18650 Battery Monitor | ADC1_CH4 via 100kΩ/100kΩ divider (R8/R9) + 100nF (C6) | Analog IN |
+| **GPIO 5** | Switched Soil Sensor VCC | Digital switched 3.3V power to TB2 Pin 2 (Duty-cycled reading) | Digital OUT |
+| **GPIO 6** | Ultrasonic Sensor `ECHO`| Digital input via 1kΩ/2kΩ divider (R3/R4) stepping 5V down to 3.3V | Digital IN |
+| **GPIO 7** | Pump MOSFET Gate | Digital output to AO3400A / FQP30N06L Gate via 1kΩ (R5) + 100kΩ pull-down (R6) | Digital OUT |
+| **GPIO 8** | Onboard Status LED | Active LOW blue LED (Active: 0, Inactive: 1) | Digital OUT |
+| **GPIO 10** | Ultrasonic Sensor `TRIG`| 10 µs trigger pulse output to HC-SR04 | Digital OUT |
+| **GPIO 20** | I2C SDA | I2C Data bus for optional SHT30 / BH1750 environmental modules | Open Drain |
+| **GPIO 21** | I2C SCL | I2C Clock bus for optional SHT30 / BH1750 environmental modules | Open Drain |
 
-### 2.4 Complete Pin & Component Mapping (Rev 2.3 Turnkey SMD & Breadboard)
-
-| ESP32-C3 Pin | Header Location | Connected Component | Function & Conditioning (Rev 2.3 SMD) | Breadboard Legacy |
-| :--- | :--- | :--- | :--- | :--- |
-| **GPIO 0** | J1 Pin 4 (Col 4 Top) | 5V Supply Rail Monitor | ADC1_CH0 via 100kΩ/100kΩ divider (R1/R2) + 100nF filter (C1) | 5V Rail (10k/10k) |
-| **GPIO 1** | J1 Pin 5 (Col 5 Top) | Capacitive Soil Sensor | ADC1_CH1 connected to TB2 Pin 1 (`DATA` / AOUT) + C2 100nF | Soil AOUT |
-| **GPIO 2** | J1 Pin 6 (Col 6 Top) | Strapping Protected | **Unconnected / Free** (Rock-solid boot reliability, 0 boot hangs) | Soil VCC |
-| **GPIO 3** | J1 Pin 7 (Col 7 Top) | Ambient Light Sensor | ADC1_CH3 via LDR1 (GL55xx DNP) + 10kΩ divider (R7) + 100nF (C4) | Ultrasonic TRIG |
-| **GPIO 4** | J1 Pin 8 (Col 8 Top) | 18650 Battery Monitor | **ADC1_CH4 via 100kΩ/100kΩ divider (R8/R9) + 100nF (C6)** from TB4-3 | Ultrasonic ECHO |
-| **GPIO 5** | J2 Pin 8 (Col 8 Bottom)| Switched Soil VCC | Digital OUT to TB2 Pin 2 (`VCC`). Duty-cycled 3.3V power | N/A |
-| **GPIO 6** | J2 Pin 7 (Col 7 Bottom)| Ultrasonic Sensor `ECHO`| **Digital IN via 1kΩ/2kΩ divider (R3/R4)** stepping 5V down to 3.3V | Spare |
-| **GPIO 7** | J2 Pin 6 (Col 6 Bottom)| Pump MOSFET Gate | Digital OUT to AO3400A Gate via 1kΩ (R5) + 100kΩ pull-down (R6) | Pump Gate |
-| **GPIO 8** | Internal / Onboard | System Status LED | Active LOW blue LED (breathing: idle, blinking: pump, flashing: error) | Status LED |
-| **GPIO 10** | J2 Pin 3 (Col 3 Bottom)| Ultrasonic Sensor `TRIG`| Digital OUT trigger pulse (10 µs pulse to TB1 Pin 2) | N/A |
-| **GPIO 20** | J2 Pin 2 (Col 2 Bottom)| I2C SDA | I2C Data bus for optional SHT30 (MOD1) and BH1750 (MOD2) | Spare |
-| **GPIO 21** | J2 Pin 1 (Col 1 Bottom)| I2C SCL | I2C Clock bus for optional SHT30 (MOD1) and BH1750 (MOD2) | Spare |
-| **ADC / Int**| Internal Silicon | Chip Temperature | Read via `temperatureRead()` core function | Chip Temp |
-
-#### Discrete Components:
-* **R1 & R2 (10 kΩ each):** 5V rail voltage divider (5V $\rightarrow$ 2.5V, safe for 3.3V ADC).
-* **C1 (100 nF ceramic):** Filter capacitor on GPIO 0 to eliminate ADC sampling ripple.
-* **R3 (1 kΩ) & R4 (2 kΩ):** 5V-to-3.3V logic level divider for HC-SR04 ECHO pulse.
-* **C2 (100 nF ceramic):** High-frequency RF decoupling filter directly across Soil AOUT and GND.
-* **R5 (1 kΩ):** Gate damping resistor (Col 6 Row A to Col 12 Row C) protecting GPIO 7 from inrush capacitance and ringing.
-* **R6 (100 kΩ):** Gate pull-down (Col 12 Row D to GND) ensuring pump stays completely OFF during boot and reset.
-* **Q1 (FQP30N06L Logic-Level N-MOSFET, TO-220):** Low-side switch controlling 5V pump motor across 3 adjacent breadboard holes (Gate: Col 12, Drain: Col 13, Source: Col 14). Threshold $V_{GS(th)} = 1.0\text{–}2.5\text{V}$, $R_{DS(on)} = 0.045\,\Omega$ max at 5V ($< 0.05\,\Omega$ at 3.3V gate drive), $V_{DSS} = 60\text{V}$, $I_D = 32\text{A}$. Standard 0.1" (2.54mm) pin pitch drops straight into adjacent Cols 12, 13, 14 with zero lead bending (Pin 1 = Gate in Col 12, Pin 2 = Drain in Col 13, Pin 3 = Source in Col 14).
-* **D1 (1N4001 Silicon Rectifier Diode):** Flyback protection diode across TB3 (Cathode to +5V Col 15, Anode to Drain Col 13). (Can also use 1N4002–1N4007 or 1N5819 Schottky).
-* **C3 (100 µF electrolytic):** Bulk power reservoir across +5V and GND to suppress motor startup dips (can also use 470 µF if available).
-
-### 2.5 Permanent Soldered Perfboard Layout (18 Rows R $\to$ A Descending × 24 Columns 1–24)
-For a permanent soldered build in an enclosure, an **18-row by 24-column 0.1" (2.54 mm) pitch through-hole perfboard** layout is fully designed and documented:
-* **Board Dimensions:** 18 Rows descending vertically from **Row R (Top Edge)** to **Row A (Bottom Edge)** $\times$ 24 Columns ($1 \dots 24$, horizontal), 432 electrically isolated plated donut pads.
-* **Isolated Pads Rule:** Perfboard holes have **no internal traces**. Every connection is explicitly made via bare solid bus wires, component lead bends, solder bridges, or insulated hookup jumpers.
-* **Microcontroller Mounting:** 2× 1×8 female header sockets mounted across Columns 3–10 in **Row J** (Top Header) and **Row D** (Bottom Header) with standard 0.600" DIP pitch (6 rows).
-* **USB-C Clearance:** USB-C connector faces **LEFT** into Columns 1–2, allowing flush cable connection with zero board interference.
-* **Outward Sensor Terminals (Top Edge / Row Q):**
-  * **TB2 (3-Pin Soil):** Row Q, Cols 7 (AOUT / Data), 9 (Switched VCC), 11 (GND); wire entries face **UPWARDS** off Row R. Pinout routes straight/parallel down into ESP32 GPIO 1 (J7) and GPIO 2 (J8) with **zero wire crossovers**.
-  * **TB1 (4-Pin Ultrasonic):** Row Q, Cols 15 (5V), 17 (TRIG), 19 (ECHO), 21 (GND); wire entries face **UPWARDS** off Row R.
-  * Spacer between TB2 and TB1: Cols 12–14 (7.62 mm spacing for unobstructed screwdriver access).
-* **Supply Monitor Divider (Row K & L Zero-Crossing):**
-  * **R1 (10kΩ):** Vertically spans N6 (+5V bus) to K6 (Divider Node).
-  * **R2 (10kΩ):** Runs horizontally along Row K from K6 (Node) to K4 (GND). Solder bridged at K4 $\to$ J4 (ESP32 GND) and K6 $\to$ J6 (GPIO 0 ADC).
-  * **C1 (100nF):** Ceramic filter with left leg in L4 (GND) and right leg in K6 (Node). Avoids crowding hole K4; directly grounded via Col 4 vertical bridge L4 $\to$ K4 $\to$ J4, and node directly bridged K6 $\to$ J6!
-* **Outward Pump Terminal (Bottom Edge / Row B):**
-  * **TB3 (2-Pin Pump):** Row B, Cols 13 (Drain -), 15 (+5V); wire entries face **DOWNWARDS** off Row A. Dedicated holes, completely separated from flyback diode D1.
-* **Actuators & Direct Solder Bridges (Separated D1 & TB3):**
-  * **Q1 (FQP30N06L TO-220 MOSFET):** Row C, Cols 12 (Gate), 13 (Drain), 14 (Source).
-  * **D1 (1N4001 Diode):** Row E, Cols 13 (Anode) to 15 (Cathode). Cathode silver stripe faces Col 15 (+5V). Right side positioned at E15.
-  * **Direct Underside Solder Bridges:** 
-    * 4-pad bridge along Col 13: **E13 (Anode) $\to$ D13 $\to$ C13 (Q1 Drain) $\to$ B13 (TB3 Pin 1 Drain)**.
-    * 4-pad bridge along Col 14: **D14 $\to$ C14 (Q1 Source) $\to$ B14 $\to$ A14 (Row A GND)**, fed directly from Row P GND bus via straight insulated wire from **P14 to D14**.
-    * 4-pad bridge / lead bend along Col 15: **E15 (D1 Cathode) $\to$ D15 $\to$ C15 $\to$ B15 (TB3 Pin 2 +5V)**, fed directly from Row N +5V bus via straight insulated wire from **N15 to E15**.
-    * Creates three symmetrical, parallel vertical tracks along Columns 13, 14, and 15 with zero diagonal cross-board wiring!
-  * **Gate Drive:** R5 (1kΩ damping) across C8 $\to$ C11, bridged C11 $\to$ C12 to Gate; R6 (100kΩ pull-down) from C12 down to A12.
-  * **C3 (100µF Bulk Capacitor):** Row L, Cols 3 (+) to 4 (-), directly joined between VCC (+5V at J3) and GND (J4) via vertical solder bridges L3 $\to$ K3 $\to$ J3 and M4 $\to$ L4 $\to$ K4 $\to$ J4.
-* **Ground Distribution Architecture:**
-  * **Sensor GND (Row P):** Bare bus wire along Row P (Cols 11–21) providing an ultra-quiet ground reference for capacitive soil sensor (GPIO 1) and ultrasonic echo divider (GPIO 4), fed directly from Col 4 GND track (M4) via top wires W3a (`M4 → P4`) and W3b (`P4 → P11`). Leaving P5–P10 open enables clean vertical signal routing down Column 7.
-  * **Power / Motor GND (Row A):** Solder bridge or bus wire along Row A (Cols 12–14) sinking high-current pump transients from Q1 Source (C14) and R6 pull-down (A12) via the Col 14 ground bridge.
-  * **Ground Feed:** Straight vertical 24 AWG insulated wire from Row P at **P14 down to D14**, joining into the 4-pad solder bridge down to A14. Eliminates diagonal cross-board star wiring!
-* **Anti-Short Dual-Layer Wiring Architecture (Optimized 10 Top / 18 Bottom):**
-  * **Physical Dielectric Isolation:** Crossing insulated jumper wires across bare bus rails on the solder side creates severe short hazards. To guarantee **100% short-free operation**, the design physically isolates wiring into two separate layers through the 1.6 mm FR4 fiberglass core:
-    * **Bottom Layer (Solder Side — 18 Rigid Connections):** Strictly limited to bare bus rails (B1 Row P GND P11-P21, B2 Row N +5V N3-N15, B3 Row A GND A12-A14) and direct adjacent solder bridges (B4 K6-J6 Node, B5 Col 3 5V Track N3-M3-L3-K3-J3, B6 Col 4 GND Track M4-L4-K4-J4, B7 J7-K7 Soil ADC Bridge, B8 J8-K8 Soil VCC Bridge, B9 J9-K9 Ultrasonic TRIG Bridge, B10 J10-K10 Ultrasonic ECHO Bridge, B11 Col 13 Pump Drain, B12 Col 14 Pump GND, B13 Col 15 Pump 5V, B14 C11-C12 Gate Resistor, B15 D8-C8 Gate Drive, B16 Col 7 Soil Data Track Q7-P7-O7, B17 Col 11 Soil GND Tie Q11-P11-O11, B18 Col 21 Ultrasonic GND Q21-P21). **Zero crossing wires on the bottom!**
-    * **Top Layer (Component Side — 10 Insulated Wires):** All rail-crossing and section-linking connections run as elevated, insulated hookup wires above the components (W1 P14→D14 GND Feed, W2 N15→E15 5V Pump Feed, W3a M4→P4 Col 4 GND Jump, W3b P4→P11 Row P GND Feed, W4 N15→Q15 TB1 5V, W5 Q19→O19 TB1 Echo, W6 O7→K7 Soil Data, W7 Q9→K8 Soil VCC, W8 K9→Q17 Trig, W9 O17→K10 Echo 3.3V).
-    * **Row K Breakout Architecture:** All 5 microcontroller signal jumpers (Node, Soil Data, Soil VCC, TRIG, ECHO) terminate cleanly into Row K through-holes (`K6`, `K7`, `K8`, `K9`, `K10`), bridged directly on the bottom to ESP32 header pins (`J6-K6`, `J7-K7`, `J8-K8`, `J9-K9`, `J10-K10`). This leaves the entire female socket header on Row J completely free of top-side soldered wires.
-* **Full Assembly Guide & Visualizer:**
-  * Guide: [`pcb/hole-thru/perfboard_circuit_guide.md`](file:///Users/robertlongbottom/dev/plant-esp32/pcb/hole-thru/perfboard_circuit_guide.md)
-  * Interactive SVG Visualizer: [`pcb/hole-thru/perfboard_diagram.html`](file:///Users/robertlongbottom/dev/plant-esp32/pcb/hole-thru/perfboard_diagram.html) (Top, Bottom Mirrored, and X-Ray composite views with independent layer toggle checkboxes for Top Insulated Wires, Top Components, Bottom Solder Bridges, Bottom Bus Rails, pad inspection, and fluid wide-screen zoom).
+### 2.3 Actuator & Sensor Conditioning Circuitry
+* **Low-Side Pump Driver:** N-Channel logic-level MOSFET (AO3400A SMD or FQP30N06L TO-220).
+  * **Gate Pull-Down (R6, 100 kΩ):** Held firmly to GND to keep the pump disabled during bootloader startup, brownouts, and chip resets.
+  * **Gate Damping (R5, 1 kΩ):** Protects GPIO 7 against inrush capacitance and ringing.
+  * **Flyback Diode (D1, 1N4001 / 1N5819):** Clamps inductive voltage spikes across pump motor terminals.
+  * **Bulk Decoupling (C3, 100 µF):** Dampens transient motor startup current dips on the 5V bus.
+* **Acoustic Ultrasonic Rangefinder (HC-SR04):**
+  * Powered from 5V rail for reliable transducer range.
+  * 1kΩ / 2kΩ resistive voltage divider steps the 5V `ECHO` output down to a 3.3V-safe logic level.
+  * Firmware implements a strict 30 ms timeout and software un-latch reset pulse to clear stuck third-party clone sensors.
+* **Corrosion-Resistant Capacitive Soil Moisture Sensor:**
+  * Switched power from GPIO 5 eliminates continuous galvanic bias in damp soil.
+  * 100nF capacitor on `AOUT` filters RF noise and ADC switching ripple.
 
 ---
 
-## 3. Firmware Architecture & FreeRTOS Concurrency
+## 3. Firmware Architecture & Rust Workspace
 
-### 3.1 Concurrency Model
-The firmware runs on FreeRTOS with three dedicated, preemptive tasks:
+The firmware is structured as a Cargo workspace separating hardware-independent domain modeling from hardware-specific HAL drivers.
 
 ```mermaid
 graph TD
-    subgraph FreeRTOS Scheduler
-        T1["Task 1: Watchdog & Safety Supervisor (Priority: HIGH)<br/>• Enforces 60s max continuous pump runtime<br/>• Monitors Task 2 & Task 3 heartbeats<br/>• Hardware Watchdog Timer (WDT) feed"]
-        T2["Task 2: Sensor Acquisition (Priority: NORMAL)<br/>• Non-blocking Ultrasonic capture (30ms timeout)<br/>• Soil moisture median-of-5 oversampling<br/>• 5V rail health & Chip Temp reads<br/>• Pushes to in-memory Ring Buffer"]
-        T3["Task 3: Network & Web Services (Priority: LOW)<br/>• Wi-Fi auto-reconnect & mDNS (plants.local)<br/>• ESPAsyncWebServer REST API & Static files<br/>• WebSockets push telemetry to clients<br/>• ArduinoOTA listener & NTP synchronization"]
+    subgraph Cargo Workspace
+        Core["plant-core (no_std domain library)<br/>• Strongly-typed Config schema (serde)<br/>• Safety Supervisor & Daily Limit State<br/>• Sensor math & median filtering<br/>• REST API JSON shapes"]
+        Firmware["plant-firmware (riscv32imc-esp-espidf)<br/>• App Main & Hardware Peripherals<br/>• Dual-Slot OTA Service (EspOta)<br/>• NVS Flash Configuration Storage<br/>• Multi-Fault Round-Robin LED Supervisor<br/>• ESP-IDF Embedded HTTP/REST Server<br/>• SNTP Time Sync & mDNS Responder"]
     end
+    Firmware --> Core
 ```
 
-### 3.2 In-Memory Ring Buffer & Storage Strategy
-* **Zero Flash Wear:** Sensor readings and failure logs are kept in a circular ring buffer in RAM (`std::deque` or fixed array). 
-* **Capacity:** 100 recent historical sensor points + 50 recent diagnostic events.
-* **LittleFS File System:** Flash memory is strictly reserved for:
-  1. Static web assets (`index.html`, `app.js`, `style.css`).
-  2. Persistent user configuration (`config.json`), updated only when the user explicitly saves changes from the web dashboard.
+### 3.1 `plant-core` (Domain Logic)
+* **`no_std` Architecture:** Compiles without `std` for native desktop testing and simulation.
+* **`config.rs`:** Strict Serde-compatible data contracts defining system, gauge, timing, and safety configurations with automatic validation and sensible defaults.
+* **`safety.rs`:** Sliding-window watering limiter tracking cumulative daily watering time against configured limits (e.g. 93 seconds/day), enforcing minimum inter-cycle cooldown periods (e.g. 300 seconds), and inhibiting night-time cycles.
+* **`sensors.rs`:** Physics conversions for ADC millivolts to percentage, ultrasonic travel time to centimeters, and plausibility boundary validators.
+
+### 3.2 `plant-firmware` (Hardware Application)
+* **Target:** `riscv32imc-esp-espidf` using ESP-IDF v5.x.
+* **NVS Flash Storage (`storage.rs`):** Uses `esp_idf_svc::nvs` to persist JSON configuration and Wi-Fi credentials across power cycles and firmware updates.
+* **Web Services (`web.rs`):** Embedded HTTP server with URL dispatching for static assets and REST API endpoints. Static web assets (`index.html`, `app.js`, `style.css`) are embedded at compile time via `include_str!`.
+* **OTA Update Engine (`ota.rs`):** Streams remote HTTPS firmware binaries with redirect tracking and direct binary stream flashing.
+* **Visual Telemetry (`led.rs`):** Independent, lockless LED supervisor handling visual signals.
 
 ---
 
-## 4. Networking, mDNS & Remote Access
+## 4. Dual-Slot Over-The-Air (OTA) Updates & Rollback
 
-### 4.1 Zero-Configuration mDNS
-* **Hostname:** Configurable via `config.json` (defaults to `plants`).
-* **mDNS Domain:** `http://plants.local`.
-* **Behavior:** Eliminates the need for static IP configuration or DHCP reservations. Any device on the local network (macOS, iOS, Windows, Linux, Android) resolves `plants.local` to the dynamic IP assigned to the ESP32.
+### 4.1 4 MB Flash Partition Table (`partitions.csv`)
 
-### 4.2 Reverse Proxy & DDNS Compatibility
-* **Origin Agnostic:** All web UI assets call strictly relative endpoints (e.g. `fetch('/api/sensor-log?n=10')`).
-* **Reverse Proxy Support:** Allows external access through reverse proxies (e.g., `https://plants.franticbrain.ddnsfree.com`) without hardcoded private LAN IP leaks or broken links.
-* **CORS Support:** Permissive CORS headers enabled on all `/api/*` endpoints for headless or third-party dashboard integrations.
-
-### 4.3 Over-The-Air (OTA) Updates
-* Embedded `ArduinoOTA` listener allows pushing updated compiled binaries directly over Wi-Fi from PlatformIO without physical USB connection.
-* Web-based fallback OTA endpoint (`POST /update`) for manual `.bin` firmware file uploads via the browser.
-
----
-
-## 5. Sensor Logic & Robustness Improvements
-
-### 5.1 HC-SR04 Hardware Timer & Un-Sticking Routine
-* **30 ms Hard Timeout:** Ultrasonic sound travels at ~34.3 cm/ms. Round-trip for 5.14 meters is 30 ms. In our plant reservoir (< 50 cm), an echo taking longer than 30 ms is physically impossible.
-* **Non-Blocking Measurement:** Pulse duration is measured using `esp_timer_get_time()`. If 30 ms elapses without the ECHO pin returning `LOW`, the function aborts immediately with `TIMEOUT_ERROR`.
-* **Software Kick (Un-stitching clone sensors):** If the sensor latches HIGH, the ESP32 reconfigures GPIO 4 as an output, drives it `LOW` for 10 µs to clear the sensor's latch, switches it back to input, and enforces a 30 ms acoustic damping quiet time.
-
-### 5.2 Factory eFuse Calibrated ADC Reads (Dual Voltage Channels)
-* Utilizes ESP-IDF `analogReadMilliVolts` / `esp_adc_cal` to read factory-calibrated curves burned into eFuse.
-* **GPIO 0 (`ADC1_CH0` - 5V Supply Rail):** Monitored continuously via 100k/100k divider + 100nF filter. Records supply rail voltage before and during pump operation to detect weak power adapters or brownouts.
-* **GPIO 4 (`ADC1_CH4` - 18650 Battery):** Dedicated battery state-of-charge channel via 100k/100k divider + 100nF filter (21µA negligible drain) directly from TB4 Pin 3 (`BAT+`).
-* **Zero Jumpers / Concurrent Reading:** Both 5V rail and raw 18650 cell voltages are read simultaneously in firmware without any manual hardware jumpers.
-* **GPIO 1 (`ADC1_CH1` - Soil Moisture):** 5-sample median filter with 10 ms spacing to reject power line noise and sensor ripple.
-* **GPIO 3 (`ADC1_CH3` - Ambient Light LDR):** Monitored via LDR1 + 10k divider (R7) + 100nF (C4). 100% Wi-Fi safe on ADC1.
-
----
-
-## 6. Pump Safety & Plant Protection System
-
-To prevent flooding or hardware burnout, the system implements multi-tiered safety constraints:
-
-1. **Hardware Watchdog Timer (WDT):** 5-second timeout. If the FreeRTOS scheduler or main tasks hang while the pump is active, the WDT triggers a hard reboot, instantly bringing GPIO 7 `LOW` via the 100kΩ pull-down resistor (R6).
-2. **Maximum Continuous Pump Runtime:** Hard cutoff after 60 seconds (configurable).
-3. **Minimum Cycle Cooldown:** Enforces a minimum delay (default 300 seconds / 5 minutes) between consecutive watering cycles to allow moisture absorption.
-4. **Daily Watering Limit:** Enforces a maximum cumulative watering time per calendar day (default 60 seconds / day), resetting at midnight via NTP.
-5. **Night-Watering Lockout:** Inhibit automated watering between 10:00 PM and 9:00 AM (configurable).
-6. **Dry Tank Cutoff:** If the water level is below 2.0 cm, automated and manual watering are blocked to prevent running the pump dry.
-
----
-
-## 7. REST API & WebSockets Contract
-
-The firmware preserves 100% backward compatibility with `plant-p2`:
-
-| Endpoint | Method | Description |
-| :--- | :--- | :--- |
-| `/api/status` | `GET` | Returns live sensor values (soil %, water level cm, supply voltage V, chip temp °C), pump state, and uptime. |
-| `/api/sensor-log` | `GET` | Returns last $N$ sensor readings in JSON array format (e.g. `?n=10`, `?n=50`). |
-| `/api/config` | `GET` | Returns the current JSON configuration. |
-| `/api/config` | `POST` | Updates and persists configuration to LittleFS. |
-| `/api/water` | `POST` | Triggers a manual watering cycle (accepts `{ "duration": 10 }`). |
-| `/api/sensor/health` | `GET` | Returns diagnostic metrics (preventive resets count, ADC calibration status, Wi-Fi RSSI). |
-| `/api/sensor/ultrasonic/reset` | `POST` | Forces an immediate hardware pin clear and ultrasonic sensor recalibration. |
-| `/ws` | `WebSocket` | Real-time bi-directional telemetry and event streaming. |
-
----
-
-## 8. Configuration Schema (`config.json`)
-
-```json
-{
-  "system": {
-    "hostname": "plants",
-    "timezone": "Asia/Singapore",
-    "gmt_offset": 8,
-    "ntp_servers": [
-      "time.google.com",
-      "pool.ntp.org",
-      "time.nist.gov"
-    ],
-    "monitoring_interval_sec": 60
-  },
-  "gauges": {
-    "soil_moisture": {
-      "trigger_threshold": 40,
-      "dry_adc": 2800,
-      "wet_adc": 1100
-    },
-    "water_level": {
-      "tank_height_cm": 30.0,
-      "sensor_offset_cm": 3.0,
-      "min_safe_level_cm": 2.0
-    },
-    "voltage": {
-      "min_warning": 4.5,
-      "max_warning": 5.5
-    }
-  },
-  "timing": {
-    "startup_delay_sec": 30,
-    "check_interval_sec": 3600,
-    "sensor_read_interval_sec": 600,
-    "automated_water_duration_sec": 20,
-    "manual_water_duration_sec": 10
-  },
-  "safety": {
-    "max_continuous_pump_sec": 60,
-    "min_time_between_cycles_sec": 300,
-    "daily_watering_limit": {
-      "enabled": true,
-      "max_seconds_per_day": 60
-    },
-    "night_watering_protection": {
-      "enabled": true,
-      "start_hour": 22,
-      "end_hour": 9
-    }
-  }
-}
+```text
+# Name,   Type, SubType, Offset,   Size,     Flags
+nvs,      data, nvs,     0x9000,   0x6000,   # 24 KB User config & Wi-Fi
+otadata,  data, ota,     0xf000,   0x2000,   # 8 KB Active slot pointers
+phy_init, data, phy,     0x11000,  0x1000,   # 4 KB RF calibration
+ota_0,    app,  ota_0,   0x20000,  0x1a9000, # 1700 KB Application Slot 0
+ota_1,    app,  ota_1,   0x1d0000, 0x1a9000, # 1700 KB Application Slot 1
 ```
 
+### 4.2 Hardware Rollback Protection
+Under `CONFIG_BOOTLOADER_APP_ROLLBACK_ENABLE=y`:
+1. When new firmware is flashed into the standby slot (`ota_0` or `ota_1`), the bootloader flags the slot as `ESP_OTA_IMG_NEW`.
+2. On initial boot, the application initializes system peripherals and verifies memory integrity.
+3. Upon confirming successful startup, the firmware invokes `EspOta::mark_running_slot_valid()`, transitioning the state to `ESP_OTA_IMG_VALID`.
+4. If the new image panics, encounters a hardware watchdog trip, or fails during initialization, the ESP32-C3 ROM bootloader detects the unvalidated image on reset and automatically boots back into the previously valid partition.
+
+### 4.3 GitHub Releases HTTPS Streaming Engine
+The OTA download client (`ota::update_from_url`) streams binaries directly from GitHub Releases:
+* **Multi-Hop 302 Redirect Following:** The URL `https://github.com/<repo>/releases/latest/download/plant-firmware.bin` triggers two 302 redirects terminating at a signed Azure/AWS storage URL with query parameters exceeding 1.2 KB.
+* **Buffer Allocation:** `buffer_size_tx` is configured to `4096` bytes (overriding ESP-IDF's default 512 bytes) to accommodate long signed URLs without triggering `HTTP_CLIENT: Out of buffer`.
+* **Dedicated Worker Stack:** The OTA download task is spawned on a dedicated thread with a **32 KB stack** (`std::thread::Builder`), preventing stack overflows during mbedTLS cryptographic handshakes and SPI flash writes.
+* **Heap Chunk Buffer:** Flash writing uses a heap-allocated 4 KB chunk buffer (`vec![0u8; 4096]`), leaving thread stack frames lean.
+
+### 4.4 Web Dashboard Changelog Confirmation Modal
+Rather than blindly downloading updates, the frontend provides an interactive workflow:
+1. User clicks **"Check GitHub Update"**.
+2. Frontend queries `https://api.github.com/repos/thomaslr/plant-esp32/releases/latest`.
+3. If a newer tag is detected, the dashboard displays a modal dialog showing:
+   * Current running version vs. target version.
+   * Full GitHub Release Changelog notes.
+   * Safety warning advising against power disconnection.
+4. Upon user confirmation, `POST /api/ota/update` triggers background streaming, the LED switches to an active flashing strobe, and the frontend polls for device reboot.
+
 ---
 
-## 9. PlatformIO Project Structure
+## 5. Resilient Networking & Self-Healing Wi-Fi
+
+### 5.1 WPA3-SAE Stale Session Recovery
+Modern routers caching MAC addresses frequently reject immediate reconnection attempts following an abrupt CPU restart (`reason: 0x600`).
+* **5-Attempt Retry Loop:** If `wifi.connect()` fails, the driver calls `wifi.disconnect()`, pauses 3 seconds, and retries up to 5 times before falling back.
+
+### 5.2 Provisioning SoftAP & 5-Minute Recovery Timer
+* **Captive Portal:** If no saved Wi-Fi credentials exist or all 5 attempts fail, the device launches `PlantMonitor-Setup-XXXX` (192.168.4.1) serving a lightweight credential configuration portal.
+* **Self-Healing Recovery:** If the router is temporarily offline during a power cut, remaining in SoftAP mode forever would strand the device. When saved credentials exist in NVS, the provisioning loop monitors elapsed time and triggers `esp_restart()` every **5 minutes** to automatically reconnect once the router recovers.
+
+### 5.3 Network Services
+* **Zero-Configuration mDNS:** Resolves dynamically to `http://plants1.local` (or configured hostname).
+* **SNTP Clock Synchronization:** Periodically synchronizes against `time.google.com`, `pool.ntp.org`, and `time.nist.gov` to maintain precise calendar time for midnight daily watering resets.
+
+---
+
+## 6. Deterministic Multi-Fault LED Supervisor
+
+Status telemetry is communicated through the onboard blue LED (GPIO 8) via a dedicated background supervisor thread.
+
+```mermaid
+graph TD
+    A[LED Supervisor Thread] --> B{OTA Active?}
+    B -- Yes --> C[10 Hz Strobe: 50ms ON / 50ms OFF]
+    B -- No --> D{Pump Active?}
+    D -- Yes --> E[Solid ON while running]
+    D -- No --> F{Wi-Fi Connected?}
+    F -- No --> G[100ms ON / 100ms OFF Blink]
+    F -- Yes --> H{Active Faults?}
+    H -- Yes --> I[Approach 2: Round-Robin Rotation<br/>Cycle through active faults]
+    H -- No --> J[Idle Heartbeat: 50ms blip every 10s]
+```
+
+### 6.1 Visual Patterns
+* **OTA Flashing Active:** 10 Hz continuous strobe (50ms ON / 50ms OFF) with complete suppression of fault blips.
+* **Watering Active:** Solid ON while pump is energized.
+* **Wi-Fi Connecting / Provisioning:** Fast continuous blink (100ms ON / 100ms OFF).
+* **Reservoir Dry:** Accelerando frequency sweep (8 pulses progressing from 300ms down to 25ms over 3.0 seconds).
+* **Ultrasonic Sensor Fault:** Triple blip (3 quick 80ms pulses followed by a 1-second pause).
+* **Soil Sensor Fault:** 5-blip cadence (5 quick 80ms pulses followed by a 1-second pause).
+* **Normal Healthy Idle:** Single 50ms heartbeat pulse every 10 seconds (divided into 100ms sleep slices for sub-second reaction to state changes).
+
+---
+
+## 7. Multi-Tiered Safety Supervisor & Plant Protection
+
+1. **Hardware Watchdog Timer (WDT):** 5-second timeout triggers immediate CPU reset if the scheduler stalls, releasing GPIO 7 LOW via R6.
+2. **Maximum Continuous Pump Runtime:** Hard cutoff after 60 seconds (configurable) prevents tank drainage during pipe fractures.
+3. **Minimum Cycle Cooldown:** Mandatory 300-second pause between watering events allows water absorption through soil substrate.
+4. **Daily Cumulative Watering Limit:** Prevents root drowning by capping total daily watering duration (e.g. 93 seconds/day max), resetting at local midnight via SNTP.
+5. **Night-Watering Protection:** Automated watering is inhibited between 10:00 PM and 9:00 AM.
+6. **Dry Tank Interlock:** Blocks automated and manual pump activation when water level is below 2.0 cm.
+
+---
+
+## 8. REST API Specification
+
+All endpoints are origin-agnostic and support CORS headers for integration with home automation hubs:
+
+| Endpoint | Method | Payload / Format | Description |
+| :--- | :--- | :--- | :--- |
+| `/api/status` | `GET` | JSON | Live sensor readings, pump state, uptime, and Wi-Fi RSSI |
+| `/api/sensor-log` | `GET` | JSON Array (`?n=15`) | Circular history ring buffer of recent sensor readings |
+| `/api/config` | `GET` | JSON | Current active system, gauge, timing, and safety configuration |
+| `/api/config` | `POST` | JSON | Updates and persists configuration changes to NVS flash |
+| `/api/water` | `POST` | `{"duration": 10}` | Triggers a manual watering cycle subject to safety supervisor checks |
+| `/api/sensor/health` | `GET` | JSON | Hardware diagnostic metrics and sensor validity flags |
+| `/api/sensor/ultrasonic/reset`| `POST` | None | Emits a clearing pulse to recover latched ultrasonic transducers |
+| `/api/wifi/reset` | `POST` | None | Erases saved Wi-Fi credentials from NVS and enters SoftAP mode |
+| `/api/system/reboot` | `POST` | None | Reboots the ESP32-C3 microcontroller |
+| `/api/ota/status` | `GET` | JSON | Reports running slot, standby slot, firmware version, and rollback state |
+| `/api/ota/update` | `POST` | `{"url": "..."}` | Initiates background HTTPS OTA download and flashing |
+| `/api/ota/upload` | `POST` | Binary `.bin` | Direct browser-based firmware upload and flashing |
+
+---
+
+## 9. GitHub Actions CI/CD Build Pipeline
+
+Automated build and release packaging is implemented in `.github/workflows/build-and-release.yml`.
+
+### 9.1 Release Workflow
+* **Trigger:** Pushing a version tag matching `v*.*.*` (e.g., `git tag v0.2.0 && git push origin v0.2.0`).
+* **Toolchain:** Pinned nightly Rust toolchain with target `riscv32imc-esp-espidf`.
+* **Caching Architecture:**
+  * `Swatinem/rust-cache@v2`: Caches Cargo registry, index, and compiled workspace artifacts.
+  * `actions/cache@v4`: Caches `.embuild/` containing ESP-IDF v5 tools, CMake bindings, and toolchains.
+  * **Result:** Build times dropped from ~22 minutes down to ~5 minutes.
+* **Artifact Generation:**
+  * Compiles `firmware-rust/plant-firmware` in `--release` profile.
+  * Runs `espflash save-image --chip esp32c3` to generate unified flashable binary (`plant-firmware.bin`).
+  * Generates `version.json` with commit SHA and release metadata.
+  * Creates an official GitHub Release with downloadable binary assets.
+
+---
+
+## 10. Repository File Structure
 
 ```text
 plant-esp32/
-├── platformio.ini               # PlatformIO environment, board & library dependencies
-├── PROJECT.md                   # Complete specification and requirements reference (this file)
-├── pcb/                         # Hardware schematics, PCB fabrication, and circuit prototyping
-│   ├── smd/                     # Turnkey SMT / PCBA Edition with Solar/Battery UPS (Rev 2.3)
-│   │   ├── plant-esp32-smd.kicad_pcb # Production KiCad PCB layout (100% Basic Parts)
-│   │   ├── plant-esp32-smd.kicad_sch # Complete KiCad schematic with dual ADC
-│   │   ├── circuit_diagram_smd.html  # Interactive SVG circuit diagram & net visualizer
-│   │   ├── plant-esp32-smd_bom.csv   # JLCPCB SMT BOM (100% Basic Parts, $0 feeder fees)
-│   │   ├── plant-esp32-smd_hand_solder_bom.csv # Hand-solder through-hole connectors BOM
-│   │   ├── plant-esp32-smd_cpl.csv   # Pick-and-place centroid file
-│   │   ├── plant-esp32-smd_gerbers.zip # Fabrication Gerber and drill zip
-│   │   ├── generate_pcb_smd.py       # Automated PCB router & DRC compiler
-│   │   └── README.md                 # SMT ordering & assembly documentation
-│   ├── hole-thru/               # 100% Through-Hole Edition (Rev 2.0)
-│   │   ├── plant-esp32.kicad_pcb     # Production KiCad PCB layout
-│   │   ├── plant-esp32_gerbers.zip   # Fabrication Gerber and drill zip
-│   │   ├── generate_pcb.py           # Automated PCB layout script
-│   │   ├── breadboard_circuit_guide.md # 15-column breadboard guide
-│   │   ├── circuit_diagram.html      # Interactive breadboard SVG visualizer
-│   │   ├── perfboard_circuit_guide.md # 18x24 soldered perfboard guide
-│   │   ├── perfboard_diagram.html    # Interactive perfboard SVG visualizer
-│   │   └── README.md                 # Through-hole assembly documentation
-│   └── README.md                # Master hardware portal & edition comparison
-├── include/
-│   ├── config_schema.h          # Configuration structures and defaults
-│   ├── pin_definitions.h        # Board pinout mapping (GPIO 0, 1, 3, 4, 7, 8)
-│   ├── ring_buffer.h            # In-memory circular telemetry log buffer
-│   ├── safety_manager.h         # Cooldown, daily cap, night lockout, and pump limits
-│   └── sensor_manager.h         # Non-blocking HC-SR04, ADC calibration, soil & voltage
-├── src/
-│   ├── main.cpp                 # FreeRTOS tasks setup, core initialization
-│   ├── safety_manager.cpp       # Pump watchdog & safety enforcement
-│   ├── sensor_manager.cpp       # HC-SR04 timer capture & ADC reading routines
-│   └── web_server.cpp           # ESPAsyncWebServer routes, WebSockets, mDNS, OTA
-└── data/                        # LittleFS filesystem partition
-    ├── config.json              # Default user settings
-    ├── index.html               # Web dashboard interface
-    ├── app.js                   # Client-side JavaScript with relative API routing
-    └── style.css                # Responsive UI styling
+├── .github/
+│   └── workflows/
+│       └── build-and-release.yml # GitHub Actions CI/CD runner with caching
+├── firmware-rust/               # Bare-metal Rust workspace
+│   ├── Cargo.toml               # Workspace manifest
+│   ├── plant-core/              # Hardware-agnostic domain logic
+│   │   ├── Cargo.toml
+│   │   └── src/
+│   │       ├── config.rs        # Strongly-typed configuration contracts
+│   │       ├── lib.rs           # Core module declarations
+│   │       ├── safety.rs        # Watering limits & cooldown safety supervisor
+│   │       └── sensors.rs       # Range, moisture & voltage calculations
+│   └── plant-firmware/          # Hardware binary application
+│       ├── Cargo.toml
+│       ├── partitions.csv       # 4 MB Dual-Slot A/B OTA partition table
+│       ├── sdkconfig.defaults   # ESP-IDF configurations (rollback, HTTP client)
+│       └── src/
+│           ├── led.rs           # Deterministic multi-fault LED supervisor
+│           ├── main.rs          # App main, startup & background task spawning
+│           ├── ota.rs           # Dual-slot OTA download & upload engine
+│           ├── pins.rs          # Hardware GPIO definitions
+│           ├── pump.rs          # Pump gate driver & low-side control
+│           ├── sensors.rs       # ADC acquisition & ultrasonic pulse timing
+│           ├── storage.rs       # NVS flash configuration persistence
+│           ├── web.rs           # Embedded HTTP server & REST API handlers
+│           └── wifi.rs          # WPA3-SAE retry loop & SoftAP portal
+├── data/                        # Web dashboard assets (embedded into binary)
+│   ├── index.html               # Single-page dashboard & OTA changelog modal
+│   ├── app.js                   # REST API polling & update orchestration
+│   ├── style.css                # Modern responsive UI theme
+│   └── config.json              # Default factory configuration
+├── pcb/                         # Schematics and PCB fabrication files
+│   ├── smd/                     # Turnkey SMT Edition with Solar/Battery UPS (Rev 2.3)
+│   └── hole-thru/               # Through-Hole & Perfboard Edition (Rev 2.0)
+└── PROJECT.md                   # System specification & architecture reference (this file)
 ```
-
----
-
-## 10. Low-Power Management & Idle Optimization
-
-### 10.1 Strategy 1: Always-Online Low-Power (Implemented)
-* **Wi-Fi Modem Sleep (`WIFI_PS_MIN_MODEM`):** Radio powers down between 802.11 AP DTIM beacons (~100–300 ms). Wakes within microseconds upon incoming TCP/HTTP packets. Zero latency perceived by browser clients.
-* **CPU Downclocking:** Microcontroller clocked at 80 MHz (reduced from 160 MHz default).
-* **Power Savings:** Reduces idle draw from ~110 mA (~0.55 W) down to ~20 mA (~0.10 W) — an ~82% reduction with zero hardware changes.
-
-### 10.2 Strategy 2: Sensor Power Gating (Under Discussion)
-* **Capacitive Soil Sensor Duty-Cycling:** Capacitive sensor draws 6–8 mA continuously at 3.3V. Powering it via an unassigned GPIO (e.g., GPIO 2 on Col 6 Top) allows energizing the sensor only for the 50 ms required during active reading cycles.
-* **Benefits:** Eliminates 6–8 mA continuous quiescent draw and stops continuous DC bias in soil, drastically reducing galvanic corrosion and sensor drift.
