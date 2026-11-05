@@ -193,9 +193,13 @@ impl HardwareSensorManager {
         divider_volts(self.read_adc_mv(PIN_SUPPLY_MONITOR_ADC))
     }
 
-    /// Reads 18650 battery voltage via 100k/100k divider.
+    /// Reads 18650 battery voltage via divider (returns 0.0V if unpopulated).
     pub fn read_battery_voltage(&self) -> f32 {
-        divider_volts(self.read_adc_mv(PIN_BATTERY_MONITOR_ADC))
+        if PIN_BATTERY_MONITOR_ADC < 0 {
+            0.0
+        } else {
+            divider_volts(self.read_adc_mv(PIN_BATTERY_MONITOR_ADC))
+        }
     }
 
     /// Reads ESP32-C3 internal silicon temperature in Celsius.
