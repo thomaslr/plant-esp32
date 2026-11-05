@@ -6,6 +6,9 @@ CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_80=y
 # FreeRTOS 1000 Hz tick rate for 1ms precision
 CONFIG_FREERTOS_HZ=1000
 
+# Main Task Stack Size (Rust + Serde + Wi-Fi requires > 8KB)
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=16384
+
 # Panic behavior: print backtrace and reboot
 CONFIG_ESP_SYSTEM_PANIC_PRINT_REBOOT=y
 

@@ -38,7 +38,7 @@ impl NvsConfigStorage {
 
     /// Loads the stored `AppConfig`. Falls back to default if not found or invalid.
     pub fn load(&self) -> AppConfig {
-        let mut buf = [0u8; BUFFER_SIZE];
+        let mut buf = vec![0u8; BUFFER_SIZE];
         match self.nvs_cfg.get_str(NVS_KEY_CONFIG, &mut buf) {
             Ok(Some(json_str)) => match serde_json::from_str::<AppConfig>(json_str) {
                 Ok(cfg) => {
