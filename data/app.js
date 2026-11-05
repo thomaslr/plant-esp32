@@ -13,10 +13,14 @@ const DEFAULT_CONFIG = {
         battery: { min_warning: 3.3, optimal_min: 3.7 },
         temperature: { optimal_max: 55.0, high_warning: 70.0 }
     },
+    timing: {
+        sensor_read_interval_sec: 3600,
+        automated_water_duration_sec: 30
+    },
     safety: {
         max_continuous_pump_sec: 60,
         min_time_between_cycles_sec: 300,
-        daily_watering_limit: { enabled: true, max_seconds_per_day: 60 }
+        daily_watering_limit: { enabled: true, max_seconds_per_day: 93 }
     }
 };
 
@@ -347,6 +351,7 @@ function loadConfigToForm() {
     const v = g.voltage || {};
     const b = g.battery || {};
     const t = g.temperature || {};
+    const tm = appConfig.timing || {};
     const s = appConfig.safety || {};
     const d = s.daily_watering_limit || {};
 
@@ -374,6 +379,9 @@ function loadConfigToForm() {
     if (s.max_continuous_pump_sec !== undefined) document.getElementById('cfg-safe-max-pump').value = s.max_continuous_pump_sec;
     if (s.min_time_between_cycles_sec !== undefined) document.getElementById('cfg-safe-cooldown').value = s.min_time_between_cycles_sec;
     if (d.max_seconds_per_day !== undefined) document.getElementById('cfg-safe-daily-limit').value = d.max_seconds_per_day;
+
+    if (tm.sensor_read_interval_sec !== undefined) document.getElementById('cfg-timing-read-interval').value = tm.sensor_read_interval_sec;
+    if (tm.automated_water_duration_sec !== undefined) document.getElementById('cfg-timing-auto-water-duration').value = tm.automated_water_duration_sec;
 }
 
 async function handleConfigSubmit(e) {
@@ -422,6 +430,10 @@ async function handleConfigSubmit(e) {
                 enabled: true,
                 max_seconds_per_day: parseInt(document.getElementById('cfg-safe-daily-limit').value, 10)
             }
+        },
+        timing: {
+            sensor_read_interval_sec: parseInt(document.getElementById('cfg-timing-read-interval').value, 10),
+            automated_water_duration_sec: parseInt(document.getElementById('cfg-timing-auto-water-duration').value, 10)
         }
     };
 
@@ -445,6 +457,8 @@ async function handleConfigSubmit(e) {
         Object.assign(appConfig.gauges.battery, patch.gauges.battery);
         Object.assign(appConfig.gauges.temperature, patch.gauges.temperature);
         Object.assign(appConfig.safety, patch.safety);
+        if (!appConfig.timing) appConfig.timing = {};
+        Object.assign(appConfig.timing, patch.timing);
 
         // Immediately redraw dashboard dials with new zone thresholds
         renderAllDialZones();
@@ -722,7 +736,10 @@ function updateFullStatusUI(data) {
     if (data.pump) {
         document.getElementById('pump-inhibit-reason').innerText = data.pump.status_message || 'Normal';
         document.getElementById('pump-cooldown').innerText = `${data.pump.cooldown_remaining_sec}s`;
-        document.getElementById('pump-daily').innerText = `${data.pump.daily_used_sec}s / 60s max`;
+        const maxDaily = (appConfig && appConfig.safety && appConfig.safety.daily_watering_limit)
+            ? appConfig.safety.daily_watering_limit.max_seconds_per_day
+            : 93;
+        document.getElementById('pump-daily').innerText = `${data.pump.daily_used_sec}s / ${maxDaily}s max`;
     }
 
     // Host & System Info

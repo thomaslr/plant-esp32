@@ -24,6 +24,7 @@ use std::time::Duration;
 use esp_idf_svc::eventloop::EspSystemEventLoop;
 use esp_idf_svc::hal::peripherals::Peripherals;
 use esp_idf_svc::log::EspLogger;
+use esp_idf_svc::mdns::EspMdns;
 use esp_idf_svc::nvs::EspDefaultNvsPartition;
 use esp_idf_svc::sntp::EspSntp;
 use esp_idf_svc::sys::{esp_timer_get_time, link_patches};
@@ -122,7 +123,26 @@ fn main() -> anyhow::Result<()> {
                 info!("[NTP] SNTP client initialized for time synchronization");
             }
 
-            // 9. Construct shared application state
+            // 9. Initialize mDNS Responder (e.g. plants.local or plants1.local)
+            let _mdns = match EspMdns::take() {
+                Ok(mut mdns) => {
+                    let host = &config.system.hostname;
+                    if let Err(e) = mdns.set_hostname(host) {
+                        warn!("[mDNS] Failed to set hostname '{}': {:?}", host, e);
+                    } else {
+                        info!("[mDNS] Responder active at http://{}.local", host);
+                    }
+                    let _ = mdns.set_instance_name(&format!("Plant Monitor ({})", host));
+                    let _ = mdns.add_service(None, "_http", "_tcp", 80, &[("board", "esp32c3")]);
+                    Some(mdns)
+                }
+                Err(e) => {
+                    warn!("[mDNS] Failed to initialize mDNS: {:?}", e);
+                    None
+                }
+            };
+
+            // 10. Construct shared application state
             let state = Arc::new(Mutex::new(AppState {
                 config: config.clone(),
                 safety,
@@ -133,7 +153,7 @@ fn main() -> anyhow::Result<()> {
                 wifi_rssi: -60,
             }));
 
-            // 10. Start Embedded HTTP Web Server
+            // 11. Start Embedded HTTP Web Server
             let _server = match create_web_server(Arc::clone(&state)) {
                 Ok(srv) => {
                     info!("[SYS] HTTP server and REST endpoints listening on port 80");
@@ -145,9 +165,12 @@ fn main() -> anyhow::Result<()> {
                 }
             };
 
-            // Prevent server and wifi from being dropped
+            // Prevent server, mdns and wifi from being dropped
             if let Some(srv) = _server {
                 core::mem::forget(srv);
+            }
+            if let Some(mdns) = _mdns {
+                core::mem::forget(mdns);
             }
             core::mem::forget(wifi_handle);
 

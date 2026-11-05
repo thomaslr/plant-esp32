@@ -365,20 +365,20 @@ mod tests {
     fn daily_limit_counts_actual_runtime_and_blocks() {
         let mut m = mgr_no_night();
         let mut t = 0u32;
-        // 60 s/day cap, 20 s cycles, 300 s cooldown: 3 cycles fit, the 4th doesn't.
+        // 93 s/day cap, 30 s cycles, 300 s cooldown: 3 cycles fit (90s), 4th would exceed (90+30 > 93).
         for _ in 0..3 {
-            m.request_watering(t, 20, "auto", 10.0, DAY).unwrap();
-            t += 20_000;
+            m.request_watering(t, 30, "auto", 10.0, DAY).unwrap();
+            t += 30_000;
             m.tick(t);
             t += 300_000;
         }
-        assert_eq!(m.daily_runtime_sec(), 60);
-        let e = m.request_watering(t, 20, "auto", 10.0, DAY).unwrap_err();
-        assert_eq!(e, Inhibit::DailyLimit { used_sec: 60, max_sec: 60 });
-        assert_eq!(m.last_inhibit_reason(), "Inhibited: Daily limit reached (60/60s used)");
+        assert_eq!(m.daily_runtime_sec(), 90);
+        let e = m.request_watering(t, 30, "auto", 10.0, DAY).unwrap_err();
+        assert_eq!(e, Inhibit::DailyLimit { used_sec: 90, max_sec: 93 });
+        assert_eq!(m.last_inhibit_reason(), "Inhibited: Daily limit reached (90/93s used)");
 
         m.reset_daily_quota();
-        assert!(m.request_watering(t, 20, "auto", 10.0, DAY).is_ok());
+        assert!(m.request_watering(t, 30, "auto", 10.0, DAY).is_ok());
     }
 
     #[test]

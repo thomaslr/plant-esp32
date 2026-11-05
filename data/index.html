@@ -402,8 +402,29 @@
                         </div>
                         <div class="form-group">
                             <label for="cfg-safe-daily-limit">Daily Watering Cap (s):</label>
-                            <input type="number" id="cfg-safe-daily-limit" min="10" max="600" step="5" required>
-                            <span class="field-hint">Maximum cumulative pump run-time allowed in 24 hours.</span>
+                            <input type="number" id="cfg-safe-daily-limit" min="10" max="600" step="1" required>
+                            <span class="field-hint">Maximum cumulative pump run-time allowed in 24 hours (default: 93s).</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 6: Timing & Automation Intervals -->
+                <div class="card settings-section">
+                    <div class="section-title">
+                        <span class="card-icon">⏱️</span>
+                        <h3>Timing & Automation Intervals</h3>
+                    </div>
+                    <p class="section-desc">Frequency of automated soil moisture checks and automated pump run duration.</p>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="cfg-timing-read-interval">Moisture Check Interval (s):</label>
+                            <input type="number" id="cfg-timing-read-interval" min="5" max="86400" step="1" required>
+                            <span class="field-hint">How often the system reads sensors & checks soil moisture (default: 3600s / 1 hr).</span>
+                        </div>
+                        <div class="form-group">
+                            <label for="cfg-timing-auto-water-duration">Automated Watering Duration (s):</label>
+                            <input type="number" id="cfg-timing-auto-water-duration" min="1" max="180" step="1" required>
+                            <span class="field-hint">Pump run time when automatic watering triggers (default: 30s).</span>
                         </div>
                     </div>
                 </div>

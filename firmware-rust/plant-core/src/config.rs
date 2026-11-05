@@ -132,8 +132,8 @@ impl Default for TimingConfig {
         Self {
             startup_delay_sec: 30,
             check_interval_sec: 3600,
-            sensor_read_interval_sec: 600,
-            automated_water_duration_sec: 20,
+            sensor_read_interval_sec: 3600,
+            automated_water_duration_sec: 30,
             manual_water_duration_sec: 10,
         }
     }
@@ -148,7 +148,7 @@ pub struct DailyLimitConfig {
 
 impl Default for DailyLimitConfig {
     fn default() -> Self {
-        Self { enabled: true, max_seconds_per_day: 60 }
+        Self { enabled: true, max_seconds_per_day: 93 }
     }
 }
 
@@ -306,6 +306,18 @@ impl AppConfig {
                 }
             }
         }
+        if let Some(ref t) = patch.timing {
+            if let Some(r) = t.sensor_read_interval_sec {
+                if r < 5 {
+                    return Err("sensor_read_interval_sec must be at least 5".to_string());
+                }
+            }
+            if let Some(w) = t.automated_water_duration_sec {
+                if w == 0 {
+                    return Err("automated_water_duration_sec must be at least 1".to_string());
+                }
+            }
+        }
 
         // Application phase
         if let Some(ref sys) = patch.system {
@@ -345,6 +357,11 @@ impl AppConfig {
                 if let Some(m) = d.max_seconds_per_day { self.safety.daily_watering_limit.max_seconds_per_day = m; }
             }
         }
+        if let Some(ref t) = patch.timing {
+            if let Some(r) = t.sensor_read_interval_sec { self.timing.sensor_read_interval_sec = r; }
+            if let Some(w) = t.automated_water_duration_sec { self.timing.automated_water_duration_sec = w; }
+            if let Some(m) = t.manual_water_duration_sec { self.timing.manual_water_duration_sec = m; }
+        }
         Ok(())
     }
 }
@@ -355,6 +372,14 @@ pub struct ConfigPatch {
     pub system: Option<SystemPatch>,
     pub gauges: Option<GaugesPatch>,
     pub safety: Option<SafetyPatch>,
+    pub timing: Option<TimingPatch>,
+}
+
+#[derive(Debug, Clone, Default, Deserialize)]
+pub struct TimingPatch {
+    pub sensor_read_interval_sec: Option<u32>,
+    pub automated_water_duration_sec: Option<u32>,
+    pub manual_water_duration_sec: Option<u32>,
 }
 
 #[derive(Debug, Clone, Default, Deserialize)]
@@ -434,7 +459,7 @@ mod tests {
         assert_eq!(c.gauges.water_level.tank_height_cm, 30.0);
         assert_eq!(c.gauges.water_level.min_safe_level_cm, 2.0);
         assert_eq!(c.timing.startup_delay_sec, 30);
-        assert_eq!(c.timing.sensor_read_interval_sec, 600);
+        assert_eq!(c.timing.sensor_read_interval_sec, 3600);
         assert_eq!(c.safety.max_continuous_pump_sec, 60);
         assert_eq!(c.safety.min_time_between_cycles_sec, 300);
         assert!(c.safety.daily_watering_limit.enabled);
