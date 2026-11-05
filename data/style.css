@@ -433,6 +433,11 @@ header {
     margin-bottom: 24px;
 }
 
+.diag-page-grid {
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    margin-bottom: 24px;
+}
+
 @media (max-width: 768px) {
     .diag-grid {
         grid-template-columns: 1fr;

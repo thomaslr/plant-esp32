@@ -14,7 +14,7 @@
             <div class="header-title">
                 <h1>🌱 Plant Monitor P2</h1>
                 <span class="badge" id="host-badge">plants.local</span>
-                <span class="badge" id="version-badge" style="background: #1e293b; color: #38bdf8; border: 1px solid #334155; font-size: 0.75rem;">v0.2.0 🌟</span>
+                <span class="badge" id="version-badge" style="background: #1e293b; color: #38bdf8; border: 1px solid #334155; font-size: 0.75rem;">v0.2.1 🌟</span>
             </div>
             <div class="header-status">
                 <span id="conn-status" class="dot dot-disconnected"></span>
@@ -25,6 +25,7 @@
         <!-- Navigation Tabs -->
         <nav class="nav-tabs">
             <button type="button" class="nav-tab active" id="tab-btn-dash">📊 Dashboard</button>
+            <button type="button" class="nav-tab" id="tab-btn-diag">🔧 Diagnostics</button>
             <button type="button" class="nav-tab" id="tab-btn-cfg">⚙️ Settings & Thresholds</button>
         </nav>
 
@@ -192,10 +193,47 @@
                 </div>
             </div>
 
-            <!-- Diagnostics & System Info -->
-            <div class="grid diag-grid">
+            <!-- Recent Sensor Log -->
+            <div class="card" style="margin-bottom: 24px;">
+                <div class="log-header">
+                    <h3>Recent Sensor Log</h3>
+                    <button id="btn-refresh-logs" class="btn btn-small">Refresh</button>
+                </div>
+                <div class="table-container">
+                    <table id="log-table">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Soil</th>
+                                <th>Water</th>
+                                <th>Supply</th>
+                                <th>Temp</th>
+                            </tr>
+                        </thead>
+                        <tbody id="log-body">
+                            <tr><td colspan="5" style="text-align:center;">Loading logs...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- =================================================================== -->
+        <!-- HARDWARE DIAGNOSTICS & SYSTEM CONTROLS VIEW                         -->
+        <!-- =================================================================== -->
+        <div id="view-diagnostics" style="display: none;">
+            <div class="settings-header">
+                <h2>🔧 Hardware Diagnostics & System Controls</h2>
+                <p>Real-time microcontroller metrics, network status, peripheral reset tools, and over-the-air firmware updates.</p>
+            </div>
+
+            <div class="grid diag-page-grid">
+                <!-- Card 1: Network & Hardware Health -->
                 <div class="card">
-                    <h3>Hardware Diagnostics</h3>
+                    <div class="card-header">
+                        <h3>Hardware Diagnostics</h3>
+                        <span class="card-icon">🎛️</span>
+                    </div>
                     <ul class="diag-list">
                         <li><span>IP Address:</span> <strong id="diag-ip">--</strong></li>
                         <li><span>mDNS Host:</span> <strong id="diag-mdns">plants.local</strong></li>
@@ -203,17 +241,22 @@
                         <li><span>System Uptime:</span> <strong id="diag-uptime">--</strong></li>
                         <li><span>Preventive Resets:</span> <strong id="diag-resets">0</strong></li>
                     </ul>
-                    <button id="btn-sensor-reset" class="btn btn-secondary">Force Ultrasonic Reset</button>
+                    <button id="btn-sensor-reset" class="btn btn-secondary" style="width: 100%; margin-top: 14px;">Force Ultrasonic Reset</button>
                     <div style="display: flex; gap: 8px; margin-top: 8px;">
                         <button id="btn-diag-reboot" class="btn btn-warning" style="flex: 1; margin-top: 0;">Reboot Device</button>
                         <button id="btn-wifi-reset" class="btn btn-secondary" style="flex: 1; margin-top: 0;">Reset Wi-Fi</button>
                     </div>
+                </div>
 
-                    <hr style="border: 0; border-top: 1px solid #30363d; margin: 14px 0 10px 0;">
-                    <h4 style="margin: 0 0 8px 0; font-size: 14px; color: #8b949e;">Firmware & OTA Updates</h4>
-                    <ul class="diag-list" style="margin-bottom: 10px;">
-                        <li><span>Firmware:</span> <strong id="diag-ota-ver">v0.1.0</strong></li>
-                        <li><span>Boot Slot:</span> <strong id="diag-ota-slot">--</strong></li>
+                <!-- Card 2: Firmware & Dual-Slot OTA Management -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Firmware & OTA Updates</h3>
+                        <span class="card-icon">🚀</span>
+                    </div>
+                    <ul class="diag-list" style="margin-bottom: 14px;">
+                        <li><span>Installed Firmware:</span> <strong id="diag-ota-ver">v0.2.0</strong></li>
+                        <li><span>Active Boot Slot:</span> <strong id="diag-ota-slot">--</strong></li>
                     </ul>
                     <div style="display: flex; gap: 8px;">
                         <button id="btn-ota-check" class="btn btn-primary" style="flex: 1;">Check GitHub Update</button>
@@ -222,30 +265,7 @@
                             <input type="file" id="file-ota-upload" accept=".bin" style="display: none;">
                         </label>
                     </div>
-                    <div id="ota-msg" style="font-size: 12px; margin-top: 8px; color: #8b949e; display: none;"></div>
-                </div>
-
-                <div class="card">
-                    <div class="log-header">
-                        <h3>Recent Sensor Log</h3>
-                        <button id="btn-refresh-logs" class="btn btn-small">Refresh</button>
-                    </div>
-                    <div class="table-container">
-                        <table id="log-table">
-                            <thead>
-                                <tr>
-                                    <th>Time</th>
-                                    <th>Soil</th>
-                                    <th>Water</th>
-                                    <th>Supply</th>
-                                    <th>Temp</th>
-                                </tr>
-                            </thead>
-                            <tbody id="log-body">
-                                <tr><td colspan="5" style="text-align:center;">Loading logs...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
+                    <div id="ota-msg" style="font-size: 13px; margin-top: 10px; color: #8b949e; display: none;"></div>
                 </div>
             </div>
         </div>

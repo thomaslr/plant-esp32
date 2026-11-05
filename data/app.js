@@ -29,6 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Tabs setup
     document.getElementById('tab-btn-dash').addEventListener('click', () => switchTab('dashboard'));
+    document.getElementById('tab-btn-diag').addEventListener('click', () => switchTab('diagnostics'));
     document.getElementById('tab-btn-cfg').addEventListener('click', () => switchTab('settings'));
 
     // Buttons
@@ -62,21 +63,26 @@ document.addEventListener('DOMContentLoaded', () => {
 // =============================================================================
 function switchTab(tab) {
     const btnDash = document.getElementById('tab-btn-dash');
+    const btnDiag = document.getElementById('tab-btn-diag');
     const btnCfg = document.getElementById('tab-btn-cfg');
     const viewDash = document.getElementById('view-dashboard');
+    const viewDiag = document.getElementById('view-diagnostics');
     const viewCfg = document.getElementById('view-settings');
 
-    if (tab === 'dashboard') {
-        btnDash.classList.add('active');
-        btnCfg.classList.remove('active');
-        viewDash.style.display = 'block';
-        viewCfg.style.display = 'none';
+    btnDash.classList.toggle('active', tab === 'dashboard');
+    btnDiag.classList.toggle('active', tab === 'diagnostics');
+    btnCfg.classList.toggle('active', tab === 'settings');
+
+    viewDash.style.display = tab === 'dashboard' ? 'block' : 'none';
+    viewDiag.style.display = tab === 'diagnostics' ? 'block' : 'none';
+    viewCfg.style.display = tab === 'settings' ? 'block' : 'none';
+
+    if (tab === 'dashboard' && lastTelemetry) {
+        updateTelemetryUI(lastTelemetry);
+    } else if (tab === 'diagnostics') {
+        fetchOtaStatus();
         if (lastTelemetry) updateTelemetryUI(lastTelemetry);
-    } else {
-        btnCfg.classList.add('active');
-        btnDash.classList.remove('active');
-        viewDash.style.display = 'none';
-        viewCfg.style.display = 'block';
+    } else if (tab === 'settings') {
         loadConfigToForm();
     }
 }
