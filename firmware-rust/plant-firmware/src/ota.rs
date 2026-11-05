@@ -5,6 +5,7 @@
 //! 2. Direct browser binary upload via REST API.
 //! 3. Automatic rollback cancellation (`mark_running_app_valid`).
 
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 use embedded_svc::http::Method;
 use embedded_svc::io::Read;
@@ -14,6 +15,20 @@ use log::{info, warn};
 
 pub const DEFAULT_GITHUB_OTA_URL: &str =
     "https://github.com/thomaslr/plant-esp32/releases/latest/download/plant-firmware.bin";
+
+static OTA_IN_PROGRESS: AtomicBool = AtomicBool::new(false);
+
+/// Returns true when an OTA download or binary flash operation is actively executing.
+pub fn is_ota_in_progress() -> bool {
+    OTA_IN_PROGRESS.load(Ordering::Relaxed)
+}
+
+struct OtaGuard;
+impl Drop for OtaGuard {
+    fn drop(&mut self) {
+        OTA_IN_PROGRESS.store(false, Ordering::SeqCst);
+    }
+}
 
 /// Details about running and available OTA partitions.
 #[derive(serde::Serialize, Clone, Debug)]
@@ -72,17 +87,24 @@ pub fn get_ota_status() -> OtaStatus {
 /// Streams a new firmware image from an HTTPS URL (e.g. GitHub Releases) into the next OTA slot.
 pub fn update_from_url(url: &str) -> Result<(), String> {
     info!("[OTA] Starting OTA download from: {}", url);
+    OTA_IN_PROGRESS.store(true, Ordering::SeqCst);
+    let _guard = OtaGuard;
 
     let mut ota = EspOta::new().map_err(|e| format!("Failed to initialize OTA: {:?}", e))?;
     let mut update = ota
         .initiate_update()
         .map_err(|e| format!("Failed to initiate OTA update: {:?}", e))?;
 
+    // GitHub Releases download requires following 2 redirects, ending in a ~1.2 KB
+    // signed Azure/AWS S3 blob URL with long auth tokens.
+    // buffer_size_tx must be large enough (e.g. 4096 bytes) so esp_http_client
+    // does not error with "HTTP_CLIENT: Out of buffer".
     let config = HttpConfig {
         follow_redirects_policy: FollowRedirectsPolicy::FollowGetHead,
         crt_bundle_attach: Some(esp_idf_svc::sys::esp_crt_bundle_attach),
-        buffer_size: Some(4096),
-        timeout: Some(Duration::from_secs(45)),
+        buffer_size: Some(8192),
+        buffer_size_tx: Some(4096),
+        timeout: Some(Duration::from_secs(60)),
         ..Default::default()
     };
 
@@ -157,6 +179,8 @@ pub fn update_from_url(url: &str) -> Result<(), String> {
 /// Writes incoming binary data chunks (e.g. from local browser file upload) to the OTA partition.
 pub fn flash_stream<R: Read>(mut reader: R, expected_len: usize) -> Result<(), String> {
     info!("[OTA] Flashing firmware from stream (expected: {} bytes)...", expected_len);
+    OTA_IN_PROGRESS.store(true, Ordering::SeqCst);
+    let _guard = OtaGuard;
 
     let mut ota = EspOta::new().map_err(|e| format!("Failed to initialize OTA: {:?}", e))?;
     let mut update = ota

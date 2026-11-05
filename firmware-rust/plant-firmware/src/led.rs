@@ -166,6 +166,9 @@ fn play_idle_heartbeat(state: &Arc<Mutex<AppState>>) {
     // 9950ms OFF with responsive exit
     for _ in 0..100 {
         thread::sleep(Duration::from_millis(100));
+        if crate::ota::is_ota_in_progress() {
+            break;
+        }
         let status = query_status(state);
         if status.pump_active || !status.wifi_connected || !status.active_faults.is_empty() {
             break;
@@ -181,6 +184,12 @@ pub fn run_led_supervisor(state: Arc<Mutex<AppState>>) -> ! {
     info!("[LED] LED Supervisor started (Approach 2: Round-Robin multi-fault rotation)");
 
     loop {
+        // 0. Super-Priority: Firmware OTA Flashing Active (Fast 10 Hz strobe: 50ms ON / 50ms OFF)
+        if crate::ota::is_ota_in_progress() {
+            pulse(50, 50);
+            continue;
+        }
+
         let status = query_status(&state);
 
         // 1. Highest Priority: Watering Active (Solid ON while pump runs)

@@ -1,6 +1,6 @@
 [package]
 name = "plant-firmware"
-version = "0.1.7"
+version = "0.1.9"
 edition = "2021"
 
 [dependencies]
