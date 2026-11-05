@@ -62,7 +62,8 @@ fn main() -> anyhow::Result<()> {
     // 4. Resolve saved Wi-Fi credentials (NVS first, secrets.rs developer fallback second)
     let saved_wifi = storage.load_wifi().or_else(|| {
         if !WIFI_SSID.is_empty() && WIFI_SSID != "YOUR_WIFI_SSID" {
-            info!("[WIFI] Using developer credentials from secrets.rs");
+            info!("[WIFI] Using developer credentials from secrets.rs and saving to NVS");
+            let _ = storage.save_wifi(WIFI_SSID, WIFI_PASSWORD);
             Some(WifiCredentials {
                 ssid: WIFI_SSID.to_string(),
                 password: WIFI_PASSWORD.to_string(),

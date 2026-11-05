@@ -88,7 +88,7 @@ function initWebSocket() {
         ws = new WebSocket(wsUrl);
 
         ws.onopen = () => {
-            setConnectionStatus(true);
+            setConnectionStatus('ws');
             if (pollTimer) {
                 clearInterval(pollTimer);
                 pollTimer = null;
@@ -107,7 +107,6 @@ function initWebSocket() {
         };
 
         ws.onclose = () => {
-            setConnectionStatus(false);
             if (!pollTimer) {
                 pollTimer = setInterval(fetchStatus, 5000);
             }
@@ -118,20 +117,22 @@ function initWebSocket() {
             ws.close();
         };
     } catch (e) {
-        setConnectionStatus(false);
         if (!pollTimer) pollTimer = setInterval(fetchStatus, 5000);
     }
 }
 
-function setConnectionStatus(connected) {
+function setConnectionStatus(mode) {
     const dot = document.getElementById('conn-status');
     const text = document.getElementById('conn-text');
-    if (connected) {
+    if (mode === 'ws') {
         dot.className = 'dot dot-connected';
-        text.innerText = 'Real-time (WS)';
+        text.innerText = 'Live (WS)';
+    } else if (mode === 'http') {
+        dot.className = 'dot dot-connected';
+        text.innerText = 'Online (5s)';
     } else {
         dot.className = 'dot dot-disconnected';
-        text.innerText = 'Polling (HTTP)';
+        text.innerText = 'Offline';
     }
 }
 
@@ -160,8 +161,10 @@ async function fetchStatus() {
         const res = await fetch('/api/status');
         if (!res.ok) throw new Error("HTTP " + res.status);
         const data = await res.json();
+        setConnectionStatus('http');
         updateFullStatusUI(data);
     } catch (err) {
+        setConnectionStatus('offline');
         console.warn("Status fetch failed:", err);
     }
 }
