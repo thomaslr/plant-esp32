@@ -42,6 +42,21 @@ pub fn is_valid_distance(cm: f32) -> bool {
     (MIN_VALID_DISTANCE_CM..=MAX_VALID_DISTANCE_CM).contains(&cm)
 }
 
+/// Plausible operational range for capacitive soil moisture sensor raw ADC reading (in mV).
+///
+/// Typical readings:
+/// - Bone dry air: ~2600 - 2900 mV
+/// - Fully submerged in water: ~1000 - 1300 mV
+/// - Disconnected probe / broken trace / dead 555 timer: < 300 mV
+/// - Short circuit to 3.3V rail: > 3200 mV
+pub const MIN_VALID_SOIL_RAW_MV: i32 = 300;
+pub const MAX_VALID_SOIL_RAW_MV: i32 = 3200;
+
+/// Returns true if the raw soil probe ADC voltage is within plausible operational bounds.
+pub fn is_valid_soil_raw(raw_mv: i32) -> bool {
+    (MIN_VALID_SOIL_RAW_MV..=MAX_VALID_SOIL_RAW_MV).contains(&raw_mv)
+}
+
 /// Capacitive soil probes have an *inverted* curve: high millivolts in dry
 /// air, low when submerged. Returns 0-100 %. `dry == wet` returns 0.
 pub fn soil_percent(raw_mv: i32, dry_mv: i32, wet_mv: i32) -> f32 {
@@ -116,6 +131,19 @@ mod tests {
         assert!(!is_valid_distance(400.01));
         assert!(!is_valid_distance(-1.0));
         assert!(!is_valid_distance(f32::NAN));
+    }
+
+    #[test]
+    fn soil_raw_validity_range() {
+        assert!(!is_valid_soil_raw(0));
+        assert!(!is_valid_soil_raw(150));
+        assert!(!is_valid_soil_raw(299));
+        assert!(is_valid_soil_raw(300));
+        assert!(is_valid_soil_raw(1100)); // typical wet
+        assert!(is_valid_soil_raw(2800)); // typical dry
+        assert!(is_valid_soil_raw(3200));
+        assert!(!is_valid_soil_raw(3201));
+        assert!(!is_valid_soil_raw(3300));
     }
 
     #[test]

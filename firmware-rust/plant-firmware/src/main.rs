@@ -1,11 +1,13 @@
 //! Main entry point for the Plant ESP32-C3 Firmware in Rust.
 //!
 //! Replaces the PlatformIO / Arduino / FreeRTOS C++ firmware.
-//! Spawns three concurrent tasks:
+//! Spawns four concurrent tasks:
 //! 1. Safety Supervisor Task (20 Hz / 50ms): Evaluates runtime limits, dry tank cutoffs, and cooldowns.
 //! 2. Sensor Acquisition Task: Reads ADC voltages, soil moisture (duty-cycled), and ultrasonic level.
 //! 3. Network & Time Supervisor: Maintains Wi-Fi, synchronizes NTP time, and resets daily watering quota at midnight.
+//! 4. Visual Status LED Supervisor: Dedicated Round-Robin status signaling on GPIO 8.
 
+mod led;
 mod pins;
 mod pump;
 mod secrets;
@@ -29,6 +31,7 @@ use plant_core::ring_buffer::RingBuffer;
 use plant_core::safety::SafetyManager;
 use plant_core::timeutil::{local_day, local_hour, MidnightTracker};
 
+use crate::led::run_led_supervisor;
 use crate::pump::HardwarePumpGate;
 use crate::secrets::{WIFI_PASSWORD, WIFI_SSID};
 use crate::sensors::HardwareSensorManager;
@@ -242,6 +245,15 @@ fn main() -> anyhow::Result<()> {
                     app.safety.reset_daily_quota();
                 }
             }
+        })?;
+
+    // 13. Task 4: Visual Status LED Supervisor (Priority: NORMAL, Round-Robin Faults)
+    let s_led = Arc::clone(&state);
+    thread::Builder::new()
+        .name("LedSupervisor".to_string())
+        .stack_size(4096)
+        .spawn(move || {
+            run_led_supervisor(s_led);
         })?;
 
     info!("[SYS] All background tasks successfully spawned. System running.");
