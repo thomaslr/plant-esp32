@@ -261,7 +261,11 @@ async function fetchOtaStatus() {
         if (!res.ok) return;
         const data = await res.json();
         if (data.firmware_version) {
-            document.getElementById('diag-ota-ver').innerText = `v${data.firmware_version}`;
+            const ver = `v${data.firmware_version.replace(/^v/, '')}`;
+            const diagVer = document.getElementById('diag-ota-ver');
+            if (diagVer) diagVer.innerText = ver;
+            const badge = document.getElementById('version-badge');
+            if (badge) badge.innerText = `${ver} 📈`;
         }
         if (data.running_slot) {
             document.getElementById('diag-ota-slot').innerText = `${data.running_slot} (Next: ${data.next_update_slot})`;
