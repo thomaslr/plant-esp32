@@ -440,7 +440,7 @@ fn send_file(
 ) -> Result<(), EspIOError> {
     let headers = [
         ("Content-Type", content_type),
-        ("Cache-Control", "public, max-age=3600"),
+        ("Cache-Control", "no-cache, must-revalidate"),
     ];
     let mut resp = req.into_response(200, Some("OK"), &headers)?;
     let _ = resp.write_all(content.as_bytes());
