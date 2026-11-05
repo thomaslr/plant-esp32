@@ -32,7 +32,6 @@ jobs:
         uses: dtolnay/rust-toolchain@nightly
         with:
           toolchain: nightly-2026-04-01
-          targets: riscv32imc-esp-espidf
           components: rust-src
 
       - name: Install ldproxy & espflash
