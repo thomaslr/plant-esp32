@@ -73,6 +73,9 @@ fn main() -> anyhow::Result<()> {
         }
     });
 
+    // Remember whether we have credentials worth retrying if the router was unreachable at boot.
+    let had_saved_wifi = saved_wifi.is_some();
+
     // 5. Connect to Wi-Fi (Station Mode) or launch Captive Portal (Provisioning SoftAP)
     let wifi_state = start_wifi(
         peripherals.modem,
@@ -100,10 +103,20 @@ fn main() -> anyhow::Result<()> {
             core::mem::forget(srv);
             core::mem::forget(wifi_handle);
 
-            // Fast LED blink (100ms ON / 100ms OFF) to indicate setup mode
+            // Fast LED blink (100ms ON / 100ms OFF) to indicate setup mode.
+            // If we have saved credentials (router was just temporarily unreachable),
+            // self-heal by rebooting after 5 minutes to retry them instead of staying
+            // stuck in the setup hotspot forever.
             init_led_hardware();
+            let provisioning_started = std::time::Instant::now();
             loop {
                 pulse_setup();
+                if had_saved_wifi && provisioning_started.elapsed() > Duration::from_secs(300) {
+                    warn!("[WIFI] Still offline with saved credentials. Rebooting to retry...");
+                    unsafe {
+                        esp_idf_svc::sys::esp_restart();
+                    }
+                }
             }
         }
         WifiState::StationConnected {

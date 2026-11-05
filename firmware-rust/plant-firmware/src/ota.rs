@@ -101,7 +101,8 @@ pub fn update_from_url(url: &str) -> Result<(), String> {
         return Err(format!("Server returned HTTP {}", status));
     }
 
-    let mut buf = [0u8; 4096];
+    // Heap-allocate the chunk buffer rather than burning stack space.
+    let mut buf = vec![0u8; 4096];
     let mut total_bytes = 0usize;
     let mut last_log_bytes = 0usize;
 

@@ -69,22 +69,38 @@ pub fn start_wifi(
                 }
                 set_sta_hostname(hostname);
 
-                if let Ok(()) = wifi.connect() {
-                    info!("[WIFI] Associated with AP. Waiting for DHCP lease...");
-                    if let Ok(()) = wifi.wait_netif_up() {
-                        if let Ok(info) = wifi.wifi().sta_netif().get_ip_info() {
-                            let ip_str = info.ip.to_string();
-                            if ip_str != "0.0.0.0" {
-                                info!("[WIFI] Station Mode active! IP: {}", ip_str);
-                                return Ok(WifiState::StationConnected {
-                                    ip_address: ip_str,
-                                    wifi_handle: wifi,
-                                });
+                // A single failed attempt is common right after a crash/OTA reboot: the
+                // router can still hold a stale session for this MAC and rejects the first
+                // auth (reason 6/0x600). Retry with a clean disconnect between attempts
+                // before concluding the network is really unavailable.
+                const MAX_STA_ATTEMPTS: u32 = 5;
+                for attempt in 1..=MAX_STA_ATTEMPTS {
+                    if attempt > 1 {
+                        warn!(
+                            "[WIFI] Retrying saved network (attempt {}/{})...",
+                            attempt, MAX_STA_ATTEMPTS
+                        );
+                        let _ = wifi.disconnect();
+                        std::thread::sleep(std::time::Duration::from_secs(3));
+                    }
+
+                    if let Ok(()) = wifi.connect() {
+                        info!("[WIFI] Associated with AP. Waiting for DHCP lease...");
+                        if let Ok(()) = wifi.wait_netif_up() {
+                            if let Ok(info) = wifi.wifi().sta_netif().get_ip_info() {
+                                let ip_str = info.ip.to_string();
+                                if ip_str != "0.0.0.0" {
+                                    info!("[WIFI] Station Mode active! IP: {}", ip_str);
+                                    return Ok(WifiState::StationConnected {
+                                        ip_address: ip_str,
+                                        wifi_handle: wifi,
+                                    });
+                                }
                             }
                         }
                     }
                 }
-                warn!("[WIFI] Failed to connect to saved network (router offline or credentials changed)");
+                warn!("[WIFI] Failed to connect to saved network after {} attempts (router offline or credentials changed)", MAX_STA_ATTEMPTS);
                 let _ = wifi.stop();
             }
         }

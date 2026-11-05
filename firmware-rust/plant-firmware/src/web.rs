@@ -321,12 +321,21 @@ pub fn create_web_server(
         };
 
         info!("[HTTP] Remote OTA update requested from: {}", url);
-        std::thread::spawn(move || {
-            std::thread::sleep(std::time::Duration::from_millis(500));
-            if let Err(e) = crate::ota::update_from_url(&url) {
-                error!("[OTA] Remote OTA update failed: {}", e);
-            }
-        });
+        // The HTTPS download needs a TLS handshake plus flash writes, which overflows
+        // the ~3 KB default std thread stack on ESP-IDF (Stack protection fault).
+        // Give the OTA worker a dedicated, generous stack.
+        let spawn_result = std::thread::Builder::new()
+            .name("OtaDownload".to_string())
+            .stack_size(32 * 1024)
+            .spawn(move || {
+                std::thread::sleep(std::time::Duration::from_millis(500));
+                if let Err(e) = crate::ota::update_from_url(&url) {
+                    error!("[OTA] Remote OTA update failed: {}", e);
+                }
+            });
+        if let Err(e) = spawn_result {
+            error!("[OTA] Failed to spawn OTA worker thread: {:?}", e);
+        }
 
         send_json(
             req,
