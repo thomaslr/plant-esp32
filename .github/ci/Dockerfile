@@ -13,11 +13,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ninja-build \
     python3 \
     python3-pip \
+    python3-venv \
     libclang-dev \
     libudev-dev \
     build-essential \
     pkg-config \
     unzip \
+    flex \
+    bison \
+    gperf \
   && rm -rf /var/lib/apt/lists/*
 
 # Install pinned nightly toolchain with rust-src for -Zbuild-std
