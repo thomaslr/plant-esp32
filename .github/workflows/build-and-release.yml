@@ -8,11 +8,9 @@ on:
       - 'v*'
     paths:
       - 'firmware-rust/**'
-      - '.github/workflows/build-and-release.yml'
   pull_request:
     paths:
       - 'firmware-rust/**'
-      - '.github/workflows/build-and-release.yml'
   workflow_dispatch:
     inputs:
       release_tag:
@@ -22,6 +20,7 @@ on:
 
 permissions:
   contents: write
+  packages: read
 
 concurrency:
   group: firmware-build-${{ github.workflow }}-${{ github.ref }}
@@ -31,27 +30,15 @@ jobs:
   build-and-release:
     name: Build ESP32-C3 Firmware Binary
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/${{ github.repository_owner }}/plant-esp32-build:2026-11-05
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-
-      - name: Install System Dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends cmake ninja-build python3 python3-pip libclang-dev libudev-dev
-
-      - name: Install Rust Toolchain (Pinned Nightly)
-        uses: dtolnay/rust-toolchain@nightly
-        with:
-          toolchain: nightly-2026-04-01
-          components: rust-src
-          profile: minimal
-
-      - name: Install ldproxy & espflash
-        uses: taiki-e/install-action@v2
-        with:
-          tool: ldproxy,espflash
 
       - name: Cache Rust Build Artifacts
         uses: Swatinem/rust-cache@v2
