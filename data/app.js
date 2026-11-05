@@ -29,6 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Tabs setup
     document.getElementById('tab-btn-dash').addEventListener('click', () => switchTab('dashboard'));
+    document.getElementById('tab-btn-logs').addEventListener('click', () => switchTab('logs'));
     document.getElementById('tab-btn-diag').addEventListener('click', () => switchTab('diagnostics'));
     document.getElementById('tab-btn-cfg').addEventListener('click', () => switchTab('settings'));
 
@@ -39,6 +40,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-diag-reboot').addEventListener('click', handleReboot);
     document.getElementById('btn-settings-reboot').addEventListener('click', handleReboot);
     document.getElementById('btn-refresh-logs').addEventListener('click', fetchLogs);
+    const logLimitSelect = document.getElementById('select-log-limit');
+    if (logLimitSelect) logLimitSelect.addEventListener('change', fetchLogs);
     document.getElementById('btn-ota-check').addEventListener('click', handleOtaCheck);
     document.getElementById('file-ota-upload').addEventListener('change', handleOtaUpload);
 
@@ -63,22 +66,29 @@ document.addEventListener('DOMContentLoaded', () => {
 // =============================================================================
 function switchTab(tab) {
     const btnDash = document.getElementById('tab-btn-dash');
+    const btnLogs = document.getElementById('tab-btn-logs');
     const btnDiag = document.getElementById('tab-btn-diag');
     const btnCfg = document.getElementById('tab-btn-cfg');
+
     const viewDash = document.getElementById('view-dashboard');
+    const viewLogs = document.getElementById('view-logs');
     const viewDiag = document.getElementById('view-diagnostics');
     const viewCfg = document.getElementById('view-settings');
 
     btnDash.classList.toggle('active', tab === 'dashboard');
+    btnLogs.classList.toggle('active', tab === 'logs');
     btnDiag.classList.toggle('active', tab === 'diagnostics');
     btnCfg.classList.toggle('active', tab === 'settings');
 
     viewDash.style.display = tab === 'dashboard' ? 'block' : 'none';
+    viewLogs.style.display = tab === 'logs' ? 'block' : 'none';
     viewDiag.style.display = tab === 'diagnostics' ? 'block' : 'none';
     viewCfg.style.display = tab === 'settings' ? 'block' : 'none';
 
     if (tab === 'dashboard' && lastTelemetry) {
         updateTelemetryUI(lastTelemetry);
+    } else if (tab === 'logs') {
+        fetchLogs();
     } else if (tab === 'diagnostics') {
         fetchOtaStatus();
         if (lastTelemetry) updateTelemetryUI(lastTelemetry);
@@ -143,8 +153,10 @@ async function fetchStatus() {
 }
 
 async function fetchLogs() {
+    const limitSelect = document.getElementById('select-log-limit');
+    const limit = limitSelect ? limitSelect.value : '50';
     try {
-        const res = await fetch('/api/sensor-log?n=15');
+        const res = await fetch(`/api/sensor-log?n=${limit}`);
         if (!res.ok) throw new Error("HTTP " + res.status);
         const logs = await res.json();
         renderLogTable(logs);
@@ -790,9 +802,15 @@ function updateFullStatusUI(data) {
 
 function renderLogTable(logs) {
     const tbody = document.getElementById('log-body');
+    const badge = document.getElementById('log-count-badge');
     if (!logs || logs.length === 0) {
         tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No log data recorded yet.</td></tr>';
+        if (badge) badge.innerText = '0 / 100 in RAM';
         return;
+    }
+
+    if (badge) {
+        badge.innerText = `${logs.length} / 100 in RAM`;
     }
 
     tbody.innerHTML = logs.map(r => `

@@ -14,7 +14,7 @@
             <div class="header-title">
                 <h1>🌱 Plant Monitor P2</h1>
                 <span class="badge" id="host-badge">plants.local</span>
-                <span class="badge" id="version-badge" style="background: #1e293b; color: #38bdf8; border: 1px solid #334155; font-size: 0.75rem;">v0.2.1 🌟</span>
+                <span class="badge" id="version-badge" style="background: #1e293b; color: #38bdf8; border: 1px solid #334155; font-size: 0.75rem;">v0.2.2 🌿</span>
             </div>
             <div class="header-status">
                 <span id="conn-status" class="dot dot-disconnected"></span>
@@ -25,6 +25,7 @@
         <!-- Navigation Tabs -->
         <nav class="nav-tabs">
             <button type="button" class="nav-tab active" id="tab-btn-dash">📊 Dashboard</button>
+            <button type="button" class="nav-tab" id="tab-btn-logs">📋 Sensor Log</button>
             <button type="button" class="nav-tab" id="tab-btn-diag">🔧 Diagnostics</button>
             <button type="button" class="nav-tab" id="tab-btn-cfg">⚙️ Settings & Thresholds</button>
         </nav>
@@ -192,12 +193,33 @@
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Recent Sensor Log -->
+        <!-- =================================================================== -->
+        <!-- SENSOR LOG & TELEMETRY HISTORY VIEW                                 -->
+        <!-- =================================================================== -->
+        <div id="view-logs" style="display: none;">
+            <div class="settings-header">
+                <h2>📋 Sensor Log & Telemetry History</h2>
+                <p>In-RAM circular ring buffer retaining up to 100 recent sensor readings without flash wear. Trimmed automatically as new readings arrive.</p>
+            </div>
+
             <div class="card" style="margin-bottom: 24px;">
                 <div class="log-header">
-                    <h3>Recent Sensor Log</h3>
-                    <button id="btn-refresh-logs" class="btn btn-small">Refresh</button>
+                    <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                        <h3 style="margin: 0;">Recent Telemetry Readings</h3>
+                        <span id="log-count-badge" class="badge" style="background: #1e293b; color: #38bdf8; border: 1px solid #334155; font-size: 0.75rem;">Capacity: 100 in RAM</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <label for="select-log-limit" style="font-size: 0.85rem; color: #94a3b8; margin: 0;">Show:</label>
+                        <select id="select-log-limit" style="background: #1e293b; color: #f8fafc; border: 1px solid #334155; border-radius: 6px; padding: 4px 8px; font-size: 0.85rem;">
+                            <option value="15">15 readings</option>
+                            <option value="30">30 readings</option>
+                            <option value="50" selected>50 readings</option>
+                            <option value="100">100 readings (max)</option>
+                        </select>
+                        <button id="btn-refresh-logs" class="btn btn-small">Refresh</button>
+                    </div>
                 </div>
                 <div class="table-container">
                     <table id="log-table">
