@@ -39,6 +39,21 @@ jobs:
         with:
           tool: ldproxy,espflash
 
+      - name: Cache Rust Build Artifacts
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: firmware-rust -> target
+
+      - name: Cache ESP-IDF Tools (.embuild)
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.rustup
+            firmware-rust/.embuild
+          key: esp-idf-${{ runner.os }}-${{ hashFiles('firmware-rust/Cargo.lock') }}
+          restore-keys: |
+            esp-idf-${{ runner.os }}-
+
       - name: Compile Release Firmware
         working-directory: firmware-rust/plant-firmware
         run: cargo build --release

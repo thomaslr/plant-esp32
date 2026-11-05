@@ -14,7 +14,7 @@
             <div class="header-title">
                 <h1>🌱 Plant Monitor P2</h1>
                 <span class="badge" id="host-badge">plants.local</span>
-                <span class="badge" id="version-badge" style="background: #1e293b; color: #38bdf8; border: 1px solid #334155; font-size: 0.75rem;">v0.1.2</span>
+                <span class="badge" id="version-badge" style="background: #1e293b; color: #38bdf8; border: 1px solid #334155; font-size: 0.75rem;">v0.1.3</span>
             </div>
             <div class="header-status">
                 <span id="conn-status" class="dot dot-disconnected"></span>
@@ -445,6 +445,37 @@
         </footer>
     </div>
 
-    <script src="app.js?v=3"></script>
+    <!-- Firmware Update Modal Dialog -->
+    <div id="modal-ota-update" class="modal-backdrop" style="display: none;">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3>🚀 New Firmware Available</h3>
+                <button type="button" class="btn-close" id="btn-modal-ota-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-version-row">
+                    <span class="ver-chip ver-current" id="modal-ver-current">Current: v0.1.1</span>
+                    <span class="ver-arrow">➔</span>
+                    <span class="ver-chip ver-target" id="modal-ver-target">New: v0.1.2</span>
+                </div>
+                <div class="modal-section-title">What's New in this Release:</div>
+                <div class="modal-changelog" id="modal-ota-changelog">
+                    Loading release notes...
+                </div>
+                <div class="modal-notice">
+                    <span class="notice-icon">🛡️</span>
+                    <div>
+                        <strong>Safety & Settings Preserved:</strong> All calibration values, thresholds, and Wi-Fi credentials are stored in non-volatile flash and will remain intact. The pump will remain safely OFF while the update downloads (~30s) and reboots.
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="btn-modal-ota-cancel">Cancel</button>
+                <button type="button" class="btn btn-primary" id="btn-modal-ota-confirm">Install Update & Reboot</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js?v=4"></script>
 </body>
 </html>

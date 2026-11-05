@@ -41,14 +41,18 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-ota-check').addEventListener('click', handleOtaCheck);
     document.getElementById('file-ota-upload').addEventListener('change', handleOtaUpload);
 
+    // Modal Events
+    document.getElementById('btn-modal-ota-close').addEventListener('click', closeOtaModal);
+    document.getElementById('btn-modal-ota-cancel').addEventListener('click', closeOtaModal);
+    document.getElementById('btn-modal-ota-confirm').addEventListener('click', executeOtaUpdate);
+
     // Settings Form
     document.getElementById('config-form').addEventListener('submit', handleConfigSubmit);
     document.getElementById('btn-reload-cfg').addEventListener('click', fetchConfig);
 
     // Initial Data Fetches
     fetchConfig();
-    initWebSocket();
-    fetchStatus();
+    startPolling();
     fetchLogs();
     fetchOtaStatus();
 });
@@ -78,56 +82,19 @@ function switchTab(tab) {
 }
 
 // =============================================================================
-// WebSocket & HTTP Fallback
+// HTTP Polling
 // =============================================================================
-function initWebSocket() {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/ws`;
-
-    try {
-        ws = new WebSocket(wsUrl);
-
-        ws.onopen = () => {
-            setConnectionStatus('ws');
-            if (pollTimer) {
-                clearInterval(pollTimer);
-                pollTimer = null;
-            }
-        };
-
-        ws.onmessage = (event) => {
-            try {
-                const data = JSON.parse(event.data);
-                if (data.type === 'telemetry') {
-                    updateTelemetryUI(data);
-                }
-            } catch (err) {
-                console.error("WS Parse Error:", err);
-            }
-        };
-
-        ws.onclose = () => {
-            if (!pollTimer) {
-                pollTimer = setInterval(fetchStatus, 5000);
-            }
-            setTimeout(initWebSocket, 5000);
-        };
-
-        ws.onerror = () => {
-            ws.close();
-        };
-    } catch (e) {
-        if (!pollTimer) pollTimer = setInterval(fetchStatus, 5000);
+function startPolling() {
+    fetchStatus();
+    if (!pollTimer) {
+        pollTimer = setInterval(fetchStatus, 5000);
     }
 }
 
 function setConnectionStatus(mode) {
     const dot = document.getElementById('conn-status');
     const text = document.getElementById('conn-text');
-    if (mode === 'ws') {
-        dot.className = 'dot dot-connected';
-        text.innerText = 'Live (WS)';
-    } else if (mode === 'http') {
+    if (mode === 'http') {
         dot.className = 'dot dot-connected';
         text.innerText = 'Online (5s)';
     } else {
@@ -282,24 +249,79 @@ async function fetchOtaStatus() {
     } catch (_) {}
 }
 
+let pendingOtaTag = null;
+
+function closeOtaModal() {
+    const modal = document.getElementById('modal-ota-update');
+    if (modal) modal.style.display = 'none';
+}
+
+function openOtaModal(currentVer, newVer, changelog) {
+    document.getElementById('modal-ver-current').innerText = `Current: ${currentVer}`;
+    document.getElementById('modal-ver-target').innerText = `New: ${newVer}`;
+    document.getElementById('modal-ota-changelog').innerText = changelog || "Bug fixes and stability improvements.";
+    document.getElementById('modal-ota-update').style.display = 'flex';
+}
+
 async function handleOtaCheck() {
-    if (!confirm("Initiate OTA update from GitHub Releases? The device will stream the binary, flash the standby partition, and reboot.")) {
-        return;
-    }
     const btn = document.getElementById('btn-ota-check');
     const msg = document.getElementById('ota-msg');
     btn.disabled = true;
     btn.innerText = 'Checking...';
     msg.style.display = 'block';
     msg.style.color = '#58a6ff';
-    msg.innerText = 'Initiating GitHub OTA download...';
+    msg.innerText = 'Checking GitHub Releases for new firmware...';
+
+    try {
+        const statusRes = await fetch('/api/ota/status');
+        const statusData = statusRes.ok ? await statusRes.json() : {};
+        const currentVer = statusData.firmware_version ? `v${statusData.firmware_version.replace(/^v/, '')}` : 'v0.1.0';
+
+        // Fetch latest release info from GitHub API
+        const ghRes = await fetch('https://api.github.com/repos/thomaslr/plant-esp32/releases/latest');
+        if (!ghRes.ok) throw new Error("Could not reach GitHub Releases API");
+        const ghData = await ghRes.json();
+        const latestTag = ghData.tag_name || 'v0.1.0';
+        const cleanLatest = latestTag.replace(/^v/, '');
+        const cleanCurrent = currentVer.replace(/^v/, '');
+
+        if (cleanLatest === cleanCurrent) {
+            msg.style.color = '#10b981';
+            msg.innerText = `You are on the latest firmware (${currentVer})!`;
+            btn.disabled = false;
+            btn.innerText = 'Check GitHub Update';
+            return;
+        }
+
+        // New firmware available: show modal popup with changelog!
+        msg.style.display = 'none';
+        pendingOtaTag = latestTag;
+        openOtaModal(currentVer, latestTag, ghData.body || "Performance enhancements, bug fixes, and safety improvements.");
+    } catch (err) {
+        msg.style.color = '#ef4444';
+        msg.innerText = 'Update check failed: ' + err.message;
+    } finally {
+        btn.disabled = false;
+        btn.innerText = 'Check GitHub Update';
+    }
+}
+
+async function executeOtaUpdate() {
+    closeOtaModal();
+    const btn = document.getElementById('btn-ota-check');
+    const msg = document.getElementById('ota-msg');
+    btn.disabled = true;
+    btn.innerText = 'Updating...';
+    msg.style.display = 'block';
+    msg.style.color = '#58a6ff';
+    msg.innerText = 'Streaming new firmware binary from GitHub... Please do not unplug device.';
 
     try {
         const res = await fetch('/api/ota/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
         const result = await res.json();
-        msg.innerText = result.message || 'OTA update started! Device will reboot in ~30s.';
+        msg.innerText = result.message || 'OTA update started! Device will reboot into new firmware in ~30s.';
         setTimeout(() => {
-            msg.innerText = 'Device rebooting into new firmware. Refreshing page in 15s...';
+            msg.innerText = 'Device rebooting. Refreshing dashboard in 15s...';
             setTimeout(() => window.location.reload(), 15000);
         }, 15000);
     } catch (err) {
