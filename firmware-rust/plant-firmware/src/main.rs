@@ -31,13 +31,13 @@ use plant_core::ring_buffer::RingBuffer;
 use plant_core::safety::SafetyManager;
 use plant_core::timeutil::{local_day, local_hour, MidnightTracker};
 
-use crate::led::run_led_supervisor;
+use crate::led::{init_led_hardware, pulse_setup, run_led_supervisor};
 use crate::pump::HardwarePumpGate;
 use crate::secrets::{WIFI_PASSWORD, WIFI_SSID};
 use crate::sensors::HardwareSensorManager;
-use crate::storage::NvsConfigStorage;
-use crate::web::{create_web_server, AppState};
-use crate::wifi::init_wifi;
+use crate::storage::{NvsConfigStorage, WifiCredentials};
+use crate::web::{create_provisioning_server, create_web_server, AppState};
+use crate::wifi::{start_wifi, WifiState};
 
 fn main() -> anyhow::Result<()> {
     // 1. Link ESP-IDF C patches and initialize logger
@@ -57,76 +57,98 @@ fn main() -> anyhow::Result<()> {
     let storage = NvsConfigStorage::new(nvs.clone())?;
     let config = storage.load();
 
-    // 4. Initialize Hardware Pump Gate and Safety Supervisor
-    let pump_gate = HardwarePumpGate::new();
-    let safety = SafetyManager::new(&config, pump_gate);
+    // 4. Resolve saved Wi-Fi credentials (NVS first, secrets.rs developer fallback second)
+    let saved_wifi = storage.load_wifi().or_else(|| {
+        if !WIFI_SSID.is_empty() && WIFI_SSID != "YOUR_WIFI_SSID" {
+            info!("[WIFI] Using developer credentials from secrets.rs");
+            Some(WifiCredentials {
+                ssid: WIFI_SSID.to_string(),
+                password: WIFI_PASSWORD.to_string(),
+            })
+        } else {
+            None
+        }
+    });
 
-    // 5. Initialize Sensor Manager & 100-sample RAM Ring Buffer
-    let sensors = HardwareSensorManager::new();
-    let history = RingBuffer::new(100);
-
-    // 6. Connect to Wi-Fi with Modem Sleep enabled
-    let wifi_handle = match init_wifi(
+    // 5. Connect to Wi-Fi (Station Mode) or launch Captive Portal (Provisioning SoftAP)
+    let wifi_state = start_wifi(
         peripherals.modem,
         sys_loop,
         Some(nvs),
-        WIFI_SSID,
-        WIFI_PASSWORD,
+        saved_wifi,
         &config.system.hostname,
-    ) {
-        Ok(w) => Some(w),
-        Err(e) => {
-            warn!("[WIFI] Failed to initialize Wi-Fi: {:?}", e);
-            None
+    )?;
+
+    match wifi_state {
+        WifiState::ProvisioningMode {
+            ap_ssid,
+            scanned_ssids,
+            wifi_handle,
+        } => {
+            info!("============================================");
+            info!("   PROVISIONING SOFTAP ACTIVE");
+            info!("   1. Connect your phone to: '{}'", ap_ssid);
+            info!("   2. Open browser to: http://192.168.4.1");
+            info!("============================================");
+
+            let s_storage = Arc::new(Mutex::new(storage));
+            let s_ssids = Arc::new(Mutex::new(scanned_ssids));
+            let srv = create_provisioning_server(s_storage, s_ssids)?;
+            core::mem::forget(srv);
+            core::mem::forget(wifi_handle);
+
+            // Fast LED blink (100ms ON / 100ms OFF) to indicate setup mode
+            init_led_hardware();
+            loop {
+                pulse_setup();
+            }
         }
-    };
+        WifiState::StationConnected {
+            ip_address,
+            wifi_handle,
+        } => {
+            // 6. Initialize Hardware Pump Gate and Safety Supervisor
+            let pump_gate = HardwarePumpGate::new();
+            let safety = SafetyManager::new(&config, pump_gate);
 
-    let ip_str = if let Some(ref w) = wifi_handle {
-        w.wifi()
-            .sta_netif()
-            .get_ip_info()
-            .map(|i| i.ip.to_string())
-            .unwrap_or_else(|_| "0.0.0.0".to_string())
-    } else {
-        "0.0.0.0".to_string()
-    };
+            // 7. Initialize Sensor Manager & 100-sample RAM Ring Buffer
+            let sensors = HardwareSensorManager::new();
+            let history = RingBuffer::new(100);
 
-    // 7. Start SNTP Time Synchronization
-    let sntp = EspSntp::new_default();
-    if sntp.is_ok() {
-        info!("[NTP] SNTP client initialized for time synchronization");
-    }
+            // 8. Start SNTP Time Synchronization
+            let sntp = EspSntp::new_default();
+            if sntp.is_ok() {
+                info!("[NTP] SNTP client initialized for time synchronization");
+            }
 
-    // 8. Construct shared application state
-    let state = Arc::new(Mutex::new(AppState {
-        config: config.clone(),
-        safety,
-        sensors,
-        history,
-        storage,
-        ip_address: ip_str,
-        wifi_rssi: -60,
-    }));
+            // 9. Construct shared application state
+            let state = Arc::new(Mutex::new(AppState {
+                config: config.clone(),
+                safety,
+                sensors,
+                history,
+                storage,
+                ip_address,
+                wifi_rssi: -60,
+            }));
 
-    // 9. Start Embedded HTTP Web Server
-    let _server = match create_web_server(Arc::clone(&state)) {
-        Ok(srv) => {
-            info!("[SYS] HTTP server and REST endpoints listening on port 80");
-            Some(srv)
-        }
-        Err(e) => {
-            warn!("[SYS] Failed to bind HTTP server: {:?}", e);
-            None
-        }
-    };
+            // 10. Start Embedded HTTP Web Server
+            let _server = match create_web_server(Arc::clone(&state)) {
+                Ok(srv) => {
+                    info!("[SYS] HTTP server and REST endpoints listening on port 80");
+                    Some(srv)
+                }
+                Err(e) => {
+                    warn!("[SYS] Failed to bind HTTP server: {:?}", e);
+                    None
+                }
+            };
 
-    // Prevent server and wifi from being dropped
-    if let Some(srv) = _server {
-        core::mem::forget(srv);
-    }
-    if let Some(w) = wifi_handle {
-        core::mem::forget(w);
-    }
+            // Prevent server and wifi from being dropped
+            if let Some(srv) = _server {
+                core::mem::forget(srv);
+            }
+            core::mem::forget(wifi_handle);
 
     // 10. Task 1: Safety & Pump Supervisor (Priority: HIGH, 20 Hz / 50ms)
     let s_safety = Arc::clone(&state);
@@ -258,8 +280,10 @@ fn main() -> anyhow::Result<()> {
 
     info!("[SYS] All background tasks successfully spawned. System running.");
 
-    // Keep main thread alive
-    loop {
-        thread::sleep(Duration::from_secs(3600));
+            // Keep main thread alive
+            loop {
+                thread::sleep(Duration::from_secs(3600));
+            }
+        }
     }
 }

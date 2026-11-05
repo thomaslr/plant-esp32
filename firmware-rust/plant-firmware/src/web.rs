@@ -27,6 +27,7 @@ use crate::storage::NvsConfigStorage;
 static INDEX_HTML: &str = include_str!("../../../data/index.html");
 static APP_JS: &str = include_str!("../../../data/app.js");
 static STYLE_CSS: &str = include_str!("../../../data/style.css");
+static SETUP_HTML: &str = include_str!("../../../data/setup.html");
 
 pub struct AppState {
     pub config: AppConfig,
@@ -249,7 +250,128 @@ pub fn create_web_server(
         send_json(req, 200, &json)
     })?;
 
+    // 11. POST /api/wifi/reset
+    let s_wifi_reset = Arc::clone(&state);
+    server.fn_handler("/api/wifi/reset", Method::Post, move |req| {
+        info!("[HTTP] Wi-Fi reset requested via REST API. Clearing credentials and rebooting...");
+        {
+            let app = s_wifi_reset.lock().unwrap();
+            let _ = app.storage.clear_wifi();
+        }
+        let res = send_json(
+            req,
+            200,
+            r#"{"status":"success","message":"Wi-Fi reset. Restarting into setup mode..."}"#,
+        );
+        std::thread::spawn(|| {
+            std::thread::sleep(std::time::Duration::from_millis(1500));
+            unsafe {
+                esp_idf_svc::sys::esp_restart();
+            }
+        });
+        res
+    })?;
+
     info!("[HTTP] Web server registered all endpoints successfully on port 80");
+    Ok(server)
+}
+
+/// Creates a dedicated lightweight HTTP server for the SoftAP Captive Portal provisioning mode.
+pub fn create_provisioning_server(
+    storage: Arc<Mutex<NvsConfigStorage>>,
+    scanned_ssids: Arc<Mutex<Vec<String>>>,
+) -> Result<EspHttpServer<'static>, EspIOError> {
+    let server_config = ServerConfig {
+        stack_size: 10240,
+        ..Default::default()
+    };
+    let mut server = EspHttpServer::new(&server_config)?;
+
+    // 1. Setup Page (GET / and GET /setup)
+    server.fn_handler("/", Method::Get, |req| {
+        send_file(req, "text/html; charset=utf-8", SETUP_HTML)
+    })?;
+    server.fn_handler("/setup", Method::Get, |req| {
+        send_file(req, "text/html; charset=utf-8", SETUP_HTML)
+    })?;
+
+    // 2. Captive Portal Detection endpoints (iOS, Android, Windows)
+    server.fn_handler("/hotspot-detect.html", Method::Get, |req| {
+        send_file(req, "text/html; charset=utf-8", SETUP_HTML)
+    })?;
+    server.fn_handler("/generate_204", Method::Get, |req| {
+        send_file(req, "text/html; charset=utf-8", SETUP_HTML)
+    })?;
+    server.fn_handler("/gen_204", Method::Get, |req| {
+        send_file(req, "text/html; charset=utf-8", SETUP_HTML)
+    })?;
+    server.fn_handler("/ncsi.txt", Method::Get, |req| {
+        send_file(req, "text/html; charset=utf-8", SETUP_HTML)
+    })?;
+    server.fn_handler("/connecttest.txt", Method::Get, |req| {
+        send_file(req, "text/html; charset=utf-8", SETUP_HTML)
+    })?;
+
+    // 3. GET /api/scan
+    let s_scan = Arc::clone(&scanned_ssids);
+    server.fn_handler("/api/scan", Method::Get, move |req| {
+        let list = s_scan.lock().unwrap();
+        let json = serde_json::to_string(&*list).unwrap_or_else(|_| "[]".to_string());
+        send_json(req, 200, &json)
+    })?;
+
+    // 4. POST /api/provision
+    let s_storage = Arc::clone(&storage);
+    server.fn_handler("/api/provision", Method::Post, move |mut req| {
+        let len = req.content_len().unwrap_or(0) as usize;
+        let mut buf = vec![0u8; len];
+        let _ = req.read_exact(&mut buf);
+
+        #[derive(serde::Deserialize)]
+        struct ProvReq {
+            ssid: String,
+            password: Option<String>,
+        }
+
+        match serde_json::from_slice::<ProvReq>(&buf) {
+            Ok(p) => {
+                let ssid = p.ssid.trim();
+                if ssid.is_empty() {
+                    return send_json(req, 400, r#"{"error":"SSID cannot be empty"}"#);
+                }
+                let pass = p.password.as_deref().unwrap_or("");
+                let save_res = {
+                    let st = s_storage.lock().unwrap();
+                    st.save_wifi(ssid, pass)
+                };
+
+                match save_res {
+                    Ok(()) => {
+                        let res = send_json(
+                            req,
+                            200,
+                            r#"{"status":"success","message":"Credentials saved. Restarting..."}"#,
+                        );
+                        // Delayed reboot gives HTTP response time to reach browser
+                        std::thread::spawn(|| {
+                            std::thread::sleep(std::time::Duration::from_millis(1500));
+                            unsafe {
+                                esp_idf_svc::sys::esp_restart();
+                            }
+                        });
+                        res
+                    }
+                    Err(e) => {
+                        let err_json = format!(r#"{{"error":"{}"}}"#, e);
+                        send_json(req, 500, &err_json)
+                    }
+                }
+            }
+            Err(_) => send_json(req, 400, r#"{"error":"Invalid JSON payload"}"#),
+        }
+    })?;
+
+    info!("[HTTP] Provisioning captive portal server listening on http://192.168.4.1:80");
     Ok(server)
 }
 

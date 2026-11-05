@@ -1,30 +1,45 @@
-//! Non-Volatile Flash Configuration Storage using ESP32 NVS.
+//! Non-Volatile Flash Configuration & Wi-Fi Storage using ESP32 NVS.
 //!
-//! Stores `AppConfig` as a JSON string under the `plant_cfg` namespace.
+//! Stores `AppConfig` under the `plant_cfg` namespace and
+//! network credentials under the `plant_wifi` namespace.
 
 use esp_idf_svc::nvs::{EspDefaultNvsPartition, EspNvs, NvsDefault};
 use log::{error, info, warn};
 use plant_core::config::AppConfig;
 
-const NVS_NAMESPACE: &str = "plant_cfg";
-const NVS_KEY: &str = "config_json";
+const CFG_NAMESPACE: &str = "plant_cfg";
+const NVS_KEY_CONFIG: &str = "config_json";
+
+const WIFI_NAMESPACE: &str = "plant_wifi";
+const NVS_KEY_SSID: &str = "wifi_ssid";
+const NVS_KEY_PASS: &str = "wifi_pass";
+
 const BUFFER_SIZE: usize = 2048;
 
+/// Stored network credentials for Station mode.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WifiCredentials {
+    pub ssid: String,
+    pub password: String,
+}
+
 pub struct NvsConfigStorage {
-    nvs: EspNvs<NvsDefault>,
+    nvs_cfg: EspNvs<NvsDefault>,
+    nvs_wifi: EspNvs<NvsDefault>,
 }
 
 impl NvsConfigStorage {
-    /// Opens the NVS partition with read/write access.
+    /// Opens the NVS partitions for configuration and Wi-Fi credentials.
     pub fn new(partition: EspDefaultNvsPartition) -> Result<Self, esp_idf_svc::sys::EspError> {
-        let nvs = EspNvs::new(partition, NVS_NAMESPACE, true)?;
-        Ok(Self { nvs })
+        let nvs_cfg = EspNvs::new(partition.clone(), CFG_NAMESPACE, true)?;
+        let nvs_wifi = EspNvs::new(partition, WIFI_NAMESPACE, true)?;
+        Ok(Self { nvs_cfg, nvs_wifi })
     }
 
     /// Loads the stored `AppConfig`. Falls back to default if not found or invalid.
     pub fn load(&self) -> AppConfig {
         let mut buf = [0u8; BUFFER_SIZE];
-        match self.nvs.get_str(NVS_KEY, &mut buf) {
+        match self.nvs_cfg.get_str(NVS_KEY_CONFIG, &mut buf) {
             Ok(Some(json_str)) => match serde_json::from_str::<AppConfig>(json_str) {
                 Ok(cfg) => {
                     info!("[NVS] Loaded existing configuration from flash");
@@ -55,11 +70,53 @@ impl NvsConfigStorage {
         let json_str = serde_json::to_string(config)
             .map_err(|e| format!("Failed to serialize config: {}", e))?;
 
-        self.nvs
-            .set_str(NVS_KEY, &json_str)
+        self.nvs_cfg
+            .set_str(NVS_KEY_CONFIG, &json_str)
             .map_err(|e| format!("Failed to write config to NVS: {}", e))?;
 
         info!("[NVS] Configuration saved to flash");
+        Ok(())
+    }
+
+    /// Loads stored Wi-Fi credentials from NVS.
+    pub fn load_wifi(&self) -> Option<WifiCredentials> {
+        let mut ssid_buf = [0u8; 64];
+        let mut pass_buf = [0u8; 64];
+
+        let ssid = match self.nvs_wifi.get_str(NVS_KEY_SSID, &mut ssid_buf) {
+            Ok(Some(s)) if !s.trim().is_empty() => s.to_string(),
+            _ => return None,
+        };
+
+        let password = match self.nvs_wifi.get_str(NVS_KEY_PASS, &mut pass_buf) {
+            Ok(Some(p)) => p.to_string(),
+            _ => String::new(),
+        };
+
+        info!("[NVS] Loaded saved Wi-Fi credentials for SSID: '{}'", ssid);
+        Some(WifiCredentials { ssid, password })
+    }
+
+    /// Saves new Wi-Fi credentials to NVS flash.
+    pub fn save_wifi(&self, ssid: &str, password: &str) -> Result<(), String> {
+        self.nvs_wifi
+            .set_str(NVS_KEY_SSID, ssid)
+            .map_err(|e| format!("Failed to save Wi-Fi SSID to NVS: {}", e))?;
+
+        self.nvs_wifi
+            .set_str(NVS_KEY_PASS, password)
+            .map_err(|e| format!("Failed to save Wi-Fi password to NVS: {}", e))?;
+
+        info!("[NVS] Saved Wi-Fi credentials for SSID: '{}'", ssid);
+        Ok(())
+    }
+
+    /// Clears Wi-Fi credentials from NVS flash (forces setup portal on next boot).
+    pub fn clear_wifi(&self) -> Result<(), String> {
+        self.nvs_wifi
+            .erase_all()
+            .map_err(|e| format!("Failed to erase Wi-Fi credentials: {}", e))?;
+        info!("[NVS] Cleared Wi-Fi credentials from NVS");
         Ok(())
     }
 }

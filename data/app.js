@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('btn-water').addEventListener('click', handleWaterClick);
     document.getElementById('btn-sensor-reset').addEventListener('click', handleResetUltrasonic);
+    document.getElementById('btn-wifi-reset').addEventListener('click', handleResetWifi);
     document.getElementById('btn-refresh-logs').addEventListener('click', fetchLogs);
 });
 
@@ -138,6 +139,25 @@ async function handleResetUltrasonic() {
     } finally {
         btn.disabled = false;
         btn.innerText = 'Force Ultrasonic Reset';
+    }
+}
+
+async function handleResetWifi() {
+    if (!confirm("Reset Wi-Fi credentials? The device will clear saved network credentials and restart in Setup Mode.")) {
+        return;
+    }
+    const btn = document.getElementById('btn-wifi-reset');
+    btn.disabled = true;
+    btn.innerText = 'Resetting Wi-Fi...';
+
+    try {
+        const res = await fetch('/api/wifi/reset', { method: 'POST' });
+        const result = await res.json();
+        alert(result.message || "Wi-Fi credentials cleared! Connect to the PlantMonitor-Setup hotspot.");
+    } catch (err) {
+        alert("Wi-Fi reset failed: " + err.message);
+        btn.disabled = false;
+        btn.innerText = 'Reset Wi-Fi (Setup Mode)';
     }
 }
 

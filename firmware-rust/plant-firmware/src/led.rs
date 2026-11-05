@@ -111,6 +111,11 @@ pub fn init_led_hardware() {
     info!("[LED] Status LED initialized on GPIO 8 (Active LOW, initial: OFF)");
 }
 
+/// Pulses the status LED in setup/provisioning mode (100ms ON / 100ms OFF).
+pub fn pulse_setup() {
+    pulse(100, 100);
+}
+
 /// Accelerando frequency sweep (low to high blink) over 3 seconds for Reservoir Dry.
 fn play_reservoir_dry_pattern() {
     // 8 pulses with progressively decreasing periods (from 300ms down to 25ms)

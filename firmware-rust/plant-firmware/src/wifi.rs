@@ -1,6 +1,9 @@
-//! Wi-Fi STA Initialization and Connection Management.
+//! Wi-Fi Station and SoftAP Provisioning Management.
 //!
-//! Configures modem sleep (WIFI_PS_MIN_MODEM) to minimize dynamic power draw.
+//! Supports two modes:
+//! 1. Station Mode: Connects to saved home/office router with modem sleep enabled.
+//! 2. Provisioning SoftAP Mode: Broadcasts `PlantMonitor-Setup-XXXX` (IP 192.168.4.1)
+//!    with a captive portal allowing users/friends to configure Wi-Fi credentials from any phone.
 
 use std::ffi::CString;
 
@@ -12,45 +15,140 @@ use esp_idf_svc::sys::{
     wifi_ps_type_t_WIFI_PS_MIN_MODEM,
 };
 use esp_idf_svc::wifi::{
-    AuthMethod, BlockingWifi, ClientConfiguration, Configuration, EspWifi,
+    AccessPointConfiguration, AuthMethod, BlockingWifi, ClientConfiguration, Configuration, EspWifi,
 };
 use log::{info, warn};
 
-pub fn init_wifi(
+use crate::storage::WifiCredentials;
+
+/// Operational Wi-Fi state determined during boot.
+pub enum WifiState {
+    /// Connected to router in Station mode.
+    StationConnected {
+        ip_address: String,
+        wifi_handle: BlockingWifi<EspWifi<'static>>,
+    },
+    /// Running SoftAP for initial captive portal provisioning.
+    ProvisioningMode {
+        ap_ssid: String,
+        scanned_ssids: Vec<String>,
+        wifi_handle: BlockingWifi<EspWifi<'static>>,
+    },
+}
+
+/// Initializes Wi-Fi hardware and connects to saved network, or launches SoftAP provisioning.
+pub fn start_wifi(
     modem: Modem<'static>,
     sys_loop: EspSystemEventLoop,
     nvs: Option<EspDefaultNvsPartition>,
-    ssid: &str,
-    password: &str,
+    saved_creds: Option<WifiCredentials>,
     hostname: &str,
-) -> Result<BlockingWifi<EspWifi<'static>>, esp_idf_svc::sys::EspError> {
-    info!("[WIFI] Initializing Wi-Fi client for SSID: '{}'", ssid);
-
+) -> Result<WifiState, esp_idf_svc::sys::EspError> {
     let esp_wifi = EspWifi::new(modem, sys_loop.clone(), nvs)?;
     let mut wifi = BlockingWifi::wrap(esp_wifi, sys_loop)?;
 
-    let wifi_configuration = Configuration::Client(ClientConfiguration {
-        ssid: ssid.try_into().unwrap_or_default(),
-        password: password.try_into().unwrap_or_default(),
-        auth_method: if password.is_empty() {
-            AuthMethod::None
-        } else {
-            AuthMethod::WPA2Personal
-        },
-        ..Default::default()
-    });
+    // 1. If saved credentials exist, attempt Station Mode first
+    if let Some(creds) = saved_creds {
+        info!("[WIFI] Attempting connection to saved network: '{}'", creds.ssid);
 
-    wifi.set_configuration(&wifi_configuration)?;
-    wifi.start()?;
-    info!("[WIFI] Driver started");
+        let client_config = ClientConfiguration {
+            ssid: creds.ssid.as_str().try_into().unwrap_or_default(),
+            password: creds.password.as_str().try_into().unwrap_or_default(),
+            auth_method: if creds.password.is_empty() {
+                AuthMethod::None
+            } else {
+                AuthMethod::WPA2Personal
+            },
+            ..Default::default()
+        };
 
-    // Enable Wi-Fi Modem Sleep (powers down radio between router DTIM beacon intervals)
-    unsafe {
-        let _ = esp_wifi_set_ps(wifi_ps_type_t_WIFI_PS_MIN_MODEM);
+        if let Ok(()) = wifi.set_configuration(&Configuration::Client(client_config)) {
+            if let Ok(()) = wifi.start() {
+                unsafe {
+                    let _ = esp_wifi_set_ps(wifi_ps_type_t_WIFI_PS_MIN_MODEM);
+                }
+                set_sta_hostname(hostname);
+
+                if let Ok(()) = wifi.connect() {
+                    info!("[WIFI] Associated with AP. Waiting for DHCP lease...");
+                    if let Ok(()) = wifi.wait_netif_up() {
+                        if let Ok(info) = wifi.wifi().sta_netif().get_ip_info() {
+                            let ip_str = info.ip.to_string();
+                            if ip_str != "0.0.0.0" {
+                                info!("[WIFI] Station Mode active! IP: {}", ip_str);
+                                return Ok(WifiState::StationConnected {
+                                    ip_address: ip_str,
+                                    wifi_handle: wifi,
+                                });
+                            }
+                        }
+                    }
+                }
+                warn!("[WIFI] Failed to connect to saved network (router offline or credentials changed)");
+                let _ = wifi.stop();
+            }
+        }
     }
-    info!("[PWR] Wi-Fi Modem Sleep enabled (WIFI_PS_MIN_MODEM)");
 
-    // Set hostname on netif
+    // 2. Fall back to Provisioning SoftAP Mode
+    let mut mac = [0u8; 6];
+    unsafe {
+        esp_idf_svc::sys::esp_read_mac(
+            mac.as_mut_ptr(),
+            esp_idf_svc::sys::esp_mac_type_t_ESP_MAC_WIFI_STA,
+        );
+    }
+    let ap_ssid = format!("PlantMonitor-Setup-{:02X}{:02X}", mac[4], mac[5]);
+    info!("[WIFI] Starting Provisioning SoftAP: '{}'", ap_ssid);
+
+    let ap_config = AccessPointConfiguration {
+        ssid: ap_ssid.as_str().try_into().unwrap_or_default(),
+        channel: 1,
+        auth_method: AuthMethod::None,
+        max_connections: 4,
+        ..Default::default()
+    };
+
+    // Use Mixed mode (Client + AP) so client radio can scan nearby SSIDs while SoftAP is hosted
+    let mixed_config = Configuration::Mixed(ClientConfiguration::default(), ap_config);
+    if let Err(e) = wifi.set_configuration(&mixed_config) {
+        warn!("[WIFI] Mixed mode configuration failed ({:?}), falling back to AccessPoint only", e);
+        let ap_only = Configuration::AccessPoint(AccessPointConfiguration {
+            ssid: ap_ssid.as_str().try_into().unwrap_or_default(),
+            channel: 1,
+            auth_method: AuthMethod::None,
+            max_connections: 4,
+            ..Default::default()
+        });
+        wifi.set_configuration(&ap_only)?;
+    }
+
+    wifi.start()?;
+    info!("[WIFI] SoftAP active. Gateway IP: 192.168.4.1");
+
+    // Scan for nearby 2.4 GHz networks
+    info!("[WIFI] Scanning nearby 2.4 GHz networks...");
+    let mut scanned_ssids = Vec::new();
+    if let Ok(aps) = wifi.scan() {
+        for ap in aps {
+            let name = ap.ssid.as_str().trim();
+            if !name.is_empty() && !scanned_ssids.iter().any(|s: &String| s == name) {
+                scanned_ssids.push(name.to_string());
+            }
+        }
+        info!("[WIFI] Discovered {} unique nearby networks", scanned_ssids.len());
+    } else {
+        warn!("[WIFI] Initial scan returned no results");
+    }
+
+    Ok(WifiState::ProvisioningMode {
+        ap_ssid,
+        scanned_ssids,
+        wifi_handle: wifi,
+    })
+}
+
+fn set_sta_hostname(hostname: &str) {
     if let Ok(c_hostname) = CString::new(hostname) {
         unsafe {
             let ifkey = CString::new("WIFI_STA_DEF").unwrap();
@@ -60,26 +158,4 @@ pub fn init_wifi(
             }
         }
     }
-
-    match wifi.connect() {
-        Ok(_) => {
-            info!("[WIFI] Connected to AP successfully");
-            match wifi.wait_netif_up() {
-                Ok(_) => {
-                    let ip = wifi.wifi().sta_netif().get_ip_info();
-                    if let Ok(info) = ip {
-                        info!("[WIFI] IP Address: {}", info.ip);
-                    }
-                }
-                Err(e) => {
-                    warn!("[WIFI] Waiting for DHCP IP timed out: {:?}", e);
-                }
-            }
-        }
-        Err(e) => {
-            warn!("[WIFI] Initial connection attempt failed ({:?}). Will retry in background.", e);
-        }
-    }
-
-    Ok(wifi)
 }
