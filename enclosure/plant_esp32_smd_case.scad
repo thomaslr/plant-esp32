@@ -6,17 +6,20 @@
 // 1. Precise PCB Cradle: 4x reinforced M3 standoffs (67.0 x 47.0 mm pitch).
 // 2. Beveled LED Viewing Window: Centered directly over the ESP32-C3 SuperMini
 //    onboard Power (Red) and GPIO 8 Status (Blue) LEDs.
-// 3. Diffuser / Acrylic Step: Underside pocket in lid for 1mm transparent lens.
-// 4. Port Cutouts:
+// 3. Diffuser / Acrylic Step: Underside pocket in lid for 1.0 mm transparent lens.
+// 4. Silicone Gel Adhesion Underside Pattern:
+//    - 2.0 mm wide x 1.0 mm deep cross-hatch waffle channels.
+//    - Ø3.2 mm anchor wells at grid intersections.
+//    - Perimeter squeeze-out rivet holes for maximum mechanical keying to tanks.
+// 5. Port Cutouts:
 //    - Left Wall: USB-C port cutout for ESP32 SuperMini.
 //    - Top Wall: Full clearance for TB1 (Ultra), TB2 (Soil), TB3 (Pump).
 //    - Right Wall: Clearance for TB4 (Solar / Battery power).
-// 5. Tool-Free Snap-Fit + Optional Corner Screws: Friction-fit lip with M3 screw pass.
+// 6. Tool-Free Snap-Fit + Optional Corner Screws: Friction-fit lip with M3 screw pass.
 // =============================================================================
 
 /* [Render Mode] */
-// Select what to render or export
-part = "exploded"; // [base: Base Cradle Only, lid: Top Cover Only, both: Side-by-Side Printable, assembled: Assembled View, exploded: Exploded 3D Preview]
+part = "exploded"; // [base: Base Cradle Only, lid: Top Cover Only, both: Side-by-Side Printable, assembled: Assembled View, exploded: Exploded 3D Preview, underside: Underside Silicone Grid]
 
 /* [PCB & Standoff Parameters] */
 pcb_w          = 74.0;  // PCB width (X) in mm
@@ -84,7 +87,7 @@ lid_outer_w    = outer_w;
 lid_outer_h    = outer_h;
 lid_total_h    = lid_floor + lid_lip_h;
 
-$fn = 40;
+$fn = 36;
 
 module rounded_rect_2d(w, h, r) {
     offset(r = r) offset(delta = -r) square([w, h], center = true);
@@ -258,7 +261,7 @@ module status_lid() {
         translate([led_win_x, led_win_y + led_win_h/2 + 2.8, -0.1]) {
             rotate([180, 0, 0])
                 linear_extrude(height = 0.6)
-                    text("STATUS", size = 2.4, font = "Liberation Sans:style=Bold", halign = "center", valign = "center");
+                    text("STATUS LED", size = 2.4, font = "Liberation Sans:style=Bold", halign = "center", valign = "center");
         }
     }
 }
@@ -349,4 +352,7 @@ if (part == "base") {
     pcb_mockup();
     // Hovering Lid above
     color([0.88, 0.88, 0.90, 0.92]) translate([0, 0, total_base_h + 18.0]) status_lid();
+} else if (part == "underside") {
+    // Flipped to inspect silicone adhesion grid
+    rotate([180, 0, 0]) base_cradle();
 }
