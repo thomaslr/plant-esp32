@@ -14,7 +14,7 @@
             <div class="header-title">
                 <h1>🌱 Plant Monitor P2</h1>
                 <span class="badge" id="host-badge">plants.local</span>
-                <span class="badge" id="version-badge" style="background: #1e293b; color: #38bdf8; border: 1px solid #334155; font-size: 0.75rem;">v0.2.2 🌿</span>
+                <span class="badge" id="version-badge" style="background: #1e293b; color: #38bdf8; border: 1px solid #334155; font-size: 0.75rem;">v0.2.3 📈</span>
             </div>
             <div class="header-status">
                 <span id="conn-status" class="dot dot-disconnected"></span>
@@ -202,6 +202,39 @@
             <div class="settings-header">
                 <h2>📋 Sensor Log & Telemetry History</h2>
                 <p>In-RAM circular ring buffer retaining up to 100 recent sensor readings without flash wear. Trimmed automatically as new readings arrive.</p>
+            </div>
+
+            <!-- Interactive Historical Telemetry Graph -->
+            <div class="card graph-card" style="margin-bottom: 20px;">
+                <div class="graph-header">
+                    <div class="graph-title-group">
+                        <span class="card-icon">📈</span>
+                        <h3 style="margin: 0;">Telemetry Trends</h3>
+                    </div>
+                    <!-- Series Toggles -->
+                    <div class="graph-series-toggles" id="graph-toggles">
+                        <button type="button" class="series-pill active" data-series="soil" style="--series-color: #10b981;">
+                            <span class="series-dot"></span> Soil Moisture (%)
+                        </button>
+                        <button type="button" class="series-pill active" data-series="water" style="--series-color: #38bdf8;">
+                            <span class="series-dot"></span> Water Depth (cm)
+                        </button>
+                        <button type="button" class="series-pill active" data-series="supply" style="--series-color: #f59e0b;">
+                            <span class="series-dot"></span> Supply Rail (V)
+                        </button>
+                        <button type="button" class="series-pill" data-series="battery" style="--series-color: #a855f7;">
+                            <span class="series-dot"></span> Battery (V)
+                        </button>
+                        <button type="button" class="series-pill" data-series="temp" style="--series-color: #f43f5e;">
+                            <span class="series-dot"></span> Chip Temp (°C)
+                        </button>
+                    </div>
+                </div>
+
+                <div class="canvas-wrapper" id="canvas-wrapper" style="position: relative; width: 100%; height: 280px; margin-top: 14px;">
+                    <canvas id="telemetry-chart"></canvas>
+                    <div id="chart-tooltip" class="chart-tooltip" style="display: none;"></div>
+                </div>
             </div>
 
             <div class="card" style="margin-bottom: 24px;">

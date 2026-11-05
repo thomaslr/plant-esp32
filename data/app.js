@@ -57,6 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initial Data Fetches
     fetchConfig();
     startPolling();
+    setupChartToggles();
     fetchLogs();
     fetchOtaStatus();
 });
@@ -89,6 +90,7 @@ function switchTab(tab) {
         updateTelemetryUI(lastTelemetry);
     } else if (tab === 'logs') {
         fetchLogs();
+        setTimeout(() => renderTelemetryChart(currentLogs), 60);
     } else if (tab === 'diagnostics') {
         fetchOtaStatus();
         if (lastTelemetry) updateTelemetryUI(lastTelemetry);
@@ -801,11 +803,13 @@ function updateFullStatusUI(data) {
 }
 
 function renderLogTable(logs) {
+    currentLogs = logs || [];
     const tbody = document.getElementById('log-body');
     const badge = document.getElementById('log-count-badge');
     if (!logs || logs.length === 0) {
         tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No log data recorded yet.</td></tr>';
         if (badge) badge.innerText = '0 / 100 in RAM';
+        renderTelemetryChart([]);
         return;
     }
 
@@ -822,4 +826,326 @@ function renderLogTable(logs) {
             <td>${r.chip_temp.toFixed(1)}°C</td>
         </tr>
     `).join('');
+
+    renderTelemetryChart(currentLogs);
+}
+
+// =============================================================================
+// Telemetry Trends Interactive Chart & Series Toggles
+// =============================================================================
+let currentLogs = [];
+let chartHoverIndex = null;
+let activeSeries = {
+    soil: true,
+    water: true,
+    supply: true,
+    battery: false,
+    temp: false,
+};
+
+try {
+    const saved = localStorage.getItem('plant_chart_series');
+    if (saved) activeSeries = Object.assign(activeSeries, JSON.parse(saved));
+} catch (_) {}
+
+const SERIES_DEFS = {
+    soil: {
+        id: 'soil',
+        name: 'Soil Moisture',
+        unit: '%',
+        color: '#10b981',
+        get: r => r.soil_percent,
+        min: 0,
+        max: 100,
+    },
+    water: {
+        id: 'water',
+        name: 'Water Depth',
+        unit: ' cm',
+        color: '#38bdf8',
+        get: r => r.water_level_cm,
+        min: 0,
+        max: 30,
+    },
+    supply: {
+        id: 'supply',
+        name: 'Supply Rail',
+        unit: 'V',
+        color: '#f59e0b',
+        get: r => r.supply_voltage,
+        min: 4.0,
+        max: 6.0,
+    },
+    battery: {
+        id: 'battery',
+        name: 'Battery',
+        unit: 'V',
+        color: '#a855f7',
+        get: r => r.battery_voltage,
+        min: 2.8,
+        max: 4.4,
+    },
+    temp: {
+        id: 'temp',
+        name: 'Chip Temp',
+        unit: '°C',
+        color: '#f43f5e',
+        get: r => r.chip_temp,
+        min: 20,
+        max: 75,
+    },
+};
+
+function setupChartToggles() {
+    const container = document.getElementById('graph-toggles');
+    if (container) {
+        const pills = container.querySelectorAll('.series-pill');
+        pills.forEach(pill => {
+            const key = pill.dataset.series;
+            pill.classList.toggle('active', !!activeSeries[key]);
+            pill.addEventListener('click', () => {
+                activeSeries[key] = !activeSeries[key];
+                pill.classList.toggle('active', activeSeries[key]);
+                try {
+                    localStorage.setItem('plant_chart_series', JSON.stringify(activeSeries));
+                } catch (_) {}
+                renderTelemetryChart(currentLogs);
+            });
+        });
+    }
+
+    const canvas = document.getElementById('telemetry-chart');
+    if (canvas) {
+        canvas.addEventListener('mousemove', handleChartMouseMove);
+        canvas.addEventListener('mouseleave', handleChartMouseLeave);
+        canvas.addEventListener('touchmove', handleChartTouchMove, { passive: true });
+        canvas.addEventListener('touchend', handleChartMouseLeave);
+    }
+
+    window.addEventListener('resize', () => {
+        const viewLogs = document.getElementById('view-logs');
+        if (viewLogs && viewLogs.style.display !== 'none') {
+            renderTelemetryChart(currentLogs);
+        }
+    });
+}
+
+function handleChartMouseMove(e) {
+    const canvas = document.getElementById('telemetry-chart');
+    if (!canvas || !currentLogs || currentLogs.length === 0) return;
+    const rect = canvas.getBoundingClientRect();
+    const pad = { left: 45, right: 20, top: 20, bottom: 35 };
+    const plotWidth = rect.width - pad.left - pad.right;
+    const pts = [...currentLogs].reverse();
+    if (pts.length < 2) return;
+
+    const mouseX = e.clientX - rect.left - pad.left;
+    const ratio = Math.max(0, Math.min(1, mouseX / plotWidth));
+    const idx = Math.round(ratio * (pts.length - 1));
+    chartHoverIndex = idx;
+    renderTelemetryChart(currentLogs);
+    showChartTooltip(pts[idx], idx, pts.length, rect);
+}
+
+function handleChartTouchMove(e) {
+    if (e.touches && e.touches[0]) {
+        handleChartMouseMove(e.touches[0]);
+    }
+}
+
+function handleChartMouseLeave() {
+    chartHoverIndex = null;
+    const tooltip = document.getElementById('chart-tooltip');
+    if (tooltip) tooltip.style.display = 'none';
+    renderTelemetryChart(currentLogs);
+}
+
+function showChartTooltip(pt, idx, total, canvasRect) {
+    const tooltip = document.getElementById('chart-tooltip');
+    if (!tooltip) return;
+
+    const pad = { left: 45, right: 20, top: 20, bottom: 35 };
+    const plotWidth = canvasRect.width - pad.left - pad.right;
+    const xPos = pad.left + (idx / (total - 1 || 1)) * plotWidth;
+
+    let rowsHtml = '';
+    for (const [key, enabled] of Object.entries(activeSeries)) {
+        if (!enabled) continue;
+        const def = SERIES_DEFS[key];
+        const val = def.get(pt);
+        const formatted = (typeof val === 'number')
+            ? (def.unit === 'V' ? val.toFixed(2) : (def.unit === '°C' ? val.toFixed(1) : val.toFixed(0)))
+            : val;
+        rowsHtml += `
+            <div class="chart-tooltip-row">
+                <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${def.color};"></span>
+                <span style="color:#cbd5e1;">${def.name}:</span>
+                <strong style="color:#ffffff;margin-left:auto;">${formatted}${def.unit}</strong>
+            </div>
+        `;
+    }
+
+    if (!rowsHtml) {
+        tooltip.style.display = 'none';
+        return;
+    }
+
+    tooltip.innerHTML = `
+        <div class="chart-tooltip-title">Timestamp: +${pt.timestamp}s (${idx + 1} of ${total})</div>
+        ${rowsHtml}
+    `;
+    tooltip.style.display = 'block';
+
+    const targetX = Math.max(70, Math.min(canvasRect.width - 70, xPos));
+    const targetY = 32;
+
+    tooltip.style.left = `${targetX}px`;
+    tooltip.style.top = `${targetY}px`;
+}
+
+function renderTelemetryChart(logs) {
+    const canvas = document.getElementById('telemetry-chart');
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    const ctx = canvas.getContext('2d');
+    ctx.resetTransform();
+    ctx.scale(dpr, dpr);
+
+    const pad = { left: 45, right: 20, top: 20, bottom: 35 };
+    const plotWidth = rect.width - pad.left - pad.right;
+    const plotHeight = rect.height - pad.top - pad.bottom;
+
+    ctx.clearRect(0, 0, rect.width, rect.height);
+
+    if (!logs || logs.length === 0) {
+        ctx.fillStyle = '#64748b';
+        ctx.font = '14px system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('No telemetry log data available yet.', rect.width / 2, rect.height / 2);
+        return;
+    }
+
+    const pts = [...logs].reverse();
+
+    // 1. Draw Grid Lines and Y-Axis Labels
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = '#1e293b';
+    ctx.fillStyle = '#64748b';
+    ctx.font = '10px system-ui, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+
+    const gridSteps = 4;
+    for (let i = 0; i <= gridSteps; i++) {
+        const y = pad.top + (i / gridSteps) * plotHeight;
+        const pct = Math.round(100 - (i / gridSteps) * 100);
+
+        ctx.beginPath();
+        ctx.setLineDash([4, 4]);
+        ctx.moveTo(pad.left, y);
+        ctx.lineTo(pad.left + plotWidth, y);
+        ctx.stroke();
+
+        ctx.setLineDash([]);
+        ctx.fillText(`${pct}%`, pad.left - 8, y);
+    }
+
+    // 2. X-Axis Time Labels
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    const xLabelCount = Math.min(5, pts.length);
+    for (let k = 0; k < xLabelCount; k++) {
+        const idx = Math.round((k / (xLabelCount - 1 || 1)) * (pts.length - 1));
+        const pt = pts[idx];
+        const x = pad.left + (pts.length > 1 ? (idx / (pts.length - 1)) * plotWidth : plotWidth / 2);
+        ctx.fillText(`+${pt.timestamp}s`, x, pad.top + plotHeight + 10);
+    }
+
+    // 3. Draw Active Series Curves
+    for (const [key, enabled] of Object.entries(activeSeries)) {
+        if (!enabled) continue;
+        const def = SERIES_DEFS[key];
+
+        const coords = pts.map((pt, i) => {
+            const val = def.get(pt);
+            const clamped = Math.max(def.min, Math.min(def.max, val));
+            const norm = (clamped - def.min) / (def.max - def.min || 1);
+            const x = pad.left + (pts.length > 1 ? (i / (pts.length - 1)) * plotWidth : plotWidth / 2);
+            const y = pad.top + (1 - norm) * plotHeight;
+            return { x, y, val };
+        });
+
+        // Draw Line
+        ctx.beginPath();
+        ctx.setLineDash([]);
+        ctx.lineWidth = 2.5;
+        ctx.strokeStyle = def.color;
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+
+        coords.forEach((c, idx) => {
+            if (idx === 0) ctx.moveTo(c.x, c.y);
+            else ctx.lineTo(c.x, c.y);
+        });
+        ctx.stroke();
+
+        // Optional Dots on Points if <= 40 readings
+        if (pts.length <= 40) {
+            ctx.fillStyle = def.color;
+            coords.forEach(c => {
+                ctx.beginPath();
+                ctx.arc(c.x, c.y, 3, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+    }
+
+    // 4. Draw Crosshair on Hover
+    if (chartHoverIndex !== null && chartHoverIndex >= 0 && chartHoverIndex < pts.length) {
+        const hIdx = chartHoverIndex;
+        const hoverX = pad.left + (pts.length > 1 ? (hIdx / (pts.length - 1)) * plotWidth : plotWidth / 2);
+
+        // Vertical Guide Line
+        ctx.beginPath();
+        ctx.setLineDash([3, 3]);
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 1;
+        ctx.moveTo(hoverX, pad.top);
+        ctx.lineTo(hoverX, pad.top + plotHeight);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Highlight Active Series Dots at Hover Index
+        const pt = pts[hIdx];
+        for (const [key, enabled] of Object.entries(activeSeries)) {
+            if (!enabled) continue;
+            const def = SERIES_DEFS[key];
+            const val = def.get(pt);
+            const clamped = Math.max(def.min, Math.min(def.max, val));
+            const norm = (clamped - def.min) / (def.max - def.min || 1);
+            const hy = pad.top + (1 - norm) * plotHeight;
+
+            // Outer Glow Ring
+            ctx.beginPath();
+            ctx.arc(hoverX, hy, 6, 0, Math.PI * 2);
+            ctx.fillStyle = '#0f172a';
+            ctx.fill();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = def.color;
+            ctx.stroke();
+
+            // Inner Dot
+            ctx.beginPath();
+            ctx.arc(hoverX, hy, 3, 0, Math.PI * 2);
+            ctx.fillStyle = def.color;
+            ctx.fill();
+        }
+    }
 }
