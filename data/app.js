@@ -470,7 +470,7 @@ function renderDialZones(containerId, min, max, zones) {
 
         if (a2 > a1) {
             const d = describeDialArc(cx, cy, r, a1, a2);
-            svgHtml += `<path class="dial-zone-arc" stroke="${z.color}" d="${d}" />`;
+            svgHtml += `<path class="dial-zone-arc" fill="none" stroke="${z.color}" stroke-width="8" stroke-linecap="butt" d="${d}" />`;
         }
     });
 

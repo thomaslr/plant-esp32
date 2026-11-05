@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Plant Monitor P2 (ESP32-C3)</title>
-    <link rel="stylesheet" href="style.css?v=2">
+    <link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
     <div class="container">
@@ -39,11 +39,11 @@
                     </div>
                     <div class="dial-container">
                         <svg class="dial-svg" viewBox="0 0 200 125" id="svg-soil">
-                            <path class="dial-bg-track" d="M 25 105 A 75 75 0 0 1 175 105" />
+                            <path class="dial-bg-track" d="M 25 105 A 75 75 0 0 1 175 105" fill="none" stroke="#334155" stroke-width="12" stroke-linecap="round" />
                             <g id="zones-soil" class="dial-zones"></g>
                             <g id="needle-soil" class="dial-needle-group" style="transform: rotate(-90deg); transform-origin: 100px 105px;">
-                                <polygon points="97,105 100,32 103,105" class="dial-needle" />
-                                <circle cx="100" cy="105" r="7" class="dial-hub" />
+                                <polygon points="97,105 100,32 103,105" fill="#f8fafc" class="dial-needle" />
+                                <circle cx="100" cy="105" r="7" fill="#38bdf8" stroke="#0f172a" stroke-width="2.5" class="dial-hub" />
                             </g>
                             <text x="25" y="122" class="dial-range-label" text-anchor="middle">0%</text>
                             <text x="175" y="122" class="dial-range-label" text-anchor="middle">100%</text>
@@ -66,11 +66,11 @@
                     </div>
                     <div class="dial-container">
                         <svg class="dial-svg" viewBox="0 0 200 125" id="svg-water">
-                            <path class="dial-bg-track" d="M 25 105 A 75 75 0 0 1 175 105" />
+                            <path class="dial-bg-track" d="M 25 105 A 75 75 0 0 1 175 105" fill="none" stroke="#334155" stroke-width="12" stroke-linecap="round" />
                             <g id="zones-water" class="dial-zones"></g>
                             <g id="needle-water" class="dial-needle-group" style="transform: rotate(-90deg); transform-origin: 100px 105px;">
-                                <polygon points="97,105 100,32 103,105" class="dial-needle" />
-                                <circle cx="100" cy="105" r="7" class="dial-hub" />
+                                <polygon points="97,105 100,32 103,105" fill="#f8fafc" class="dial-needle" />
+                                <circle cx="100" cy="105" r="7" fill="#38bdf8" stroke="#0f172a" stroke-width="2.5" class="dial-hub" />
                             </g>
                             <text x="25" y="122" class="dial-range-label" text-anchor="middle">0%</text>
                             <text x="175" y="122" class="dial-range-label" text-anchor="middle">100%</text>
@@ -93,11 +93,11 @@
                     </div>
                     <div class="dial-container">
                         <svg class="dial-svg" viewBox="0 0 200 125" id="svg-voltage">
-                            <path class="dial-bg-track" d="M 25 105 A 75 75 0 0 1 175 105" />
+                            <path class="dial-bg-track" d="M 25 105 A 75 75 0 0 1 175 105" fill="none" stroke="#334155" stroke-width="12" stroke-linecap="round" />
                             <g id="zones-voltage" class="dial-zones"></g>
                             <g id="needle-voltage" class="dial-needle-group" style="transform: rotate(-90deg); transform-origin: 100px 105px;">
-                                <polygon points="97,105 100,32 103,105" class="dial-needle" />
-                                <circle cx="100" cy="105" r="7" class="dial-hub" />
+                                <polygon points="97,105 100,32 103,105" fill="#f8fafc" class="dial-needle" />
+                                <circle cx="100" cy="105" r="7" fill="#38bdf8" stroke="#0f172a" stroke-width="2.5" class="dial-hub" />
                             </g>
                             <text x="25" y="122" class="dial-range-label" text-anchor="middle">4.0V</text>
                             <text x="175" y="122" class="dial-range-label" text-anchor="middle">6.0V</text>
@@ -120,11 +120,11 @@
                     </div>
                     <div class="dial-container">
                         <svg class="dial-svg" viewBox="0 0 200 125" id="svg-battery">
-                            <path class="dial-bg-track" d="M 25 105 A 75 75 0 0 1 175 105" />
+                            <path class="dial-bg-track" d="M 25 105 A 75 75 0 0 1 175 105" fill="none" stroke="#334155" stroke-width="12" stroke-linecap="round" />
                             <g id="zones-battery" class="dial-zones"></g>
                             <g id="needle-battery" class="dial-needle-group" style="transform: rotate(-90deg); transform-origin: 100px 105px;">
-                                <polygon points="97,105 100,32 103,105" class="dial-needle" />
-                                <circle cx="100" cy="105" r="7" class="dial-hub" />
+                                <polygon points="97,105 100,32 103,105" fill="#f8fafc" class="dial-needle" />
+                                <circle cx="100" cy="105" r="7" fill="#38bdf8" stroke="#0f172a" stroke-width="2.5" class="dial-hub" />
                             </g>
                             <text x="25" y="122" class="dial-range-label" text-anchor="middle">3.0V</text>
                             <text x="175" y="122" class="dial-range-label" text-anchor="middle">4.2V</text>
@@ -147,11 +147,11 @@
                     </div>
                     <div class="dial-container">
                         <svg class="dial-svg" viewBox="0 0 200 125" id="svg-temp">
-                            <path class="dial-bg-track" d="M 25 105 A 75 75 0 0 1 175 105" />
+                            <path class="dial-bg-track" d="M 25 105 A 75 75 0 0 1 175 105" fill="none" stroke="#334155" stroke-width="12" stroke-linecap="round" />
                             <g id="zones-temp" class="dial-zones"></g>
                             <g id="needle-temp" class="dial-needle-group" style="transform: rotate(-90deg); transform-origin: 100px 105px;">
-                                <polygon points="97,105 100,32 103,105" class="dial-needle" />
-                                <circle cx="100" cy="105" r="7" class="dial-hub" />
+                                <polygon points="97,105 100,32 103,105" fill="#f8fafc" class="dial-needle" />
+                                <circle cx="100" cy="105" r="7" fill="#38bdf8" stroke="#0f172a" stroke-width="2.5" class="dial-hub" />
                             </g>
                             <text x="25" y="122" class="dial-range-label" text-anchor="middle">20°C</text>
                             <text x="175" y="122" class="dial-range-label" text-anchor="middle">85°C</text>
@@ -398,6 +398,6 @@
         </footer>
     </div>
 
-    <script src="app.js?v=2"></script>
+    <script src="app.js?v=3"></script>
 </body>
 </html>
