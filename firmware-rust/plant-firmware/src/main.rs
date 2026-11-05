@@ -8,6 +8,7 @@
 //! 4. Visual Status LED Supervisor: Dedicated Round-Robin status signaling on GPIO 8.
 
 mod led;
+mod ota;
 mod pins;
 mod pump;
 mod secrets;
@@ -280,7 +281,10 @@ fn main() -> anyhow::Result<()> {
 
     info!("[SYS] All background tasks successfully spawned. System running.");
 
-            // Keep main thread alive
+    // 14. Confirm successful boot to bootloader to permanently cancel OTA rollback
+    crate::ota::mark_running_app_valid();
+
+    // Keep main thread alive
             loop {
                 thread::sleep(Duration::from_secs(3600));
             }

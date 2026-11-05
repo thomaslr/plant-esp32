@@ -9,7 +9,7 @@ use embedded_svc::http::{Headers, Method};
 use embedded_svc::io::{Read, Write};
 use esp_idf_svc::http::server::{Configuration as ServerConfig, EspHttpConnection, EspHttpServer};
 use esp_idf_svc::io::EspIOError;
-use log::info;
+use log::{error, info};
 use plant_core::api::{
     parse_log_count, parse_water_duration, query_param, to_json, HealthResponse, LogEntry,
     PumpView, ResetResponse, SensorsView, StatusResponse, WaterResponse,
@@ -270,6 +270,64 @@ pub fn create_web_server(
             }
         });
         res
+    })?;
+
+    // 12. GET /api/ota/status
+    server.fn_handler("/api/ota/status", Method::Get, move |req| {
+        let status = crate::ota::get_ota_status();
+        let json = to_json(&status);
+        send_json(req, 200, &json)
+    })?;
+
+    // 13. POST /api/ota/update
+    server.fn_handler("/api/ota/update", Method::Post, move |mut req| {
+        let len = req.content_len().unwrap_or(0) as usize;
+        let mut buf = vec![0u8; len];
+        let _ = req.read_exact(&mut buf);
+
+        let url = if let Ok(v) = serde_json::from_slice::<serde_json::Value>(&buf) {
+            v.get("url")
+                .and_then(|u| u.as_str())
+                .unwrap_or(crate::ota::DEFAULT_GITHUB_OTA_URL)
+                .to_string()
+        } else {
+            crate::ota::DEFAULT_GITHUB_OTA_URL.to_string()
+        };
+
+        info!("[HTTP] Remote OTA update requested from: {}", url);
+        std::thread::spawn(move || {
+            std::thread::sleep(std::time::Duration::from_millis(500));
+            if let Err(e) = crate::ota::update_from_url(&url) {
+                error!("[OTA] Remote OTA update failed: {}", e);
+            }
+        });
+
+        send_json(
+            req,
+            200,
+            r#"{"status":"started","message":"OTA update initiated in background. Device will reboot when complete."}"#,
+        )
+    })?;
+
+    // 14. POST /api/ota/upload
+    server.fn_handler("/api/ota/upload", Method::Post, move |mut req| {
+        let len = req.content_len().unwrap_or(0) as usize;
+        info!("[HTTP] Direct OTA upload received ({} bytes)", len);
+        if len < 500_000 {
+            return send_json(req, 400, r#"{"error":"File too small to be valid firmware"}"#);
+        }
+
+        match crate::ota::flash_stream(&mut req, len) {
+            Ok(()) => send_json(
+                req,
+                200,
+                r#"{"status":"success","message":"Firmware flashed! Rebooting..."}"#,
+            ),
+            Err(e) => {
+                error!("[OTA] Flash stream error: {}", e);
+                send_json(req, 500, &format!(r#"{{"error":"{}"}}"#, e))
+            }
+        }
     })?;
 
     info!("[HTTP] Web server registered all endpoints successfully on port 80");

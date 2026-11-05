@@ -1,0 +1,79 @@
+name: Build & Release Firmware
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Tag/version name (e.g. v0.2.0)'
+        required: false
+        default: 'v0.2.0'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    name: Build ESP32-C3 Firmware Binary
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install System Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build python3 python3-pip libclang-dev libudev-dev
+
+      - name: Install Rust Toolchain (Pinned Nightly)
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          toolchain: nightly-2026-04-01
+          targets: riscv32imc-esp-espidf
+          components: rust-src
+
+      - name: Install ldproxy & espflash
+        uses: taiki-e/install-action@v2
+        with:
+          tool: ldproxy,espflash
+
+      - name: Compile Release Firmware
+        working-directory: firmware-rust/plant-firmware
+        run: cargo build --release
+
+      - name: Convert ELF to Flashable Firmware Binary (.bin)
+        run: |
+          espflash save-image --chip esp32c3 \
+            firmware-rust/target/riscv32imc-esp-espidf/release/plant-firmware \
+            plant-firmware.bin
+          ls -lh plant-firmware.bin
+
+      - name: Generate Version Metadata
+        run: |
+          TAG_NAME="${{ github.ref_name }}"
+          if [ -z "$TAG_NAME" ] || [ "$TAG_NAME" = "main" ]; then
+            TAG_NAME="${{ github.event.inputs.release_tag || 'latest' }}"
+          fi
+          cat <<EOF > version.json
+          {
+            "version": "$TAG_NAME",
+            "url": "https://github.com/${{ github.repository }}/releases/latest/download/plant-firmware.bin",
+            "sha256": "$(sha256sum plant-firmware.bin | awk '{print $1}')",
+            "built_at": "$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          }
+          EOF
+          cat version.json
+
+      - name: Publish to GitHub Releases
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+        with:
+          tag_name: ${{ github.ref_name != 'main' && github.ref_name || github.event.inputs.release_tag || 'latest' }}
+          name: Plant Monitor Firmware ${{ github.ref_name != 'main' && github.ref_name || github.event.inputs.release_tag || 'latest' }}
+          generate_release_notes: true
+          files: |
+            plant-firmware.bin
+            version.json

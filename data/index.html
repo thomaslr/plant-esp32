@@ -117,6 +117,21 @@
                 </ul>
                 <button id="btn-sensor-reset" class="btn btn-secondary">Force Ultrasonic Reset</button>
                 <button id="btn-wifi-reset" class="btn btn-secondary" style="margin-top: 8px;">Reset Wi-Fi (Setup Mode)</button>
+
+                <hr style="border: 0; border-top: 1px solid #30363d; margin: 14px 0 10px 0;">
+                <h4 style="margin: 0 0 8px 0; font-size: 14px; color: #8b949e;">Firmware & OTA Updates</h4>
+                <ul class="diag-list" style="margin-bottom: 10px;">
+                    <li><span>Firmware:</span> <strong id="diag-ota-ver">v0.1.0</strong></li>
+                    <li><span>Boot Slot:</span> <strong id="diag-ota-slot">--</strong></li>
+                </ul>
+                <div style="display: flex; gap: 8px;">
+                    <button id="btn-ota-check" class="btn btn-primary" style="flex: 1;">Check GitHub Update</button>
+                    <label class="btn btn-secondary" style="flex: 1; text-align: center; cursor: pointer; margin: 0; display: flex; align-items: center; justify-content: center;">
+                        Upload .bin
+                        <input type="file" id="file-ota-upload" accept=".bin" style="display: none;">
+                    </label>
+                </div>
+                <div id="ota-msg" style="font-size: 12px; margin-top: 8px; color: #8b949e; display: none;"></div>
             </div>
 
             <div class="card">

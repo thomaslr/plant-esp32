@@ -11,6 +11,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-sensor-reset').addEventListener('click', handleResetUltrasonic);
     document.getElementById('btn-wifi-reset').addEventListener('click', handleResetWifi);
     document.getElementById('btn-refresh-logs').addEventListener('click', fetchLogs);
+    document.getElementById('btn-ota-check').addEventListener('click', handleOtaCheck);
+    document.getElementById('file-ota-upload').addEventListener('change', handleOtaUpload);
+    fetchOtaStatus();
 });
 
 // =============================================================================
@@ -158,6 +161,80 @@ async function handleResetWifi() {
         alert("Wi-Fi reset failed: " + err.message);
         btn.disabled = false;
         btn.innerText = 'Reset Wi-Fi (Setup Mode)';
+    }
+}
+
+async function fetchOtaStatus() {
+    try {
+        const res = await fetch('/api/ota/status');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.firmware_version) {
+            document.getElementById('diag-ota-ver').innerText = `v${data.firmware_version}`;
+        }
+        if (data.running_slot) {
+            document.getElementById('diag-ota-slot').innerText = `${data.running_slot} (Next: ${data.next_update_slot})`;
+        }
+    } catch (_) {}
+}
+
+async function handleOtaCheck() {
+    if (!confirm("Initiate OTA update from GitHub Releases? The device will stream the binary, flash the standby partition, and reboot.")) {
+        return;
+    }
+    const btn = document.getElementById('btn-ota-check');
+    const msg = document.getElementById('ota-msg');
+    btn.disabled = true;
+    btn.innerText = 'Checking...';
+    msg.style.display = 'block';
+    msg.style.color = '#58a6ff';
+    msg.innerText = 'Initiating GitHub OTA download...';
+
+    try {
+        const res = await fetch('/api/ota/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+        const result = await res.json();
+        msg.innerText = result.message || 'OTA update started! Device will reboot in ~30s.';
+        setTimeout(() => {
+            msg.innerText = 'Device rebooting into new firmware. Refreshing page in 15s...';
+            setTimeout(() => window.location.reload(), 15000);
+        }, 15000);
+    } catch (err) {
+        msg.style.color = '#ef4444';
+        msg.innerText = 'OTA update error: ' + err.message;
+        btn.disabled = false;
+        btn.innerText = 'Check GitHub Update';
+    }
+}
+
+async function handleOtaUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (!confirm(`Flash firmware binary '${file.name}' (${(file.size / 1024).toFixed(0)} KB)? The device will flash the standby partition and reboot.`)) {
+        event.target.value = '';
+        return;
+    }
+
+    const msg = document.getElementById('ota-msg');
+    msg.style.display = 'block';
+    msg.style.color = '#58a6ff';
+    msg.innerText = `Uploading and flashing ${file.name}... Please wait.`;
+
+    try {
+        const res = await fetch('/api/ota/upload', {
+            method: 'POST',
+            body: file
+        });
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.error || 'Upload failed');
+        msg.style.color = '#10b981';
+        msg.innerText = result.message || 'Firmware flashed successfully! Rebooting in a moment...';
+        setTimeout(() => window.location.reload(), 12000);
+    } catch (err) {
+        msg.style.color = '#ef4444';
+        msg.innerText = 'Upload failed: ' + err.message;
+    } finally {
+        event.target.value = '';
     }
 }
 
