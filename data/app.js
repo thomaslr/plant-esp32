@@ -31,6 +31,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-water').addEventListener('click', handleWaterClick);
     document.getElementById('btn-sensor-reset').addEventListener('click', handleResetUltrasonic);
     document.getElementById('btn-wifi-reset').addEventListener('click', handleResetWifi);
+    document.getElementById('btn-diag-reboot').addEventListener('click', handleReboot);
+    document.getElementById('btn-settings-reboot').addEventListener('click', handleReboot);
     document.getElementById('btn-refresh-logs').addEventListener('click', fetchLogs);
     document.getElementById('btn-ota-check').addEventListener('click', handleOtaCheck);
     document.getElementById('file-ota-upload').addEventListener('change', handleOtaUpload);
@@ -222,7 +224,7 @@ async function handleResetWifi() {
     }
     const btn = document.getElementById('btn-wifi-reset');
     btn.disabled = true;
-    btn.innerText = 'Resetting Wi-Fi...';
+    btn.innerText = 'Resetting...';
 
     try {
         const res = await fetch('/api/wifi/reset', { method: 'POST' });
@@ -231,7 +233,31 @@ async function handleResetWifi() {
     } catch (err) {
         alert("Wi-Fi reset failed: " + err.message);
         btn.disabled = false;
-        btn.innerText = 'Reset Wi-Fi (Setup Mode)';
+        btn.innerText = 'Reset Wi-Fi';
+    }
+}
+
+async function handleReboot() {
+    const targetHost = (appConfig && appConfig.system && appConfig.system.hostname) ? appConfig.system.hostname : 'plants';
+    if (!confirm(`Reboot Plant Monitor? The device will restart and reconnect as ${targetHost}.local.`)) {
+        return;
+    }
+    const diagBtn = document.getElementById('btn-diag-reboot');
+    const cfgBtn = document.getElementById('btn-settings-reboot');
+    if (diagBtn) { diagBtn.disabled = true; diagBtn.innerText = 'Rebooting...'; }
+    if (cfgBtn) { cfgBtn.disabled = true; cfgBtn.innerText = 'Rebooting...'; }
+
+    try {
+        const res = await fetch('/api/system/reboot', { method: 'POST' });
+        const result = await res.json();
+        alert(result.message || "Device is rebooting. Page will reload in a few seconds.");
+        setTimeout(() => {
+            window.location.href = `http://${targetHost}.local`;
+        }, 8000);
+    } catch (err) {
+        alert("Reboot request failed: " + err.message);
+        if (diagBtn) { diagBtn.disabled = false; diagBtn.innerText = 'Reboot Device'; }
+        if (cfgBtn) { cfgBtn.disabled = false; cfgBtn.innerText = '🔄 Reboot Device'; }
     }
 }
 
@@ -314,6 +340,7 @@ async function handleOtaUpload(event) {
 // =============================================================================
 function loadConfigToForm() {
     if (!appConfig) return;
+    const sys = appConfig.system || {};
     const g = appConfig.gauges || {};
     const sm = g.soil_moisture || {};
     const wl = g.water_level || {};
@@ -322,6 +349,10 @@ function loadConfigToForm() {
     const t = g.temperature || {};
     const s = appConfig.safety || {};
     const d = s.daily_watering_limit || {};
+
+    if (sys.hostname !== undefined) {
+        document.getElementById('cfg-system-hostname').value = sys.hostname;
+    }
 
     if (sm.trigger_threshold !== undefined) document.getElementById('cfg-soil-trigger').value = sm.trigger_threshold;
     if (sm.optimal_min !== undefined) document.getElementById('cfg-soil-opt-min').value = sm.optimal_min;
@@ -354,7 +385,12 @@ async function handleConfigSubmit(e) {
     btn.innerText = 'Saving to Flash...';
     msg.style.display = 'none';
 
+    const rawHostname = document.getElementById('cfg-system-hostname').value.trim();
+
     const patch = {
+        system: {
+            hostname: rawHostname
+        },
         gauges: {
             soil_moisture: {
                 trigger_threshold: parseInt(document.getElementById('cfg-soil-trigger').value, 10),
@@ -399,6 +435,9 @@ async function handleConfigSubmit(e) {
         if (!res.ok) throw new Error(resJson.error || "Failed to commit configuration");
 
         // Merge patch into memory
+        if (!appConfig.system) appConfig.system = {};
+        const oldHostname = appConfig.system.hostname;
+        Object.assign(appConfig.system, patch.system);
         if (!appConfig.gauges) appConfig.gauges = {};
         Object.assign(appConfig.gauges.soil_moisture, patch.gauges.soil_moisture);
         Object.assign(appConfig.gauges.water_level, patch.gauges.water_level);
@@ -411,10 +450,15 @@ async function handleConfigSubmit(e) {
         renderAllDialZones();
         if (lastTelemetry) updateTelemetryUI(lastTelemetry);
 
+        const hostnameChanged = oldHostname && patch.system && patch.system.hostname && (oldHostname !== patch.system.hostname);
         msg.className = 'cfg-status-msg status-ok';
-        msg.innerText = '✅ Settings saved to NVS flash and applied immediately!';
+        if (hostnameChanged) {
+            msg.innerText = `✅ Settings saved! Hostname changed to "${patch.system.hostname}". Click "Reboot Device" to activate ${patch.system.hostname}.local.`;
+        } else {
+            msg.innerText = '✅ Settings saved to NVS flash and applied immediately!';
+        }
         msg.style.display = 'inline-block';
-        setTimeout(() => { msg.style.display = 'none'; }, 6000);
+        setTimeout(() => { msg.style.display = 'none'; }, 8000);
     } catch (err) {
         msg.className = 'cfg-status-msg status-err';
         msg.innerText = '❌ Save error: ' + err.message;

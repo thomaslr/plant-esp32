@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Plant Monitor P2 (ESP32-C3)</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="apple-touch-icon" href="favicon.svg">
     <link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
@@ -201,7 +203,10 @@
                         <li><span>Preventive Resets:</span> <strong id="diag-resets">0</strong></li>
                     </ul>
                     <button id="btn-sensor-reset" class="btn btn-secondary">Force Ultrasonic Reset</button>
-                    <button id="btn-wifi-reset" class="btn btn-secondary" style="margin-top: 8px;">Reset Wi-Fi (Setup Mode)</button>
+                    <div style="display: flex; gap: 8px; margin-top: 8px;">
+                        <button id="btn-diag-reboot" class="btn btn-warning" style="flex: 1; margin-top: 0;">Reboot Device</button>
+                        <button id="btn-wifi-reset" class="btn btn-secondary" style="flex: 1; margin-top: 0;">Reset Wi-Fi</button>
+                    </div>
 
                     <hr style="border: 0; border-top: 1px solid #30363d; margin: 14px 0 10px 0;">
                     <h4 style="margin: 0 0 8px 0; font-size: 14px; color: #8b949e;">Firmware & OTA Updates</h4>
@@ -254,6 +259,25 @@
             </div>
 
             <form id="config-form">
+                <!-- Section 0: Network & Device Identity -->
+                <div class="card settings-section">
+                    <div class="section-title">
+                        <span class="card-icon">🌐</span>
+                        <h3>Network & Device Identity</h3>
+                    </div>
+                    <p class="section-desc">Local network hostname used for mDNS discovery and DHCP identification. Requires reboot to apply.</p>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="cfg-system-hostname">mDNS Hostname:</label>
+                            <div class="input-suffix-group">
+                                <input type="text" id="cfg-system-hostname" pattern="[a-zA-Z0-9-]+" maxlength="32" placeholder="plants" required>
+                                <span class="input-suffix">.local</span>
+                            </div>
+                            <span class="field-hint">e.g. entering <code>plants1</code> will become <code>plants1.local</code> on reboot. Letters, numbers, and hyphens only.</span>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Section 1: Soil Moisture -->
                 <div class="card settings-section">
                     <div class="section-title">
@@ -388,6 +412,7 @@
                 <div class="settings-actions">
                     <button type="submit" id="btn-save-cfg" class="btn btn-primary">💾 Save Settings to Flash</button>
                     <button type="button" id="btn-reload-cfg" class="btn btn-secondary" style="width: auto; margin-top: 0;">🔄 Discard & Reload</button>
+                    <button type="button" id="btn-settings-reboot" class="btn btn-warning" style="width: auto; margin-top: 0;">🔄 Reboot Device</button>
                     <div id="cfg-status-msg" class="cfg-status-msg"></div>
                 </div>
             </form>

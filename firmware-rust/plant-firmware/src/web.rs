@@ -28,6 +28,7 @@ static INDEX_HTML: &str = include_str!("../../../data/index.html");
 static APP_JS: &str = include_str!("../../../data/app.js");
 static STYLE_CSS: &str = include_str!("../../../data/style.css");
 static SETUP_HTML: &str = include_str!("../../../data/setup.html");
+static FAVICON_SVG: &str = include_str!("../../../data/favicon.svg");
 
 pub struct AppState {
     pub config: AppConfig,
@@ -66,7 +67,15 @@ pub fn create_web_server(
         send_file(req, "text/css", STYLE_CSS)
     })?;
 
-    // 4. GET /api/status
+    // 4. Static Asset: GET /favicon.svg and GET /favicon.ico
+    server.fn_handler("/favicon.svg", Method::Get, |req| {
+        send_file(req, "image/svg+xml", FAVICON_SVG)
+    })?;
+    server.fn_handler("/favicon.ico", Method::Get, |req| {
+        send_file(req, "image/svg+xml", FAVICON_SVG)
+    })?;
+
+    // 5. GET /api/status
     let s_status = Arc::clone(&state);
     server.fn_handler("/api/status", Method::Get, move |req| {
         let (json, status_code) = {
@@ -272,7 +281,24 @@ pub fn create_web_server(
         res
     })?;
 
-    // 12. GET /api/ota/status
+    // 12. POST /api/system/reboot
+    server.fn_handler("/api/system/reboot", Method::Post, move |req| {
+        info!("[HTTP] System reboot requested via REST API. Restarting...");
+        let res = send_json(
+            req,
+            200,
+            r#"{"status":"success","message":"Device is rebooting..."}"#,
+        );
+        std::thread::spawn(|| {
+            std::thread::sleep(std::time::Duration::from_millis(1500));
+            unsafe {
+                esp_idf_svc::sys::esp_restart();
+            }
+        });
+        res
+    })?;
+
+    // 13. GET /api/ota/status
     server.fn_handler("/api/ota/status", Method::Get, move |req| {
         let status = crate::ota::get_ota_status();
         let json = to_json(&status);
@@ -368,6 +394,14 @@ pub fn create_provisioning_server(
     })?;
     server.fn_handler("/connecttest.txt", Method::Get, |req| {
         send_file(req, "text/html; charset=utf-8", SETUP_HTML)
+    })?;
+
+    // Favicon endpoints
+    server.fn_handler("/favicon.svg", Method::Get, |req| {
+        send_file(req, "image/svg+xml", FAVICON_SVG)
+    })?;
+    server.fn_handler("/favicon.ico", Method::Get, |req| {
+        send_file(req, "image/svg+xml", FAVICON_SVG)
     })?;
 
     // 3. GET /api/scan

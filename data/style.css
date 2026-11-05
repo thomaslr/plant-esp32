@@ -372,6 +372,54 @@ header {
     background: #475569;
 }
 
+.btn-warning {
+    background: #d97706;
+    color: white;
+}
+
+.btn-warning:hover {
+    background: #b45309;
+}
+
+.btn-danger {
+    background: #dc2626;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #b91c1c;
+}
+
+.input-suffix-group {
+    display: flex;
+    align-items: stretch;
+}
+
+.input-suffix-group input {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    flex: 1;
+}
+
+.input-suffix {
+    display: flex;
+    align-items: center;
+    background: #1e293b;
+    border: 1px solid var(--card-border);
+    border-left: none;
+    padding: 0 12px;
+    border-top-right-radius: 6px;
+    border-bottom-right-radius: 6px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #94a3b8;
+    user-select: none;
+}
+
+.input-suffix-group:focus-within .input-suffix {
+    border-color: #38bdf8;
+}
+
 .btn-small {
     padding: 4px 10px;
     font-size: 0.8rem;

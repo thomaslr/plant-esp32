@@ -244,6 +244,23 @@ impl AppConfig {
     /// Applies a `POST /api/config` patch. Validates values before committing.
     pub fn apply_patch(&mut self, patch: &ConfigPatch) -> Result<(), String> {
         // Validation phase
+        if let Some(ref sys) = patch.system {
+            if let Some(ref h) = sys.hostname {
+                let trimmed = h.trim();
+                if trimmed.is_empty() {
+                    return Err("hostname cannot be empty".to_string());
+                }
+                if trimmed.len() > 32 {
+                    return Err("hostname must be at most 32 characters".to_string());
+                }
+                if !trimmed.chars().all(|c| c.is_ascii_alphanumeric() || c == '-') {
+                    return Err("hostname can only contain letters, numbers, and hyphens".to_string());
+                }
+                if trimmed.starts_with('-') || trimmed.ends_with('-') {
+                    return Err("hostname cannot start or end with a hyphen".to_string());
+                }
+            }
+        }
         if let Some(ref g) = patch.gauges {
             if let Some(ref s) = g.soil_moisture {
                 if let Some(t) = s.trigger_threshold {
@@ -291,6 +308,11 @@ impl AppConfig {
         }
 
         // Application phase
+        if let Some(ref sys) = patch.system {
+            if let Some(ref h) = sys.hostname {
+                self.system.hostname = h.trim().to_string();
+            }
+        }
         if let Some(ref g) = patch.gauges {
             if let Some(ref s) = g.soil_moisture {
                 if let Some(t) = s.trigger_threshold { self.gauges.soil_moisture.trigger_threshold = t; }
@@ -330,8 +352,14 @@ impl AppConfig {
 /// Body accepted by `POST /api/config`. Unknown keys are ignored.
 #[derive(Debug, Clone, Default, Deserialize)]
 pub struct ConfigPatch {
+    pub system: Option<SystemPatch>,
     pub gauges: Option<GaugesPatch>,
     pub safety: Option<SafetyPatch>,
+}
+
+#[derive(Debug, Clone, Default, Deserialize)]
+pub struct SystemPatch {
+    pub hostname: Option<String>,
 }
 
 #[derive(Debug, Clone, Default, Deserialize)]
@@ -482,6 +510,16 @@ mod tests {
         assert_eq!(c.gauges.soil_moisture.dry_adc, 2800); // not patchable via API
         assert_eq!(c.safety.max_continuous_pump_sec, 45);
         assert_eq!(c.safety.min_time_between_cycles_sec, 120);
+
+        // Test hostname patch in system
+        let sys_patch: ConfigPatch = serde_json::from_str(r#"{"system":{"hostname":"plants1"}}"#).unwrap();
+        c.apply_patch(&sys_patch).unwrap();
+        assert_eq!(c.system.hostname, "plants1");
+
+        // Invalid hostname rejected
+        let bad_host: ConfigPatch = serde_json::from_str(r#"{"system":{"hostname":"bad host!"}}"#).unwrap();
+        assert!(c.apply_patch(&bad_host).is_err());
+        assert_eq!(c.system.hostname, "plants1");
     }
 
     #[test]

@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="bgTile" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#090d16"/>
+    </linearGradient>
+    <linearGradient id="leafGradLeft" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#059669"/>
+      <stop offset="100%" stop-color="#34d399"/>
+    </linearGradient>
+    <linearGradient id="leafGradRight" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#6ee7b7"/>
+    </linearGradient>
+    <linearGradient id="dropGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#0284c7"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Modern squircle tile with emerald accent border -->
+  <rect width="64" height="64" rx="16" fill="url(#bgTile)"/>
+  <rect x="1.5" y="1.5" width="61" height="61" rx="14.5" fill="none" stroke="#10b981" stroke-width="2.5" stroke-opacity="0.9"/>
+
+  <!-- Plant Stem (graceful taper and curve) -->
+  <path d="M 31 52 C 31 38 31 28 29 20" fill="none" stroke="#10b981" stroke-width="4.5" stroke-linecap="round"/>
+
+  <!-- Left Leaf (Broad seedling cotyledon) -->
+  <path d="M 29 28 C 15 28 10 18 17 12 C 26 10 31 20 29 28 Z" fill="url(#leafGradLeft)"/>
+  <path d="M 29 28 C 24 23 20 18 19 14" fill="none" stroke="#059669" stroke-width="1.2" stroke-linecap="round" opacity="0.6"/>
+
+  <!-- Right Leaf (Young unfurling leaf) -->
+  <path d="M 29 21 C 32 13 44 11 49 18 C 51 26 39 29 29 21 Z" fill="url(#leafGradRight)"/>
+  <path d="M 29 21 C 35 19 41 19 45 19" fill="none" stroke="#059669" stroke-width="1.2" stroke-linecap="round" opacity="0.6"/>
+
+  <!-- Water Droplet (Hydration accent) -->
+  <path d="M 43 48 C 39.2 48 36.5 45.3 36.5 42.2 C 36.5 39 43 31.5 43 31.5 C 43 31.5 49.5 39 49.5 42.2 C 49.5 45.3 46.8 48 43 48 Z" fill="url(#dropGrad)"/>
+  <ellipse cx="41.2" cy="40.5" rx="1.5" ry="2.2" fill="#ffffff" opacity="0.85" transform="rotate(-20 41.2 40.5)"/>
+</svg>
