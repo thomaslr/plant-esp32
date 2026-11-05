@@ -20,11 +20,21 @@ pub struct SoilMoistureConfig {
     pub dry_adc: i32,
     /// Sensor millivolts in water (100 % moisture).
     pub wet_adc: i32,
+    /// Lower bound of optimal soil moisture zone (%).
+    pub optimal_min: i32,
+    /// Upper bound of optimal soil moisture zone (%).
+    pub optimal_max: i32,
 }
 
 impl Default for SoilMoistureConfig {
     fn default() -> Self {
-        Self { trigger_threshold: 40, dry_adc: 2800, wet_adc: 1100 }
+        Self {
+            trigger_threshold: 40,
+            dry_adc: 2800,
+            wet_adc: 1100,
+            optimal_min: 35,
+            optimal_max: 75,
+        }
     }
 }
 
@@ -37,11 +47,18 @@ pub struct WaterLevelConfig {
     pub sensor_offset_cm: f32,
     /// Minimum water level before dry-run protection engages.
     pub min_safe_level_cm: f32,
+    /// Water level percentage threshold to alert for refill.
+    pub refill_warning_pct: f32,
 }
 
 impl Default for WaterLevelConfig {
     fn default() -> Self {
-        Self { tank_height_cm: 30.0, sensor_offset_cm: 3.0, min_safe_level_cm: 2.0 }
+        Self {
+            tank_height_cm: 30.0,
+            sensor_offset_cm: 3.0,
+            min_safe_level_cm: 2.0,
+            refill_warning_pct: 25.0,
+        }
     }
 }
 
@@ -60,12 +77,44 @@ impl Default for VoltageConfig {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct BatteryConfig {
+    /// Low battery warning threshold in Volts.
+    pub min_warning: f32,
+    /// Lower bound of optimal battery range in Volts.
+    pub optimal_min: f32,
+}
+
+impl Default for BatteryConfig {
+    fn default() -> Self {
+        Self { min_warning: 3.3, optimal_min: 3.7 }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct TemperatureConfig {
+    /// Upper bound of optimal chip temperature range in °C.
+    pub optimal_max: f32,
+    /// High temperature alert threshold in °C.
+    pub high_warning: f32,
+}
+
+impl Default for TemperatureConfig {
+    fn default() -> Self {
+        Self { optimal_max: 55.0, high_warning: 70.0 }
+    }
+}
+
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct GaugesConfig {
     pub soil_moisture: SoilMoistureConfig,
     pub water_level: WaterLevelConfig,
     pub voltage: VoltageConfig,
+    pub battery: BatteryConfig,
+    pub temperature: TemperatureConfig,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -192,43 +241,93 @@ impl AppConfig {
         serde_json::to_string_pretty(self).expect("AppConfig serialisation is infallible")
     }
 
-    /// Applies a `POST /api/config` patch. Only the three fields the C++ web
-    /// handler supported are accepted. The patch is validated as a whole
-    /// first, so a bad value leaves the config completely untouched.
+    /// Applies a `POST /api/config` patch. Validates values before committing.
     pub fn apply_patch(&mut self, patch: &ConfigPatch) -> Result<(), String> {
-        let threshold = patch
-            .gauges
-            .as_ref()
-            .and_then(|g| g.soil_moisture.as_ref())
-            .and_then(|s| s.trigger_threshold);
-        let max_pump = patch.safety.as_ref().and_then(|s| s.max_continuous_pump_sec);
-        let cooldown = patch.safety.as_ref().and_then(|s| s.min_time_between_cycles_sec);
-
-        if let Some(t) = threshold {
-            if !(0..=100).contains(&t) {
-                return Err(format!("trigger_threshold must be 0-100, got {t}"));
+        // Validation phase
+        if let Some(ref g) = patch.gauges {
+            if let Some(ref s) = g.soil_moisture {
+                if let Some(t) = s.trigger_threshold {
+                    if !(0..=100).contains(&t) {
+                        return Err(format!("trigger_threshold must be 0-100, got {t}"));
+                    }
+                }
+                if let Some(min) = s.optimal_min {
+                    if !(0..=100).contains(&min) {
+                        return Err(format!("optimal_min must be 0-100, got {min}"));
+                    }
+                }
+                if let Some(max) = s.optimal_max {
+                    if !(0..=100).contains(&max) {
+                        return Err(format!("optimal_max must be 0-100, got {max}"));
+                    }
+                }
+            }
+            if let Some(ref w) = g.water_level {
+                if let Some(h) = w.tank_height_cm {
+                    if h <= 0.0 {
+                        return Err("tank_height_cm must be positive".to_string());
+                    }
+                }
+                if let Some(safe) = w.min_safe_level_cm {
+                    if safe < 0.0 {
+                        return Err("min_safe_level_cm cannot be negative".to_string());
+                    }
+                }
+            }
+            if let Some(ref v) = g.voltage {
+                if let (Some(min), Some(max)) = (v.min_warning, v.max_warning) {
+                    if min >= max {
+                        return Err("min_warning must be less than max_warning".to_string());
+                    }
+                }
             }
         }
-        if let Some(m) = max_pump {
-            if m == 0 {
-                return Err("max_continuous_pump_sec must be at least 1".to_string());
+        if let Some(ref s) = patch.safety {
+            if let Some(m) = s.max_continuous_pump_sec {
+                if m == 0 {
+                    return Err("max_continuous_pump_sec must be at least 1".to_string());
+                }
             }
         }
 
-        if let Some(t) = threshold {
-            self.gauges.soil_moisture.trigger_threshold = t;
+        // Application phase
+        if let Some(ref g) = patch.gauges {
+            if let Some(ref s) = g.soil_moisture {
+                if let Some(t) = s.trigger_threshold { self.gauges.soil_moisture.trigger_threshold = t; }
+                if let Some(min) = s.optimal_min { self.gauges.soil_moisture.optimal_min = min; }
+                if let Some(max) = s.optimal_max { self.gauges.soil_moisture.optimal_max = max; }
+            }
+            if let Some(ref w) = g.water_level {
+                if let Some(h) = w.tank_height_cm { self.gauges.water_level.tank_height_cm = h; }
+                if let Some(safe) = w.min_safe_level_cm { self.gauges.water_level.min_safe_level_cm = safe; }
+                if let Some(r) = w.refill_warning_pct { self.gauges.water_level.refill_warning_pct = r; }
+            }
+            if let Some(ref v) = g.voltage {
+                if let Some(min) = v.min_warning { self.gauges.voltage.min_warning = min; }
+                if let Some(max) = v.max_warning { self.gauges.voltage.max_warning = max; }
+            }
+            if let Some(ref b) = g.battery {
+                if let Some(min) = b.min_warning { self.gauges.battery.min_warning = min; }
+                if let Some(opt) = b.optimal_min { self.gauges.battery.optimal_min = opt; }
+            }
+            if let Some(ref t) = g.temperature {
+                if let Some(opt) = t.optimal_max { self.gauges.temperature.optimal_max = opt; }
+                if let Some(h) = t.high_warning { self.gauges.temperature.high_warning = h; }
+            }
         }
-        if let Some(m) = max_pump {
-            self.safety.max_continuous_pump_sec = m;
-        }
-        if let Some(c) = cooldown {
-            self.safety.min_time_between_cycles_sec = c;
+        if let Some(ref s) = patch.safety {
+            if let Some(m) = s.max_continuous_pump_sec { self.safety.max_continuous_pump_sec = m; }
+            if let Some(c) = s.min_time_between_cycles_sec { self.safety.min_time_between_cycles_sec = c; }
+            if let Some(ref d) = s.daily_watering_limit {
+                if let Some(e) = d.enabled { self.safety.daily_watering_limit.enabled = e; }
+                if let Some(m) = d.max_seconds_per_day { self.safety.daily_watering_limit.max_seconds_per_day = m; }
+            }
         }
         Ok(())
     }
 }
 
-/// Body accepted by `POST /api/config`. Unknown keys are ignored, as in C++.
+/// Body accepted by `POST /api/config`. Unknown keys are ignored.
 #[derive(Debug, Clone, Default, Deserialize)]
 pub struct ConfigPatch {
     pub gauges: Option<GaugesPatch>,
@@ -238,17 +337,55 @@ pub struct ConfigPatch {
 #[derive(Debug, Clone, Default, Deserialize)]
 pub struct GaugesPatch {
     pub soil_moisture: Option<SoilMoisturePatch>,
+    pub water_level: Option<WaterLevelPatch>,
+    pub voltage: Option<VoltagePatch>,
+    pub battery: Option<BatteryPatch>,
+    pub temperature: Option<TemperaturePatch>,
 }
 
 #[derive(Debug, Clone, Default, Deserialize)]
 pub struct SoilMoisturePatch {
     pub trigger_threshold: Option<i32>,
+    pub optimal_min: Option<i32>,
+    pub optimal_max: Option<i32>,
+}
+
+#[derive(Debug, Clone, Default, Deserialize)]
+pub struct WaterLevelPatch {
+    pub tank_height_cm: Option<f32>,
+    pub min_safe_level_cm: Option<f32>,
+    pub refill_warning_pct: Option<f32>,
+}
+
+#[derive(Debug, Clone, Default, Deserialize)]
+pub struct VoltagePatch {
+    pub min_warning: Option<f32>,
+    pub max_warning: Option<f32>,
+}
+
+#[derive(Debug, Clone, Default, Deserialize)]
+pub struct BatteryPatch {
+    pub min_warning: Option<f32>,
+    pub optimal_min: Option<f32>,
+}
+
+#[derive(Debug, Clone, Default, Deserialize)]
+pub struct TemperaturePatch {
+    pub optimal_max: Option<f32>,
+    pub high_warning: Option<f32>,
 }
 
 #[derive(Debug, Clone, Default, Deserialize)]
 pub struct SafetyPatch {
     pub max_continuous_pump_sec: Option<u32>,
     pub min_time_between_cycles_sec: Option<u32>,
+    pub daily_watering_limit: Option<DailyLimitPatch>,
+}
+
+#[derive(Debug, Clone, Default, Deserialize)]
+pub struct DailyLimitPatch {
+    pub enabled: Option<bool>,
+    pub max_seconds_per_day: Option<u32>,
 }
 
 #[cfg(test)]

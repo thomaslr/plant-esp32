@@ -8,8 +8,13 @@ use std::thread::sleep;
 use std::time::Duration;
 
 use esp_idf_svc::sys::{
-    esp_timer_get_time, gpio_get_level, gpio_mode_t_GPIO_MODE_INPUT,
-    gpio_mode_t_GPIO_MODE_OUTPUT, gpio_reset_pin, gpio_set_direction, gpio_set_level,
+    adc1_channel_t, adc1_channel_t_ADC1_CHANNEL_0, adc1_channel_t_ADC1_CHANNEL_1,
+    adc1_channel_t_ADC1_CHANNEL_3, adc1_channel_t_ADC1_CHANNEL_4, adc1_config_channel_atten,
+    adc1_config_width, adc1_get_raw, adc_atten_t_ADC_ATTEN_DB_11,
+    adc_bits_width_t_ADC_WIDTH_BIT_12, adc_unit_t_ADC_UNIT_1, esp_adc_cal_characteristics_t,
+    esp_adc_cal_characterize, esp_adc_cal_raw_to_voltage, esp_timer_get_time, gpio_get_level,
+    gpio_mode_t_GPIO_MODE_INPUT, gpio_mode_t_GPIO_MODE_OUTPUT, gpio_reset_pin, gpio_set_direction,
+    gpio_set_level,
 };
 use log::debug;
 use plant_core::config::AppConfig;
@@ -29,9 +34,22 @@ pub struct HardwareSensorManager {
 }
 
 impl HardwareSensorManager {
-    /// Initializes GPIO pins for sensors and powers off switched probe power.
+    /// Initializes GPIO pins and ADC1 peripheral with 12-bit resolution and 11dB attenuation.
     pub fn new() -> Self {
         unsafe {
+            // Configure ADC1 12-bit capture width
+            adc1_config_width(adc_bits_width_t_ADC_WIDTH_BIT_12);
+
+            // Configure 11dB attenuation (~0-3.1V range) on all active ADC1 channels:
+            // Channel 0 = GPIO 0 (5V Rail Divider)
+            // Channel 1 = GPIO 1 (Capacitive Soil Sensor)
+            // Channel 3 = GPIO 3 (Ambient Light LDR)
+            // Channel 4 = GPIO 4 (18650 Battery Divider)
+            adc1_config_channel_atten(adc1_channel_t_ADC1_CHANNEL_0, adc_atten_t_ADC_ATTEN_DB_11);
+            adc1_config_channel_atten(adc1_channel_t_ADC1_CHANNEL_1, adc_atten_t_ADC_ATTEN_DB_11);
+            adc1_config_channel_atten(adc1_channel_t_ADC1_CHANNEL_3, adc_atten_t_ADC_ATTEN_DB_11);
+            adc1_config_channel_atten(adc1_channel_t_ADC1_CHANNEL_4, adc_atten_t_ADC_ATTEN_DB_11);
+
             // Ultrasonic TRIG: Output, start LOW
             gpio_reset_pin(PIN_ULTRASONIC_TRIG);
             gpio_set_direction(PIN_ULTRASONIC_TRIG, gpio_mode_t_GPIO_MODE_OUTPUT);
@@ -238,20 +256,28 @@ impl Default for HardwareSensorManager {
     }
 }
 
-/// Helper function to read raw millivolts on ESP32-C3 ADC1 channels.
+/// Helper function to read factory eFuse-calibrated millivolts on ESP32-C3 ADC1 channels.
 fn read_raw_channel_mv(pin: i32) -> i32 {
-    let channel = match pin {
-        0 => 0,
-        1 => 1,
-        3 => 3,
-        4 => 4,
-        _ => 0,
+    let channel: adc1_channel_t = match pin {
+        0 => adc1_channel_t_ADC1_CHANNEL_0,
+        1 => adc1_channel_t_ADC1_CHANNEL_1,
+        3 => adc1_channel_t_ADC1_CHANNEL_3,
+        4 => adc1_channel_t_ADC1_CHANNEL_4,
+        _ => adc1_channel_t_ADC1_CHANNEL_0,
     };
 
     unsafe {
-        let raw = esp_idf_svc::sys::adc1_get_raw(channel as esp_idf_svc::sys::adc1_channel_t);
+        let raw = adc1_get_raw(channel);
         if raw >= 0 {
-            (raw * 3100) / 4095
+            let mut chars = std::mem::zeroed::<esp_adc_cal_characteristics_t>();
+            esp_adc_cal_characterize(
+                adc_unit_t_ADC_UNIT_1,
+                adc_atten_t_ADC_ATTEN_DB_11,
+                adc_bits_width_t_ADC_WIDTH_BIT_12,
+                1100,
+                &mut chars,
+            );
+            esp_adc_cal_raw_to_voltage(raw as u32, &chars) as i32
         } else {
             0
         }
