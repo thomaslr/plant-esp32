@@ -11,8 +11,9 @@ use esp_idf_svc::eventloop::EspSystemEventLoop;
 use esp_idf_svc::hal::modem::Modem;
 use esp_idf_svc::nvs::EspDefaultNvsPartition;
 use esp_idf_svc::sys::{
-    esp_netif_get_handle_from_ifkey, esp_netif_set_hostname, esp_wifi_set_ps,
-    wifi_ps_type_t_WIFI_PS_MIN_MODEM, wifi_ps_type_t_WIFI_PS_NONE,
+    esp_netif_get_handle_from_ifkey, esp_netif_set_hostname, esp_wifi_get_max_tx_power,
+    esp_wifi_set_max_tx_power, esp_wifi_set_ps, wifi_ps_type_t_WIFI_PS_MIN_MODEM,
+    wifi_ps_type_t_WIFI_PS_NONE,
 };
 use esp_idf_svc::wifi::{
     AccessPointConfiguration, AuthMethod, BlockingWifi, ClientConfiguration, Configuration, EspWifi,
@@ -64,9 +65,16 @@ pub fn start_wifi(
 
         if let Ok(()) = wifi.set_configuration(&Configuration::Client(client_config)) {
             if let Ok(()) = wifi.start() {
-                // Keep modem power save OFF during initial connection/DHCP handshake
-                // to prevent packet drops and auth timeouts with mesh routers (e.g. Deco).
+                // Boost Wi-Fi transmission power to maximum (78 = ~19.5-20 dBm, ~100mW)
+                // to optimize signal reach with wall-powered operation.
                 unsafe {
+                    let _ = esp_wifi_set_max_tx_power(78);
+                    let mut actual_pwr: i8 = 0;
+                    if esp_wifi_get_max_tx_power(&mut actual_pwr) == 0 {
+                        info!("[WIFI] Maximum TX power configured: {} (quarter-dBm, ~{:.1} dBm)", actual_pwr, (actual_pwr as f32) / 4.0);
+                    }
+                    // Keep modem power save OFF during initial connection/DHCP handshake
+                    // to prevent packet drops and auth timeouts with mesh routers (e.g. Deco).
                     let _ = esp_wifi_set_ps(wifi_ps_type_t_WIFI_PS_NONE);
                 }
                 set_sta_hostname(hostname);
