@@ -101,12 +101,22 @@ pub fn create_web_server(
                 },
             };
 
+            let last_watered_ago_sec = app.safety.last_watered_ago_sec(now_ms);
+            let last_watered_duration_sec = app.safety.last_watered_duration_sec();
+            let last_watered_text = plant_core::timeutil::format_last_watered(
+                last_watered_ago_sec,
+                last_watered_duration_sec,
+            );
+
             let pump = PumpView {
                 active: app.safety.is_pump_active(),
                 runtime_sec: app.safety.active_runtime_sec(now_ms),
                 daily_used_sec: app.safety.daily_runtime_sec(),
                 cooldown_remaining_sec: app.safety.seconds_until_next_allowed(now_ms),
                 status_message: app.safety.last_inhibit_reason().to_string(),
+                last_watered_ago_sec,
+                last_watered_duration_sec,
+                last_watered_text,
             };
 
             let status = StatusResponse {

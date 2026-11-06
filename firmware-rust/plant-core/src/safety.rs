@@ -66,6 +66,7 @@ pub struct SafetyManager<G: PumpGate> {
     pump_start_ms: u32,
     target_duration_ms: u32,
     last_pump_stop_ms: Option<u32>,
+    last_watered_duration_sec: u32,
     daily_watering_seconds: u32,
     last_inhibit_reason: String,
 }
@@ -83,6 +84,7 @@ impl<G: PumpGate> SafetyManager<G> {
             pump_start_ms: 0,
             target_duration_ms: 0,
             last_pump_stop_ms: None,
+            last_watered_duration_sec: 0,
             daily_watering_seconds: 0,
             last_inhibit_reason: "System initializing".to_string(),
         }
@@ -197,6 +199,7 @@ impl<G: PumpGate> SafetyManager<G> {
         let actual_sec = now_ms.wrapping_sub(self.pump_start_ms) / 1000;
         self.daily_watering_seconds = self.daily_watering_seconds.saturating_add(actual_sec);
         self.last_pump_stop_ms = Some(now_ms);
+        self.last_watered_duration_sec = actual_sec;
         self.last_inhibit_reason = format!("Stopped: {reason}");
     }
 
@@ -242,6 +245,14 @@ impl<G: PumpGate> SafetyManager<G> {
 
     pub fn last_inhibit_reason(&self) -> &str {
         &self.last_inhibit_reason
+    }
+
+    pub fn last_watered_ago_sec(&self, now_ms: u32) -> Option<u32> {
+        self.last_pump_stop_ms.map(|stopped_at| now_ms.wrapping_sub(stopped_at) / 1000)
+    }
+
+    pub fn last_watered_duration_sec(&self) -> u32 {
+        self.last_watered_duration_sec
     }
 
     pub fn reset_daily_quota(&mut self) {

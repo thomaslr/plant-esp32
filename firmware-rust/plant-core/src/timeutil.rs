@@ -31,6 +31,44 @@ pub fn local_day(unix_secs: i64, gmt_offset_hours: i32) -> Option<i64> {
     Some(local.div_euclid(SECS_PER_DAY))
 }
 
+/// Rounds elapsed seconds to the nearest single unit of time (s/m/h/d)
+/// to avoid sharing unnecessary precision or jitter.
+pub fn format_relative_time(elapsed_sec: u32) -> String {
+    if elapsed_sec < 60 {
+        format!("{elapsed_sec}s ago")
+    } else if elapsed_sec < 3570 {
+        let mins = (elapsed_sec + 30) / 60;
+        format!("{mins}m ago")
+    } else if elapsed_sec < 84600 {
+        let hours = (elapsed_sec + 1800) / 3600;
+        format!("{hours}h ago")
+    } else {
+        let days = (elapsed_sec + 43200) / 86400;
+        format!("{days}d ago")
+    }
+}
+
+/// Formats a duration in seconds rounded to the nearest unit of time (s/m/h).
+pub fn format_duration(duration_sec: u32) -> String {
+    if duration_sec < 60 {
+        format!("{duration_sec}s")
+    } else if duration_sec < 3570 {
+        let mins = (duration_sec + 30) / 60;
+        format!("{mins}m")
+    } else {
+        let hours = (duration_sec + 1800) / 3600;
+        format!("{hours}h")
+    }
+}
+
+/// Combines relative time ago and duration into a human-readable summary.
+pub fn format_last_watered(ago_sec: Option<u32>, duration_sec: u32) -> String {
+    match ago_sec {
+        Some(sec) => format!("{} ({})", format_relative_time(sec), format_duration(duration_sec)),
+        None => "None since boot".to_string(),
+    }
+}
+
 /// Detects local-midnight rollovers. Feed it the current local day; it returns
 /// `true` exactly once per day change (never on the very first sample, so a
 /// reboot at 15:00 does not "reset" a quota that is already zero anyway).
@@ -122,5 +160,29 @@ mod tests {
             }
         }
         assert_eq!(resets, 1, "26 h starting at 22:00 crosses local midnight once");
+    }
+
+    #[test]
+    fn relative_time_rounds_to_nearest_unit() {
+        assert_eq!(format_relative_time(0), "0s ago");
+        assert_eq!(format_relative_time(45), "45s ago");
+        assert_eq!(format_relative_time(59), "59s ago");
+        assert_eq!(format_relative_time(60), "1m ago");
+        assert_eq!(format_relative_time(89), "1m ago");
+        assert_eq!(format_relative_time(90), "2m ago");
+        assert_eq!(format_relative_time(3569), "59m ago");
+        assert_eq!(format_relative_time(3570), "1h ago");
+        assert_eq!(format_relative_time(7200), "2h ago");
+        assert_eq!(format_relative_time(84599), "23h ago");
+        assert_eq!(format_relative_time(84600), "1d ago");
+        assert_eq!(format_relative_time(129600), "2d ago");
+    }
+
+    #[test]
+    fn format_last_watered_summary() {
+        assert_eq!(format_last_watered(None, 0), "None since boot");
+        assert_eq!(format_last_watered(Some(45), 15), "45s ago (15s)");
+        assert_eq!(format_last_watered(Some(900), 15), "15m ago (15s)");
+        assert_eq!(format_last_watered(Some(7200), 10), "2h ago (10s)");
     }
 }

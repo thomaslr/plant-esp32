@@ -74,6 +74,9 @@ pub struct PumpView {
     pub daily_used_sec: u32,
     pub cooldown_remaining_sec: u32,
     pub status_message: String,
+    pub last_watered_ago_sec: Option<u32>,
+    pub last_watered_duration_sec: u32,
+    pub last_watered_text: String,
 }
 
 /// `GET /api/status`.
@@ -260,6 +263,9 @@ mod tests {
                 daily_used_sec: 20,
                 cooldown_remaining_sec: 120,
                 status_message: "Stopped: Target duration or safety runtime reached".into(),
+                last_watered_ago_sec: Some(180),
+                last_watered_duration_sec: 15,
+                last_watered_text: "3m ago (15s)".into(),
             },
         };
         let v = json_of(&status);

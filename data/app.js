@@ -805,6 +805,10 @@ function updateFullStatusUI(data) {
 
     if (data.pump) {
         document.getElementById('pump-inhibit-reason').innerText = data.pump.status_message || 'Normal';
+        const lastWateredElem = document.getElementById('pump-last-watered');
+        if (lastWateredElem) {
+            lastWateredElem.innerText = data.pump.last_watered_text || 'None since boot';
+        }
         document.getElementById('pump-cooldown').innerText = `${data.pump.cooldown_remaining_sec}s`;
         const maxDaily = (appConfig && appConfig.safety && appConfig.safety.daily_watering_limit)
             ? appConfig.safety.daily_watering_limit.max_seconds_per_day
