@@ -134,10 +134,17 @@ fn main() -> anyhow::Result<()> {
             let history = RingBuffer::new(100);
 
             // 8. Start SNTP Time Synchronization
-            let sntp = EspSntp::new_default();
-            if sntp.is_ok() {
-                info!("[NTP] SNTP client initialized for time synchronization");
-            }
+            let _sntp = match EspSntp::new_default() {
+                Ok(sntp) => {
+                    info!("[NTP] SNTP client initialized for time synchronization");
+                    core::mem::forget(sntp);
+                    true
+                }
+                Err(e) => {
+                    warn!("[NTP] Failed to initialize SNTP: {:?}", e);
+                    false
+                }
+            };
 
             // 9. Initialize mDNS Responder (e.g. plants.local or plants1.local)
             let _mdns = match EspMdns::take() {
@@ -197,9 +204,9 @@ fn main() -> anyhow::Result<()> {
         .name("SafetySupervisor".to_string())
         .stack_size(4096)
         .spawn(move || loop {
-            let now_ms = unsafe { (esp_timer_get_time() / 1000) as u32 };
             {
                 let mut app = s_safety.lock().unwrap();
+                let now_ms = unsafe { (esp_timer_get_time() / 1000) as u32 };
                 app.safety.tick(now_ms);
             }
             thread::sleep(Duration::from_millis(50));
@@ -258,11 +265,14 @@ fn main() -> anyhow::Result<()> {
 
                     if soil < threshold && reading.water_level_cm >= min_water {
                         let duration = config.timing.automated_water_duration_sec;
-                        let now_sec = unsafe { (esp_timer_get_time() / 1_000_000) as u32 };
-                        let now_ms = unsafe { (esp_timer_get_time() / 1000) as u32 };
-                        let hour = local_hour(now_sec as i64, config.system.gmt_offset);
+                        let now_unix = std::time::SystemTime::now()
+                            .duration_since(std::time::UNIX_EPOCH)
+                            .map(|d| d.as_secs() as i64)
+                            .unwrap_or(0);
+                        let hour = local_hour(now_unix, config.system.gmt_offset);
 
                         let mut app = s_sensors.lock().unwrap();
+                        let now_ms = unsafe { (esp_timer_get_time() / 1000) as u32 };
                         let result = app.safety.request_watering(
                             now_ms,
                             duration,
@@ -295,13 +305,17 @@ fn main() -> anyhow::Result<()> {
             loop {
                 thread::sleep(Duration::from_secs(60));
 
-                let (gmt_offset, now_sec) = {
+                let gmt_offset = {
                     let app = s_monitor.lock().unwrap();
-                    let sec = unsafe { (esp_timer_get_time() / 1_000_000) as u32 };
-                    (app.config.system.gmt_offset, sec)
+                    app.config.system.gmt_offset
                 };
 
-                let day = local_day(now_sec as i64, gmt_offset);
+                let now_unix = std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .map(|d| d.as_secs() as i64)
+                    .unwrap_or(0);
+
+                let day = local_day(now_unix, gmt_offset);
                 if tracker.update(day) {
                     info!("[NTP] Midnight reached: resetting daily watering quota");
                     let mut app = s_monitor.lock().unwrap();

@@ -313,6 +313,18 @@ impl AppConfig {
                     return Err("max_continuous_pump_sec must be at least 1".to_string());
                 }
             }
+            if let Some(ref n) = s.night_watering_protection {
+                if let Some(start) = n.start_hour {
+                    if !(0..=23).contains(&start) {
+                        return Err("start_hour must be between 0 and 23".to_string());
+                    }
+                }
+                if let Some(end) = n.end_hour {
+                    if !(0..=23).contains(&end) {
+                        return Err("end_hour must be between 0 and 23".to_string());
+                    }
+                }
+            }
         }
         if let Some(ref t) = patch.timing {
             if let Some(r) = t.sensor_read_interval_sec {
@@ -371,6 +383,11 @@ impl AppConfig {
             if let Some(ref d) = s.daily_watering_limit {
                 if let Some(e) = d.enabled { self.safety.daily_watering_limit.enabled = e; }
                 if let Some(m) = d.max_seconds_per_day { self.safety.daily_watering_limit.max_seconds_per_day = m; }
+            }
+            if let Some(ref n) = s.night_watering_protection {
+                if let Some(e) = n.enabled { self.safety.night_watering_protection.enabled = e; }
+                if let Some(start) = n.start_hour { self.safety.night_watering_protection.start_hour = start; }
+                if let Some(end) = n.end_hour { self.safety.night_watering_protection.end_hour = end; }
             }
         }
         if let Some(ref t) = patch.timing {
@@ -454,12 +471,20 @@ pub struct SafetyPatch {
     pub max_continuous_pump_sec: Option<u32>,
     pub min_time_between_cycles_sec: Option<u32>,
     pub daily_watering_limit: Option<DailyLimitPatch>,
+    pub night_watering_protection: Option<NightProtectionPatch>,
 }
 
 #[derive(Debug, Clone, Default, Deserialize)]
 pub struct DailyLimitPatch {
     pub enabled: Option<bool>,
     pub max_seconds_per_day: Option<u32>,
+}
+
+#[derive(Debug, Clone, Default, Deserialize)]
+pub struct NightProtectionPatch {
+    pub enabled: Option<bool>,
+    pub start_hour: Option<i32>,
+    pub end_hour: Option<i32>,
 }
 
 #[cfg(test)]
@@ -610,5 +635,38 @@ mod tests {
         let too_high: ConfigPatch = serde_json::from_str(r#"{"timing":{"pump_speed_pct":105}}"#).unwrap();
         assert!(c.apply_patch(&too_high).is_err());
         assert_eq!(c.timing.pump_speed_pct, 75);
+    }
+
+    #[test]
+    fn night_watering_protection_patch_and_validation() {
+        let mut c = AppConfig::default();
+        assert!(c.safety.night_watering_protection.enabled);
+        assert_eq!(c.safety.night_watering_protection.start_hour, 22);
+        assert_eq!(c.safety.night_watering_protection.end_hour, 9);
+
+        let patch: ConfigPatch = serde_json::from_str(
+            r#"{"safety":{"night_watering_protection":{"enabled":false,"start_hour":23,"end_hour":7}}}"#,
+        )
+        .unwrap();
+        c.apply_patch(&patch).unwrap();
+        assert!(!c.safety.night_watering_protection.enabled);
+        assert_eq!(c.safety.night_watering_protection.start_hour, 23);
+        assert_eq!(c.safety.night_watering_protection.end_hour, 7);
+
+        // Invalid hour (> 23) rejected
+        let bad_hour: ConfigPatch = serde_json::from_str(
+            r#"{"safety":{"night_watering_protection":{"start_hour":24}}}"#,
+        )
+        .unwrap();
+        assert!(c.apply_patch(&bad_hour).is_err());
+        assert_eq!(c.safety.night_watering_protection.start_hour, 23);
+
+        // Invalid hour (< 0) rejected
+        let bad_neg: ConfigPatch = serde_json::from_str(
+            r#"{"safety":{"night_watering_protection":{"end_hour":-1}}}"#,
+        )
+        .unwrap();
+        assert!(c.apply_patch(&bad_neg).is_err());
+        assert_eq!(c.safety.night_watering_protection.end_hour, 7);
     }
 }

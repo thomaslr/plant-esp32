@@ -440,6 +440,12 @@ function loadConfigToForm() {
     if (s.min_time_between_cycles_sec !== undefined) document.getElementById('cfg-safe-cooldown').value = s.min_time_between_cycles_sec;
     if (d.max_seconds_per_day !== undefined) document.getElementById('cfg-safe-daily-limit').value = d.max_seconds_per_day;
 
+    const n = s.night_watering_protection || {};
+    const nightCheck = document.getElementById('cfg-safe-night-enabled');
+    if (nightCheck) nightCheck.checked = n.enabled !== undefined ? n.enabled : true;
+    if (n.start_hour !== undefined) document.getElementById('cfg-safe-night-start').value = n.start_hour;
+    if (n.end_hour !== undefined) document.getElementById('cfg-safe-night-end').value = n.end_hour;
+
     if (tm.sensor_read_interval_sec !== undefined) document.getElementById('cfg-timing-read-interval').value = tm.sensor_read_interval_sec;
     if (tm.automated_water_duration_sec !== undefined) document.getElementById('cfg-timing-auto-water-duration').value = tm.automated_water_duration_sec;
     const pSpeed = tm.pump_speed_pct !== undefined ? tm.pump_speed_pct : 60;
@@ -497,6 +503,11 @@ async function handleConfigSubmit(e) {
             daily_watering_limit: {
                 enabled: true,
                 max_seconds_per_day: parseInt(document.getElementById('cfg-safe-daily-limit').value, 10)
+            },
+            night_watering_protection: {
+                enabled: document.getElementById('cfg-safe-night-enabled') ? document.getElementById('cfg-safe-night-enabled').checked : true,
+                start_hour: parseInt(document.getElementById('cfg-safe-night-start').value, 10),
+                end_hour: parseInt(document.getElementById('cfg-safe-night-end').value, 10)
             }
         },
         timing: {
@@ -814,6 +825,17 @@ function updateFullStatusUI(data) {
             ? appConfig.safety.daily_watering_limit.max_seconds_per_day
             : 93;
         document.getElementById('pump-daily').innerText = `${data.pump.daily_used_sec}s / ${maxDaily}s max`;
+        const quietElem = document.getElementById('pump-quiet-hours');
+        if (quietElem) {
+            quietElem.innerText = data.pump.quiet_hours_text || 'Disabled';
+            if (data.pump.quiet_hours_active) {
+                quietElem.style.color = '#f59e0b';
+                quietElem.style.fontWeight = '600';
+            } else {
+                quietElem.style.color = 'inherit';
+                quietElem.style.fontWeight = 'normal';
+            }
+        }
     }
 
     // Host & System Info

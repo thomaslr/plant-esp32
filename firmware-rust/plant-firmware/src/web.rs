@@ -108,6 +108,18 @@ pub fn create_web_server(
                 last_watered_duration_sec,
             );
 
+            let unix_secs = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|d| d.as_secs() as i64)
+                .unwrap_or(0);
+            let current_hour = plant_core::timeutil::local_hour(unix_secs, app.config.system.gmt_offset);
+            let (quiet_hours_active, quiet_hours_text) = plant_core::timeutil::format_night_protection(
+                app.config.safety.night_watering_protection.enabled,
+                app.config.safety.night_watering_protection.start_hour,
+                app.config.safety.night_watering_protection.end_hour,
+                current_hour,
+            );
+
             let pump = PumpView {
                 active: app.safety.is_pump_active(),
                 runtime_sec: app.safety.active_runtime_sec(now_ms),
@@ -117,6 +129,8 @@ pub fn create_web_server(
                 last_watered_ago_sec,
                 last_watered_duration_sec,
                 last_watered_text,
+                quiet_hours_active,
+                quiet_hours_text,
             };
 
             let status = StatusResponse {

@@ -69,6 +69,38 @@ pub fn format_last_watered(ago_sec: Option<u32>, duration_sec: u32) -> String {
     }
 }
 
+/// Returns true if `current_hour` (0..=23) falls within the window `[start_hour, end_hour)`.
+/// Handles windows that span midnight (e.g. 22 to 9).
+pub fn is_night_hour(start_hour: i32, end_hour: i32, current_hour: u8) -> bool {
+    let h = i32::from(current_hour);
+    if start_hour > end_hour {
+        h >= start_hour || h < end_hour
+    } else {
+        h >= start_hour && h < end_hour
+    }
+}
+
+/// Formats the quiet hours / night watering protection status for UI display.
+/// Returns `(is_currently_active, human_readable_text)`.
+pub fn format_night_protection(
+    enabled: bool,
+    start_hour: i32,
+    end_hour: i32,
+    current_hour: Option<u8>,
+) -> (bool, String) {
+    let window_str = format!("{:02}:00 - {:02}:00", start_hour, end_hour);
+    if !enabled {
+        return (false, format!("Disabled ({window_str})"));
+    }
+    match current_hour {
+        Some(h) if is_night_hour(start_hour, end_hour, h) => {
+            (true, format!("Active ({window_str})"))
+        }
+        Some(_) => (false, format!("Inactive ({window_str})")),
+        None => (false, format!("Waiting for NTP ({window_str})")),
+    }
+}
+
 /// Detects local-midnight rollovers. Feed it the current local day; it returns
 /// `true` exactly once per day change (never on the very first sample, so a
 /// reboot at 15:00 does not "reset" a quota that is already zero anyway).
@@ -184,5 +216,43 @@ mod tests {
         assert_eq!(format_last_watered(Some(45), 15), "45s ago (15s)");
         assert_eq!(format_last_watered(Some(900), 15), "15m ago (15s)");
         assert_eq!(format_last_watered(Some(7200), 10), "2h ago (10s)");
+    }
+
+    #[test]
+    fn night_protection_formatting_and_window_check() {
+        assert!(!is_night_hour(22, 9, 12));
+        assert!(is_night_hour(22, 9, 23));
+        assert!(is_night_hour(22, 9, 0));
+        assert!(is_night_hour(22, 9, 8));
+        assert!(!is_night_hour(22, 9, 9));
+
+        // Window not spanning midnight e.g. 1 to 5
+        assert!(!is_night_hour(1, 5, 0));
+        assert!(is_night_hour(1, 5, 3));
+        assert!(!is_night_hour(1, 5, 5));
+
+        // Disabled
+        assert_eq!(
+            format_night_protection(false, 22, 9, Some(23)),
+            (false, "Disabled (22:00 - 09:00)".to_string())
+        );
+
+        // Waiting for NTP
+        assert_eq!(
+            format_night_protection(true, 22, 9, None),
+            (false, "Waiting for NTP (22:00 - 09:00)".to_string())
+        );
+
+        // Active
+        assert_eq!(
+            format_night_protection(true, 22, 9, Some(23)),
+            (true, "Active (22:00 - 09:00)".to_string())
+        );
+
+        // Inactive
+        assert_eq!(
+            format_night_protection(true, 22, 9, Some(14)),
+            (false, "Inactive (22:00 - 09:00)".to_string())
+        );
     }
 }

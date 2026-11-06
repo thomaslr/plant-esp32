@@ -26,6 +26,21 @@ pub trait PumpGate {
     fn set_pump(&mut self, on: bool);
 }
 
+/// Computes elapsed milliseconds between `start_ms` and `now_ms`.
+///
+/// Handles 32-bit millisecond counter rollover (~49.7 days) while safely
+/// clamping to 0 if `now_ms < start_ms` due to thread preemption, lock jitter,
+/// or slight out-of-order execution.
+#[inline]
+pub fn elapsed_millis(start_ms: u32, now_ms: u32) -> u32 {
+    let diff = (now_ms as i32).wrapping_sub(start_ms as i32);
+    if diff <= 0 {
+        0
+    } else {
+        diff as u32
+    }
+}
+
 /// Why a watering request was refused. [`fmt::Display`] produces the exact
 /// strings the C++ firmware showed in the web UI.
 #[derive(Debug, Clone, PartialEq)]
@@ -148,7 +163,7 @@ impl<G: PumpGate> SafetyManager<G> {
 
         // 2. Cool-down (skipped until the pump has run at least once).
         if let Some(stopped_at) = self.last_pump_stop_ms {
-            let elapsed_ms = now_ms.wrapping_sub(stopped_at);
+            let elapsed_ms = elapsed_millis(stopped_at, now_ms);
             let cooldown_ms = self.cfg.min_time_between_cycles_sec.saturating_mul(1000);
             if elapsed_ms < cooldown_ms {
                 return Err(Inhibit::Cooldown { remaining_sec: (cooldown_ms - elapsed_ms) / 1000 });
@@ -196,7 +211,7 @@ impl<G: PumpGate> SafetyManager<G> {
         self.gate.set_pump(false);
         self.pump_active = false;
 
-        let actual_sec = now_ms.wrapping_sub(self.pump_start_ms) / 1000;
+        let actual_sec = elapsed_millis(self.pump_start_ms, now_ms) / 1000;
         self.daily_watering_seconds = self.daily_watering_seconds.saturating_add(actual_sec);
         self.last_pump_stop_ms = Some(now_ms);
         self.last_watered_duration_sec = actual_sec;
@@ -208,7 +223,7 @@ impl<G: PumpGate> SafetyManager<G> {
         if !self.pump_active {
             return;
         }
-        let elapsed_ms = now_ms.wrapping_sub(self.pump_start_ms);
+        let elapsed_ms = elapsed_millis(self.pump_start_ms, now_ms);
         let hard_limit_ms = self.cfg.max_continuous_pump_sec.saturating_mul(1000);
         if elapsed_ms >= self.target_duration_ms || elapsed_ms >= hard_limit_ms {
             self.stop_watering(now_ms, "Target duration or safety runtime reached");
@@ -223,7 +238,7 @@ impl<G: PumpGate> SafetyManager<G> {
         if !self.pump_active {
             return 0;
         }
-        now_ms.wrapping_sub(self.pump_start_ms) / 1000
+        elapsed_millis(self.pump_start_ms, now_ms) / 1000
     }
 
     pub fn daily_runtime_sec(&self) -> u32 {
@@ -234,7 +249,7 @@ impl<G: PumpGate> SafetyManager<G> {
         let Some(stopped_at) = self.last_pump_stop_ms else {
             return 0;
         };
-        let elapsed_ms = now_ms.wrapping_sub(stopped_at);
+        let elapsed_ms = elapsed_millis(stopped_at, now_ms);
         let cooldown_ms = self.cfg.min_time_between_cycles_sec.saturating_mul(1000);
         if elapsed_ms >= cooldown_ms {
             0
@@ -248,7 +263,7 @@ impl<G: PumpGate> SafetyManager<G> {
     }
 
     pub fn last_watered_ago_sec(&self, now_ms: u32) -> Option<u32> {
-        self.last_pump_stop_ms.map(|stopped_at| now_ms.wrapping_sub(stopped_at) / 1000)
+        self.last_pump_stop_ms.map(|stopped_at| elapsed_millis(stopped_at, now_ms) / 1000)
     }
 
     pub fn last_watered_duration_sec(&self) -> u32 {
@@ -573,5 +588,36 @@ mod tests {
             }
             assert!(!m.gate().on);
         }
+    }
+
+    #[test]
+    fn now_ms_before_pump_start_does_not_overflow_or_stop() {
+        let mut m = mgr_no_night();
+        m.request_watering(1000, 10, "test", 10.0, DAY).unwrap();
+        assert!(m.is_pump_active());
+
+        // Simulate tick receiving now_ms slightly before pump_start_ms due to lock latency/jitter
+        m.tick(960);
+        assert!(m.is_pump_active(), "pump must NOT be stopped if now_ms < pump_start_ms");
+        assert_eq!(m.daily_runtime_sec(), 0);
+
+        // Advance time normally
+        m.tick(1000 + 5000);
+        assert!(m.is_pump_active());
+        m.tick(1000 + 10_000);
+        assert!(!m.is_pump_active());
+        assert_eq!(m.daily_runtime_sec(), 10);
+    }
+
+    #[test]
+    fn elapsed_millis_handles_jitter_and_rollover() {
+        assert_eq!(elapsed_millis(1000, 1000), 0);
+        assert_eq!(elapsed_millis(1000, 1050), 50);
+        assert_eq!(elapsed_millis(1000, 950), 0); // Jitter clamped to 0
+
+        // Rollover across u32::MAX
+        let start = u32::MAX - 200;
+        let now = 300;
+        assert_eq!(elapsed_millis(start, now), 501);
     }
 }

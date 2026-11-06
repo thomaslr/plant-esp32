@@ -77,6 +77,8 @@ pub struct PumpView {
     pub last_watered_ago_sec: Option<u32>,
     pub last_watered_duration_sec: u32,
     pub last_watered_text: String,
+    pub quiet_hours_active: bool,
+    pub quiet_hours_text: String,
 }
 
 /// `GET /api/status`.
@@ -266,6 +268,8 @@ mod tests {
                 last_watered_ago_sec: Some(180),
                 last_watered_duration_sec: 15,
                 last_watered_text: "3m ago (15s)".into(),
+                quiet_hours_active: false,
+                quiet_hours_text: "Inactive (22:00 - 09:00)".into(),
             },
         };
         let v = json_of(&status);
@@ -278,6 +282,8 @@ mod tests {
         assert_eq!(v["pump"]["cooldown_remaining_sec"], 120);
         assert_eq!(v["pump"]["daily_used_sec"], 20);
         assert_eq!(v["pump"]["active"], false);
+        assert_eq!(v["pump"]["quiet_hours_active"], false);
+        assert_eq!(v["pump"]["quiet_hours_text"], "Inactive (22:00 - 09:00)");
         assert_eq!(v["sensors"]["soil_percent"], 41.5);
         assert!(v["sensors"].get("pump_active").is_none());
         assert!(v["mdns"].is_string());
