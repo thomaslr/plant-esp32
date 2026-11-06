@@ -13,8 +13,8 @@
   "gauges": {
     "soil_moisture": {
       "trigger_threshold": 40,
-      "dry_adc": 2800,
-      "wet_adc": 1100,
+      "dry_adc": 1950,
+      "wet_adc": 670,
       "optimal_min": 35,
       "optimal_max": 75
     },
@@ -39,8 +39,8 @@
   },
   "timing": {
     "startup_delay_sec": 30,
-    "check_interval_sec": 3600,
-    "sensor_read_interval_sec": 3600,
+    "check_interval_sec": 600,
+    "sensor_read_interval_sec": 600,
     "automated_water_duration_sec": 5,
     "manual_water_duration_sec": 5,
     "pump_speed_pct": 60

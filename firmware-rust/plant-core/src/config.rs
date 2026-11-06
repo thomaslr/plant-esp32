@@ -30,8 +30,8 @@ impl Default for SoilMoistureConfig {
     fn default() -> Self {
         Self {
             trigger_threshold: 40,
-            dry_adc: 2800,
-            wet_adc: 1100,
+            dry_adc: 1950,
+            wet_adc: 670,
             optimal_min: 35,
             optimal_max: 75,
         }
@@ -133,8 +133,8 @@ impl Default for TimingConfig {
     fn default() -> Self {
         Self {
             startup_delay_sec: 30,
-            check_interval_sec: 3600,
-            sensor_read_interval_sec: 3600,
+            check_interval_sec: 600,
+            sensor_read_interval_sec: 600,
             automated_water_duration_sec: 5,
             manual_water_duration_sec: 5,
             pump_speed_pct: 60,
@@ -271,6 +271,11 @@ impl AppConfig {
                         return Err(format!("trigger_threshold must be 0-100, got {t}"));
                     }
                 }
+                if let (Some(dry), Some(wet)) = (s.dry_adc, s.wet_adc) {
+                    if dry <= wet {
+                        return Err("dry_adc must be greater than wet_adc (higher voltage when dry)".to_string());
+                    }
+                }
                 if let Some(min) = s.optimal_min {
                     if !(0..=100).contains(&min) {
                         return Err(format!("optimal_min must be 0-100, got {min}"));
@@ -336,6 +341,8 @@ impl AppConfig {
         if let Some(ref g) = patch.gauges {
             if let Some(ref s) = g.soil_moisture {
                 if let Some(t) = s.trigger_threshold { self.gauges.soil_moisture.trigger_threshold = t; }
+                if let Some(dry) = s.dry_adc { self.gauges.soil_moisture.dry_adc = dry; }
+                if let Some(wet) = s.wet_adc { self.gauges.soil_moisture.wet_adc = wet; }
                 if let Some(min) = s.optimal_min { self.gauges.soil_moisture.optimal_min = min; }
                 if let Some(max) = s.optimal_max { self.gauges.soil_moisture.optimal_max = max; }
             }
@@ -410,6 +417,8 @@ pub struct GaugesPatch {
 #[derive(Debug, Clone, Default, Deserialize)]
 pub struct SoilMoisturePatch {
     pub trigger_threshold: Option<i32>,
+    pub dry_adc: Option<i32>,
+    pub wet_adc: Option<i32>,
     pub optimal_min: Option<i32>,
     pub optimal_max: Option<i32>,
 }
@@ -466,12 +475,12 @@ mod tests {
         assert_eq!(c.system.hostname, "plants");
         assert_eq!(c.system.gmt_offset, 8);
         assert_eq!(c.gauges.soil_moisture.trigger_threshold, 40);
-        assert_eq!(c.gauges.soil_moisture.dry_adc, 2800);
-        assert_eq!(c.gauges.soil_moisture.wet_adc, 1100);
+        assert_eq!(c.gauges.soil_moisture.dry_adc, 1950);
+        assert_eq!(c.gauges.soil_moisture.wet_adc, 670);
         assert_eq!(c.gauges.water_level.tank_height_cm, 30.0);
         assert_eq!(c.gauges.water_level.min_safe_level_cm, 2.0);
         assert_eq!(c.timing.startup_delay_sec, 30);
-        assert_eq!(c.timing.sensor_read_interval_sec, 3600);
+        assert_eq!(c.timing.sensor_read_interval_sec, 600);
         assert_eq!(c.safety.max_continuous_pump_sec, 60);
         assert_eq!(c.safety.min_time_between_cycles_sec, 300);
         assert!(c.safety.daily_watering_limit.enabled);
@@ -502,7 +511,7 @@ mod tests {
         let c = AppConfig::from_json(r#"{"gauges":{"soil_moisture":{"trigger_threshold":25}}}"#)
             .unwrap();
         assert_eq!(c.gauges.soil_moisture.trigger_threshold, 25);
-        assert_eq!(c.gauges.soil_moisture.dry_adc, 2800); // untouched
+        assert_eq!(c.gauges.soil_moisture.dry_adc, 1950); // untouched
         assert_eq!(c.safety.max_continuous_pump_sec, 60); // untouched
     }
 
@@ -537,14 +546,14 @@ mod tests {
     fn patch_updates_only_supported_fields() {
         let mut c = AppConfig::default();
         let patch: ConfigPatch = serde_json::from_str(
-            r#"{"gauges":{"soil_moisture":{"trigger_threshold":30,"dry_adc":1}},
+            r#"{"gauges":{"soil_moisture":{"trigger_threshold":30,"dry_adc":2100}},
                 "safety":{"max_continuous_pump_sec":45,"min_time_between_cycles_sec":120},
                 "ignored":true}"#,
         )
         .unwrap();
         c.apply_patch(&patch).unwrap();
         assert_eq!(c.gauges.soil_moisture.trigger_threshold, 30);
-        assert_eq!(c.gauges.soil_moisture.dry_adc, 2800); // not patchable via API
+        assert_eq!(c.gauges.soil_moisture.dry_adc, 2100);
         assert_eq!(c.safety.max_continuous_pump_sec, 45);
         assert_eq!(c.safety.min_time_between_cycles_sec, 120);
 

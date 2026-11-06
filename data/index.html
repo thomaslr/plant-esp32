@@ -14,7 +14,7 @@
             <div class="header-title">
                 <h1>🌱 Plant Monitor P2</h1>
                 <span class="badge" id="host-badge">plants.local</span>
-                <span class="badge" id="version-badge" style="background: #1e293b; color: #38bdf8; border: 1px solid #334155; font-size: 0.75rem;">v0.2.7 📈</span>
+                <span class="badge" id="version-badge" style="background: #1e293b; color: #38bdf8; border: 1px solid #334155; font-size: 0.75rem;">v0.2.8 📈</span>
             </div>
             <div class="header-status">
                 <span id="conn-status" class="dot dot-disconnected"></span>
@@ -358,9 +358,9 @@
                 <div class="card settings-section">
                     <div class="section-title">
                         <span class="card-icon">🪴</span>
-                        <h3>Soil Moisture Ranges</h3>
+                        <h3>Soil Moisture Ranges & Calibration</h3>
                     </div>
-                    <p class="section-desc">Defines automatic watering trigger level and the dial's colored zones.</p>
+                    <p class="section-desc">Defines automatic watering trigger level, dial zones, and hardware probe ADC voltage calibration.</p>
                     <div class="form-grid">
                         <div class="form-group">
                             <label for="cfg-soil-trigger">Trigger Threshold (%):</label>
@@ -376,6 +376,16 @@
                             <label for="cfg-soil-opt-max">Optimal Range Max (%):</label>
                             <input type="number" id="cfg-soil-opt-max" min="0" max="100" step="1" required>
                             <span class="field-hint">Upper boundary of GREEN zone (above this is BLUE saturated).</span>
+                        </div>
+                        <div class="form-group">
+                            <label for="cfg-soil-dry-adc">Dry Probe Calibration (mV):</label>
+                            <input type="number" id="cfg-soil-dry-adc" min="500" max="3200" step="10" required>
+                            <span class="field-hint">ADC reading in bone dry air = 0% (your sensor: ~1950 mV).</span>
+                        </div>
+                        <div class="form-group">
+                            <label for="cfg-soil-wet-adc">Wet Probe Calibration (mV):</label>
+                            <input type="number" id="cfg-soil-wet-adc" min="300" max="2500" step="10" required>
+                            <span class="field-hint">ADC reading submerged in water = 100% (your sensor: ~670 mV).</span>
                         </div>
                     </div>
                 </div>
@@ -500,7 +510,7 @@
                         <div class="form-group">
                             <label for="cfg-timing-read-interval">Moisture Check Interval (s):</label>
                             <input type="number" id="cfg-timing-read-interval" min="5" max="86400" step="1" required>
-                            <span class="field-hint">How often the system reads sensors & checks soil moisture (default: 3600s / 1 hr).</span>
+                            <span class="field-hint">How often the system reads sensors & checks soil moisture (default: 600s / 10 mins).</span>
                         </div>
                         <div class="form-group">
                             <label for="cfg-timing-auto-water-duration">Automated Watering Duration (s):</label>

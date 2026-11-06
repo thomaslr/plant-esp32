@@ -113,7 +113,7 @@ function switchTab(tab) {
 function startPolling() {
     fetchStatus();
     if (!pollTimer) {
-        pollTimer = setInterval(fetchStatus, 5000);
+        pollTimer = setInterval(fetchStatus, 60000);
     }
 }
 
@@ -122,7 +122,7 @@ function setConnectionStatus(mode) {
     const text = document.getElementById('conn-text');
     if (mode === 'http') {
         dot.className = 'dot dot-connected';
-        text.innerText = 'Online (5s)';
+        text.innerText = 'Online';
     } else {
         dot.className = 'dot dot-disconnected';
         text.innerText = 'Offline';
@@ -419,6 +419,8 @@ function loadConfigToForm() {
     if (sm.trigger_threshold !== undefined) document.getElementById('cfg-soil-trigger').value = sm.trigger_threshold;
     if (sm.optimal_min !== undefined) document.getElementById('cfg-soil-opt-min').value = sm.optimal_min;
     if (sm.optimal_max !== undefined) document.getElementById('cfg-soil-opt-max').value = sm.optimal_max;
+    if (sm.dry_adc !== undefined) document.getElementById('cfg-soil-dry-adc').value = sm.dry_adc;
+    if (sm.wet_adc !== undefined) document.getElementById('cfg-soil-wet-adc').value = sm.wet_adc;
 
     if (wl.tank_height_cm !== undefined) document.getElementById('cfg-tank-height').value = wl.tank_height_cm;
     if (wl.sensor_offset_cm !== undefined) document.getElementById('cfg-sensor-offset').value = wl.sensor_offset_cm;
@@ -466,7 +468,9 @@ async function handleConfigSubmit(e) {
             soil_moisture: {
                 trigger_threshold: parseInt(document.getElementById('cfg-soil-trigger').value, 10),
                 optimal_min: parseInt(document.getElementById('cfg-soil-opt-min').value, 10),
-                optimal_max: parseInt(document.getElementById('cfg-soil-opt-max').value, 10)
+                optimal_max: parseInt(document.getElementById('cfg-soil-opt-max').value, 10),
+                dry_adc: parseInt(document.getElementById('cfg-soil-dry-adc').value, 10),
+                wet_adc: parseInt(document.getElementById('cfg-soil-wet-adc').value, 10)
             },
             water_level: {
                 tank_height_cm: parseFloat(document.getElementById('cfg-tank-height').value),
@@ -528,6 +532,7 @@ async function handleConfigSubmit(e) {
         // Immediately redraw dashboard dials with new zone thresholds
         renderAllDialZones();
         if (lastTelemetry) updateTelemetryUI(lastTelemetry);
+        loadConfigToForm();
 
         const hostnameChanged = oldHostname && patch.system && patch.system.hostname && (oldHostname !== patch.system.hostname);
         msg.className = 'cfg-status-msg status-ok';
