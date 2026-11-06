@@ -64,6 +64,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
         run: |
           espflash save-image --chip esp32c3 \
+            --partition-table firmware-rust/plant-firmware/partitions.csv \
             firmware-rust/target/riscv32imc-esp-espidf/release/plant-firmware \
             plant-firmware.bin
           ls -lh plant-firmware.bin

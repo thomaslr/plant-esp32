@@ -8,4 +8,5 @@ echo "=================================================="
 echo " 🌿 Restoring Production Firmware (Release)..."
 echo "=================================================="
 
-cargo run --release
+cargo build --release
+espflash flash --partition-table plant-firmware/partitions.csv target/riscv32imc-esp-espidf/release/plant-firmware --monitor
