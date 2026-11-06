@@ -152,20 +152,20 @@ graph TD
     B -- No --> D{Pump Active?}
     D -- Yes --> E[Solid ON while running]
     D -- No --> F{Wi-Fi Connected?}
-    F -- No --> G[100ms ON / 100ms OFF Blink]
+    F -- No --> G[200ms ON / 800ms OFF Blink]
     F -- Yes --> H{Active Faults?}
     H -- Yes --> I[Approach 2: Round-Robin Rotation<br/>Cycle through active faults]
-    H -- No --> J[Idle Heartbeat: 50ms blip every 10s]
+    H -- No --> J[Idle Heartbeat: 100ms blip every 10s]
 ```
 
 ### 6.1 Visual Patterns
 * **OTA Flashing Active:** 10 Hz continuous strobe (50ms ON / 50ms OFF) with complete suppression of fault blips.
 * **Watering Active:** Solid ON while pump is energized.
-* **Wi-Fi Connecting / Provisioning:** Fast continuous blink (100ms ON / 100ms OFF).
+* **Wi-Fi Connecting / Provisioning:** Distinct beacon blink (200ms ON / 800ms OFF).
 * **Reservoir Dry:** Accelerando frequency sweep (8 pulses progressing from 300ms down to 25ms over 3.0 seconds).
-* **Ultrasonic Sensor Fault:** Triple blip (3 quick 80ms pulses followed by a 1-second pause).
-* **Soil Sensor Fault:** 5-blip cadence (5 quick 80ms pulses followed by a 1-second pause).
-* **Normal Healthy Idle:** Single 50ms heartbeat pulse every 10 seconds (divided into 100ms sleep slices for sub-second reaction to state changes).
+* **Ultrasonic Sensor Fault:** 4-blip cadence (4 pulses: 160ms ON, 240ms OFF, followed by a 2.0-second pause).
+* **Soil Sensor Fault:** Triple blip (3 pulses: 160ms ON, 240ms OFF, followed by a 2.0-second pause).
+* **Normal Healthy Idle:** Single 100ms heartbeat pulse every 10 seconds (divided into 100ms sleep slices for sub-second reaction to state changes).
 
 ---
 

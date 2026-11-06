@@ -46,10 +46,12 @@ jobs:
           workspaces: firmware-rust -> target
           cache-on-failure: true
 
-      - name: Cache ESP-IDF Tools (.embuild)
+      - name: Cache ESP-IDF Tools (.espressif)
         uses: actions/cache@v4
         with:
-          path: firmware-rust/.embuild
+          path: |
+            ~/.espressif
+            firmware-rust/.embuild
           key: esp-idf-${{ runner.os }}-${{ hashFiles('firmware-rust/Cargo.lock') }}
           restore-keys: |
             esp-idf-${{ runner.os }}-

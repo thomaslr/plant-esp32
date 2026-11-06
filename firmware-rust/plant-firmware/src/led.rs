@@ -8,11 +8,11 @@
 //!
 //! Visual Signaling Patterns:
 //! - Watering Active: Solid ON while pump is running.
-//! - Wi-Fi Connecting: Fast continuous blink (100ms ON, 100ms OFF).
+//! - Wi-Fi Connecting: Distinct beacon blink (200ms ON, 800ms OFF).
 //! - Reservoir Dry: Accelerando frequency sweep (low to high blink) over 3 seconds.
-//! - Ultrasonic Sensor Fault: Triple blip (3 quick 80ms pulses, pause).
-//! - Soil Moisture Sensor Fault: 5 blips (5 quick 80ms pulses, pause).
-//! - Normal Healthy Idle: Single subtle 50ms blip once every 10 seconds.
+//! - Ultrasonic Sensor Fault: 4 blips (4 pulses: 160ms ON, 240ms OFF, 2000ms pause).
+//! - Soil Moisture Sensor Fault: Triple blip (3 pulses: 160ms ON, 240ms OFF, 2000ms pause).
+//! - Normal Healthy Idle: Single calm 100ms blip once every 10 seconds.
 
 use std::sync::{Arc, Mutex};
 use std::thread;
@@ -111,9 +111,9 @@ pub fn init_led_hardware() {
     info!("[LED] Status LED initialized on GPIO 8 (Active LOW, initial: OFF)");
 }
 
-/// Pulses the status LED in setup/provisioning mode (100ms ON / 100ms OFF).
+/// Pulses the status LED in setup/provisioning mode (200ms ON / 800ms OFF).
 pub fn pulse_setup() {
-    pulse(100, 100);
+    pulse(200, 800);
 }
 
 /// Accelerando frequency sweep (low to high blink) over 3 seconds for Reservoir Dry.
@@ -138,33 +138,33 @@ fn play_reservoir_dry_pattern() {
     thread::sleep(Duration::from_millis(870));
 }
 
-/// Triple blip pattern for Ultrasonic Sensor Fault (3 quick pulses).
+/// 4-blip pattern for Ultrasonic Sensor Fault (4 pulses: 160ms ON / 240ms OFF).
 fn play_ultrasonic_fault_pattern() {
-    for _ in 0..2 {
-        pulse(80, 120);
+    for _ in 0..3 {
+        pulse(160, 240);
     }
-    pulse(80, 1000);
+    pulse(160, 2000);
 }
 
-/// 5-blip pattern for Soil Moisture Sensor Fault (5 quick pulses).
+/// Triple blip pattern for Soil Moisture Sensor Fault (3 pulses: 160ms ON / 240ms OFF).
 fn play_soil_fault_pattern() {
-    for _ in 0..4 {
-        pulse(80, 120);
+    for _ in 0..2 {
+        pulse(160, 240);
     }
-    pulse(80, 1000);
+    pulse(160, 2000);
 }
 
-/// Normal healthy idle heartbeat: 50ms pulse once every 10 seconds.
-/// Slices the 9950ms sleep into 100ms intervals so state changes (pump active, faults)
+/// Normal healthy idle heartbeat: 100ms pulse once every 10 seconds.
+/// Slices the 9900ms sleep into 100ms intervals so state changes (pump active, faults)
 /// are reacted to promptly without lagging behind the 10-second timer.
 fn play_idle_heartbeat(state: &Arc<Mutex<AppState>>) {
-    // 50ms ON
+    // 100ms ON (doubled from 50ms for a calmer, clearly visible pulse)
     led_on();
-    thread::sleep(Duration::from_millis(50));
+    thread::sleep(Duration::from_millis(100));
     led_off();
 
-    // 9950ms OFF with responsive exit
-    for _ in 0..100 {
+    // 9900ms OFF with responsive exit
+    for _ in 0..99 {
         thread::sleep(Duration::from_millis(100));
         if crate::ota::is_ota_in_progress() {
             break;
@@ -206,9 +206,9 @@ pub fn run_led_supervisor(state: Arc<Mutex<AppState>>) -> ! {
             continue;
         }
 
-        // 2. Wi-Fi Connecting / Disconnected: Fast continuous blink (100ms ON / 100ms OFF)
+        // 2. Wi-Fi Connecting / Disconnected: Distinct beacon blink (200ms ON / 800ms OFF)
         if !status.wifi_connected {
-            pulse(100, 100);
+            pulse(200, 800);
             continue;
         }
 
@@ -230,11 +230,11 @@ pub fn run_led_supervisor(state: Arc<Mutex<AppState>>) -> ! {
             }
 
             // Separator pause between alternating fault patterns
-            thread::sleep(Duration::from_millis(800));
+            thread::sleep(Duration::from_millis(1600));
             continue;
         }
 
-        // 4. Normal Healthy Idle: 50ms pulse once every 10 seconds
+        // 4. Normal Healthy Idle: 100ms pulse once every 10 seconds
         play_idle_heartbeat(&state);
     }
 }

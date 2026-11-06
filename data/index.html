@@ -14,7 +14,7 @@
             <div class="header-title">
                 <h1>🌱 Plant Monitor P2</h1>
                 <span class="badge" id="host-badge">plants.local</span>
-                <span class="badge" id="version-badge" style="background: #1e293b; color: #38bdf8; border: 1px solid #334155; font-size: 0.75rem;">v0.2.4 📈</span>
+                <span class="badge" id="version-badge" style="background: #1e293b; color: #38bdf8; border: 1px solid #334155; font-size: 0.75rem;">v0.2.5 📈</span>
             </div>
             <div class="header-status">
                 <span id="conn-status" class="dot dot-disconnected"></span>
@@ -26,8 +26,8 @@
         <nav class="nav-tabs">
             <button type="button" class="nav-tab active" id="tab-btn-dash">📊 Dashboard</button>
             <button type="button" class="nav-tab" id="tab-btn-logs">📋 Sensor Log</button>
-            <button type="button" class="nav-tab" id="tab-btn-diag">🔧 Diagnostics</button>
-            <button type="button" class="nav-tab" id="tab-btn-cfg">⚙️ Settings & Thresholds</button>
+            <button type="button" class="nav-tab" id="tab-btn-diag">⚙️ Settings</button>
+            <button type="button" class="nav-tab" id="tab-btn-cfg">📐 Thresholds & Safety</button>
         </nav>
 
         <!-- =================================================================== -->
@@ -278,7 +278,7 @@
         <!-- =================================================================== -->
         <div id="view-diagnostics" style="display: none;">
             <div class="settings-header">
-                <h2>🔧 Hardware Diagnostics & System Controls</h2>
+                <h2>⚙️ Settings & System Controls</h2>
                 <p>Real-time microcontroller metrics, network status, peripheral reset tools, and over-the-air firmware updates.</p>
             </div>
 
@@ -286,7 +286,7 @@
                 <!-- Card 1: Network & Hardware Health -->
                 <div class="card">
                     <div class="card-header">
-                        <h3>Hardware Diagnostics</h3>
+                        <h3>Settings</h3>
                         <span class="card-icon">🎛️</span>
                     </div>
                     <ul class="diag-list">
