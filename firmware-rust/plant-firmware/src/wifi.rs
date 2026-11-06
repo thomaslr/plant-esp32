@@ -12,7 +12,7 @@ use esp_idf_svc::hal::modem::Modem;
 use esp_idf_svc::nvs::EspDefaultNvsPartition;
 use esp_idf_svc::sys::{
     esp_netif_get_handle_from_ifkey, esp_netif_set_hostname, esp_wifi_set_ps,
-    wifi_ps_type_t_WIFI_PS_MIN_MODEM,
+    wifi_ps_type_t_WIFI_PS_MIN_MODEM, wifi_ps_type_t_WIFI_PS_NONE,
 };
 use esp_idf_svc::wifi::{
     AccessPointConfiguration, AuthMethod, BlockingWifi, ClientConfiguration, Configuration, EspWifi,
@@ -64,24 +64,26 @@ pub fn start_wifi(
 
         if let Ok(()) = wifi.set_configuration(&Configuration::Client(client_config)) {
             if let Ok(()) = wifi.start() {
+                // Keep modem power save OFF during initial connection/DHCP handshake
+                // to prevent packet drops and auth timeouts with mesh routers (e.g. Deco).
                 unsafe {
-                    let _ = esp_wifi_set_ps(wifi_ps_type_t_WIFI_PS_MIN_MODEM);
+                    let _ = esp_wifi_set_ps(wifi_ps_type_t_WIFI_PS_NONE);
                 }
                 set_sta_hostname(hostname);
 
                 // A single failed attempt is common right after a crash/OTA reboot: the
                 // router can still hold a stale session for this MAC and rejects the first
-                // auth (reason 6/0x600). Retry with a clean disconnect between attempts
-                // before concluding the network is really unavailable.
-                const MAX_STA_ATTEMPTS: u32 = 5;
+                // auth (reason 6/0x600). Mesh systems like TP-Link Deco take time to clear
+                // stale leases and route DHCP packets. Retry up to 10 times with 15s delays.
+                const MAX_STA_ATTEMPTS: u32 = 10;
                 for attempt in 1..=MAX_STA_ATTEMPTS {
                     if attempt > 1 {
                         warn!(
-                            "[WIFI] Retrying saved network (attempt {}/{})...",
+                            "[WIFI] Retrying saved network (attempt {}/{} in 15s)...",
                             attempt, MAX_STA_ATTEMPTS
                         );
                         let _ = wifi.disconnect();
-                        std::thread::sleep(std::time::Duration::from_secs(3));
+                        std::thread::sleep(std::time::Duration::from_secs(15));
                     }
 
                     if let Ok(()) = wifi.connect() {
@@ -91,6 +93,10 @@ pub fn start_wifi(
                                 let ip_str = info.ip.to_string();
                                 if ip_str != "0.0.0.0" {
                                     info!("[WIFI] Station Mode active! IP: {}", ip_str);
+                                    // Connection and DHCP lease established; safely enable modem sleep
+                                    unsafe {
+                                        let _ = esp_wifi_set_ps(wifi_ps_type_t_WIFI_PS_MIN_MODEM);
+                                    }
                                     return Ok(WifiState::StationConnected {
                                         ip_address: ip_str,
                                         wifi_handle: wifi,
