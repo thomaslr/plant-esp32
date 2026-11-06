@@ -14,9 +14,12 @@ use esp_idf_svc::sys::{
     adc_bits_width_t_ADC_WIDTH_BIT_12, adc_unit_t_ADC_UNIT_1, esp_adc_cal_characteristics_t,
     esp_adc_cal_characterize, esp_adc_cal_raw_to_voltage, esp_timer_get_time, gpio_get_level,
     gpio_mode_t_GPIO_MODE_INPUT, gpio_mode_t_GPIO_MODE_OUTPUT, gpio_reset_pin, gpio_set_direction,
-    gpio_set_level,
+    gpio_set_level, soc_periph_temperature_sensor_clk_src_t_TEMPERATURE_SENSOR_CLK_SRC_DEFAULT,
+    temperature_sensor_config_t, temperature_sensor_disable, temperature_sensor_enable,
+    temperature_sensor_get_celsius, temperature_sensor_handle_t, temperature_sensor_install,
+    temperature_sensor_uninstall, ESP_OK,
 };
-use log::debug;
+use log::{debug, info, warn};
 use plant_core::config::AppConfig;
 use plant_core::reading::SensorReading;
 use plant_core::sensors::{
@@ -29,12 +32,19 @@ use crate::pins::{
     PIN_ULTRASONIC_ECHO, PIN_ULTRASONIC_TRIG,
 };
 
+#[derive(Clone, Copy)]
+struct TempSensorHandle(temperature_sensor_handle_t);
+unsafe impl Send for TempSensorHandle {}
+unsafe impl Sync for TempSensorHandle {}
+
 pub struct HardwareSensorManager {
     preventive_resets_count: AtomicU32,
+    temp_sensor: Option<TempSensorHandle>,
 }
 
 impl HardwareSensorManager {
-    /// Initializes GPIO pins and ADC1 peripheral with 12-bit resolution and 11dB attenuation.
+    /// Initializes GPIO pins, ADC1 peripheral with 12-bit resolution and 11dB attenuation,
+    /// and the ESP32-C3 internal silicon temperature sensor.
     pub fn new() -> Self {
         unsafe {
             // Configure ADC1 12-bit capture width
@@ -65,8 +75,33 @@ impl HardwareSensorManager {
             gpio_set_level(PIN_SOIL_POWER, 0);
         }
 
+        let temp_sensor = unsafe {
+            let mut handle: temperature_sensor_handle_t = std::ptr::null_mut();
+            let mut config = temperature_sensor_config_t::default();
+            config.range_min = 10;
+            config.range_max = 50;
+            config.clk_src = soc_periph_temperature_sensor_clk_src_t_TEMPERATURE_SENSOR_CLK_SRC_DEFAULT;
+
+            let install_res = temperature_sensor_install(&config, &mut handle);
+            if install_res == ESP_OK && !handle.is_null() {
+                let enable_res = temperature_sensor_enable(handle);
+                if enable_res == ESP_OK {
+                    info!("[SENSOR] Internal ESP32-C3 temperature sensor initialized successfully");
+                    Some(TempSensorHandle(handle))
+                } else {
+                    warn!("[SENSOR] Failed to enable temperature sensor: {}", enable_res);
+                    temperature_sensor_uninstall(handle);
+                    None
+                }
+            } else {
+                warn!("[SENSOR] Failed to install temperature sensor: {}", install_res);
+                None
+            }
+        };
+
         Self {
             preventive_resets_count: AtomicU32::new(0),
+            temp_sensor,
         }
     }
 
@@ -204,7 +239,16 @@ impl HardwareSensorManager {
 
     /// Reads ESP32-C3 internal silicon temperature in Celsius.
     pub fn read_chip_temperature(&self) -> f32 {
-        read_chip_temp_celsius()
+        if let Some(sensor) = self.temp_sensor {
+            let mut temp = 0.0f32;
+            let res = unsafe { temperature_sensor_get_celsius(sensor.0, &mut temp) };
+            if res == ESP_OK {
+                return (temp * 10.0).round() / 10.0;
+            } else {
+                warn!("[SENSOR] Failed to read internal chip temperature: {}", res);
+            }
+        }
+        0.0
     }
 
     /// Returns the number of times the ultrasonic stuck-latch preventive reset fired.
@@ -288,7 +332,13 @@ fn read_raw_channel_mv(pin: i32) -> i32 {
     }
 }
 
-/// Helper function to read internal chip temperature.
-fn read_chip_temp_celsius() -> f32 {
-    42.0
+impl Drop for HardwareSensorManager {
+    fn drop(&mut self) {
+        if let Some(sensor) = self.temp_sensor {
+            unsafe {
+                let _ = temperature_sensor_disable(sensor.0);
+                let _ = temperature_sensor_uninstall(sensor.0);
+            }
+        }
+    }
 }
