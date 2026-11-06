@@ -1,5 +1,9 @@
 # Plant ESP32 Controller — Through-Hole Edition (Rev 2.0)
 
+> [!IMPORTANT]
+> **Canonical Pinout Reference:**
+> All ESP32-C3 SuperMini hardware pinouts strictly follow the official [LastMinuteEngineers ESP32-C3 SuperMini Pinout Reference](https://lastminuteengineers.com/esp32-c3-super-mini-pinout-reference/).
+
 This directory contains all design files, production Gerbers, prototyping visualizers, and assembly guides for the **100% Through-Hole Edition** of the Plant ESP32 watering controller.
 
 Designed specifically for DIY hand soldering using standard through-hole parts (TO-220 MOSFET, axial 1/4W resistors, DO-41 diode, radial electrolytic capacitor).

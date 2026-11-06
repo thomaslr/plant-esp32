@@ -41,8 +41,9 @@
     "startup_delay_sec": 30,
     "check_interval_sec": 3600,
     "sensor_read_interval_sec": 3600,
-    "automated_water_duration_sec": 30,
-    "manual_water_duration_sec": 10
+    "automated_water_duration_sec": 5,
+    "manual_water_duration_sec": 5,
+    "pump_speed_pct": 60
   },
   "safety": {
     "max_continuous_pump_sec": 60,

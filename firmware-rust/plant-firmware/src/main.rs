@@ -17,6 +17,7 @@ mod storage;
 mod web;
 mod wifi;
 
+use std::sync::atomic::AtomicU32;
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
@@ -123,8 +124,9 @@ fn main() -> anyhow::Result<()> {
             ip_address,
             wifi_handle,
         } => {
-            // 6. Initialize Hardware Pump Gate and Safety Supervisor
-            let pump_gate = HardwarePumpGate::new();
+            // 6. Initialize Hardware Pump Gate (5 kHz LEDC PWM) and Safety Supervisor
+            let pump_speed = Arc::new(AtomicU32::new(config.timing.pump_speed_pct));
+            let pump_gate = HardwarePumpGate::new(Arc::clone(&pump_speed));
             let safety = SafetyManager::new(&config, pump_gate);
 
             // 7. Initialize Sensor Manager & 100-sample RAM Ring Buffer
@@ -165,6 +167,7 @@ fn main() -> anyhow::Result<()> {
                 storage,
                 ip_address,
                 wifi_rssi: -60,
+                pump_speed,
             }));
 
             // 11. Start Embedded HTTP Web Server

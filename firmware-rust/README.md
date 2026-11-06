@@ -55,26 +55,29 @@ firmware-rust/
 5. **Low-Power Optimizations Preserved:**
    - ESP32-C3 CPU downclocked to 80 MHz (`CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_80=y`).
    - Wi-Fi Modem Sleep enabled (`WIFI_PS_MIN_MODEM`).
-   - Switched probe power duty-cycling (GPIO 5 HIGH only during 30ms sampling) to eliminate galvanic corrosion and idle draw.
-   - Ultrasonic stuck-latch recovery on GPIO 6 to heal clone HC-SR04 sensors.
+   - Switched probe power duty-cycling (GPIO 21 HIGH only during 30ms sampling) to eliminate galvanic corrosion and idle draw.
+   - Ultrasonic stuck-latch recovery on GPIO 20 to heal clone HC-SR04 sensors.
 
 ---
 
 ## Hardware Pinout Reference (ESP32-C3 SuperMini)
 
+Canonical Pinout Reference: [LastMinuteEngineers ESP32-C3 SuperMini Pinout](https://lastminuteengineers.com/esp32-c3-super-mini-pinout-reference/)
+
 | Function | Pin | Hardware Circuit |
 | :--- | :--- | :--- |
-| **5V Supply Monitor** | GPIO 0 (ADC1_CH0) | 100k/100k Divider + 100nF C1 |
-| **Soil Moisture ADC** | GPIO 1 (ADC1_CH1) | Capacitive Probe Analog Out |
-| **Ambient Light ADC**| GPIO 3 (ADC1_CH3) | GL55xx LDR + 10k Divider |
-| **18650 Battery Mon** | GPIO 4 (ADC1_CH4) | 100k/100k Divider + 100nF C6 |
-| **Soil Probe Power**  | GPIO 5 | Digital Out (Switched VCC) |
-| **Ultrasonic ECHO**   | GPIO 6 | Digital In via 1k/2k Divider |
-| **Pump MOSFET Gate**  | GPIO 7 | Digital Out (Low-side gate switch) |
-| **Status LED**        | GPIO 8 | Digital Out (Active LOW) |
-| **Ultrasonic TRIG**   | GPIO 10 | Digital Out (10µs trigger pulse) |
-| **I2C SDA**           | GPIO 20 | External Sensor Header |
-| **I2C SCL**           | GPIO 21 | External Sensor Header |
+| **18650 Battery Mon** | GPIO 0 (ADC1_CH0) | 100k/100k Divider + 100nF C6 (from TB4-3) |
+| **Ambient Light ADC** | GPIO 1 (ADC1_CH1) | GL55xx LDR + 10k Divider R7 |
+| **Strapping NC**      | GPIO 2 | Unconnected / High-Z (Boot immune) |
+| **Soil Moisture ADC** | GPIO 3 (ADC1_CH3) | Capacitive Probe Analog Out (TB2-1) |
+| **5V Supply Monitor** | GPIO 4 (ADC1_CH4) | 100k/100k Divider + 100nF C1 |
+| **I2C SCL**           | GPIO 5 | External Sensor Header (MOD1/MOD2) |
+| **I2C SDA**           | GPIO 6 | External Sensor Header (MOD1/MOD2) |
+| **Ultrasonic TRIG**   | GPIO 7 | Digital Out (10µs trigger pulse to TB1-2) |
+| **Status LED**        | GPIO 8 | Digital Out (Active LOW onboard blue LED) |
+| **Pump MOSFET Gate**  | GPIO 10 | Digital Out (AO3400A Low-side gate switch) |
+| **Ultrasonic ECHO**   | GPIO 20 | Digital In via 1k/2k Divider from TB1-3 |
+| **Soil Probe Power**  | GPIO 21 | Digital Out (Switched VCC to TB2-2) |
 
 ---
 

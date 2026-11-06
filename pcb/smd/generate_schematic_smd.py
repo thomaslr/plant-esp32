@@ -429,21 +429,21 @@ def build_schematic():
     wire_out_label("J1", "1", "+5V", -6, 0, 180)
     wire_out_label("J1", "2", "GND", -6, 0, 180)
     wire_out_label("J1", "3", "+3V3", -6, 0, 180)
-    wire_out_label("J1", "4", "GPIO0_5V_ADC", -6, 0, 180)
-    wire_out_label("J1", "5", "GPIO1_SOIL", -6, 0, 180)
-    wire_out_label("J1", "6", "GPIO3_LDR", -6, 0, 180)
-    add_no_connect(*pin_locations[("J1", "7")])
-    wire_out_label("J1", "8", "GPIO4_VBAT_ADC", -6, 0, 180)
+    wire_out_label("J1", "4", "GPIO4_5V_ADC", -6, 0, 180)
+    wire_out_label("J1", "5", "GPIO3_SOIL", -6, 0, 180)
+    add_no_connect(*pin_locations[("J1", "6")])
+    wire_out_label("J1", "7", "GPIO1_LDR", -6, 0, 180)
+    wire_out_label("J1", "8", "GPIO0_VBAT_ADC", -6, 0, 180)
 
     # --- J2 Connections ---
-    wire_out_label("J2", "1", "GPIO21_SCL", -6, 0, 180)
-    wire_out_label("J2", "2", "GPIO20_SDA", -6, 0, 180)
-    wire_out_label("J2", "3", "GPIO10_TRIG", -6, 0, 180)
-    wire_out_label("J2", "4", "GPIO7_GATE", -6, 0, 180)
+    wire_out_label("J2", "1", "GPIO5_SCL", -6, 0, 180)
+    wire_out_label("J2", "2", "GPIO6_SDA", -6, 0, 180)
+    wire_out_label("J2", "3", "GPIO7_TRIG", -6, 0, 180)
+    add_no_connect(*pin_locations[("J2", "4")])
     add_no_connect(*pin_locations[("J2", "5")])
-    add_no_connect(*pin_locations[("J2", "6")])
-    wire_out_label("J2", "7", "GPIO6_ECHO", -6, 0, 180)
-    wire_out_label("J2", "8", "GPIO5_SOIL_VCC", -6, 0, 180)
+    wire_out_label("J2", "6", "GPIO10_GATE", -6, 0, 180)
+    wire_out_label("J2", "7", "GPIO20_ECHO", -6, 0, 180)
+    wire_out_label("J2", "8", "GPIO21_SOIL_VCC", -6, 0, 180)
 
     # --- 5V Rail ADC Divider (R1, R2, C1) ---
     # R1 Pin 1 (top): +5V
@@ -465,7 +465,7 @@ def build_schematic():
 
     label_5v_x = round(c1_p1[0] + G(6), 4)
     add_wire(c1_p1[0], mid_y_5v, label_5v_x, mid_y_5v)
-    add_label("GPIO0_5V_ADC", label_5v_x, mid_y_5v, 0)
+    add_label("GPIO4_5V_ADC", label_5v_x, mid_y_5v, 0)
 
     # GND returns for R2 and C1
     wire_out_label("R2", "1", "GND", 0, 4, 270)
@@ -490,7 +490,7 @@ def build_schematic():
 
     label_bat_x = round(c6_p2[0] + G(6), 4)
     add_wire(c6_p2[0], mid_y_bat, label_bat_x, mid_y_bat)
-    add_label("GPIO4_VBAT_ADC", label_bat_x, mid_y_bat, 0)
+    add_label("GPIO0_VBAT_ADC", label_bat_x, mid_y_bat, 0)
 
     # GND returns for R9 and C6
     wire_out_label("R9", "1", "GND", 0, 4, 270)
@@ -517,12 +517,12 @@ def build_schematic():
 
     label_echo_x = round(r3_p1[0] + G(6), 4)
     add_wire(r3_p1[0], mid_y_echo, label_echo_x, mid_y_echo)
-    add_label("GPIO6_ECHO", label_echo_x, mid_y_echo, 0)
+    add_label("GPIO20_ECHO", label_echo_x, mid_y_echo, 0)
 
     wire_out_label("R4", "2", "GND", 0, 4, 270)
 
     # --- Pump Driver (R5, R6, Q1, D1) ---
-    wire_out_label("R5", "1", "GPIO7_GATE", -6, 0, 180)
+    wire_out_label("R5", "1", "GPIO10_GATE", -6, 0, 180)
 
     r5_p2 = pin_locations[("R5", "2")] # (G(183), G(96))
     q1_g  = pin_locations[("Q1", "1")]  # (G(196), G(96))
@@ -559,7 +559,7 @@ def build_schematic():
     add_label("PUMP_DRAIN", pump_label_x, pump_bus_y, 0)
 
     # --- Soil Sensor Filter (C2) ---
-    wire_out_label("C2", "1", "GPIO1_SOIL", 0, -4, 90)
+    wire_out_label("C2", "1", "GPIO3_SOIL", 0, -4, 90)
     wire_out_label("C2", "2", "GND", 0, 4, 270)
 
     # --- Ambient Light Sensor (LDR1, R7, C4) ---
@@ -580,17 +580,17 @@ def build_schematic():
 
     ldr_label_x = round(c4_p1[0] + G(6), 4)
     add_wire(c4_p1[0], mid_y_ldr, ldr_label_x, mid_y_ldr)
-    add_label("GPIO3_LDR", ldr_label_x, mid_y_ldr, 0)
+    add_label("GPIO1_LDR", ldr_label_x, mid_y_ldr, 0)
 
     wire_out_label("R7", "2", "GND", 0, 4, 270)
     wire_out_label("C4", "2", "GND", 0, 4, 270)
 
     # --- Terminal Blocks TB1, TB2, TB3, TB4 ---
-    tb1_nets = [("+5V", "1"), ("GPIO10_TRIG", "2"), ("ECHO_5V", "3"), ("GND", "4")]
+    tb1_nets = [("+5V", "1"), ("GPIO7_TRIG", "2"), ("ECHO_5V", "3"), ("GND", "4")]
     for net, pnum in tb1_nets:
         wire_out_label("TB1", pnum, net, -6, 0, 180)
 
-    tb2_nets = [("GPIO1_SOIL", "1"), ("GPIO5_SOIL_VCC", "2"), ("GND", "3")]
+    tb2_nets = [("GPIO3_SOIL", "1"), ("GPIO21_SOIL_VCC", "2"), ("GND", "3")]
     for net, pnum in tb2_nets:
         wire_out_label("TB2", pnum, net, -6, 0, 180)
 
@@ -603,11 +603,11 @@ def build_schematic():
         wire_out_label("TB4", pnum, net, -6, 0, 180)
 
     # --- Expansion Headers MOD1 & MOD2 ---
-    mod1_nets = [("+3V3", "1"), ("GND", "2"), ("GPIO21_SCL", "3"), ("GPIO20_SDA", "4")]
+    mod1_nets = [("+3V3", "1"), ("GND", "2"), ("GPIO5_SCL", "3"), ("GPIO6_SDA", "4")]
     for net, pnum in mod1_nets:
         wire_out_label("MOD1", pnum, net, -6, 0, 180)
 
-    mod2_nets = [("+3V3", "1"), ("GND", "2"), ("GPIO21_SCL", "3"), ("GPIO20_SDA", "4"), ("GND", "5")]
+    mod2_nets = [("+3V3", "1"), ("GND", "2"), ("GPIO5_SCL", "3"), ("GPIO6_SDA", "4"), ("GND", "5")]
     for net, pnum in mod2_nets:
         wire_out_label("MOD2", pnum, net, -6, 0, 180)
 

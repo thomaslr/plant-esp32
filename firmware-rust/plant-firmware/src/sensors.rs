@@ -1,7 +1,7 @@
 //! Hardware Sensor Acquisition Driver.
 //!
 //! Controls ADC sampling (supply voltage, battery voltage, soil moisture),
-//! switched soil probe power (GPIO 5 duty cycle), and ultrasonic timing (HC-SR04).
+//! switched soil probe power (GPIO 21 duty cycle), and ultrasonic timing (HC-SR04).
 
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::thread::sleep;
@@ -51,10 +51,10 @@ impl HardwareSensorManager {
             adc1_config_width(adc_bits_width_t_ADC_WIDTH_BIT_12);
 
             // Configure 11dB attenuation (~0-3.1V range) on all active ADC1 channels:
-            // Channel 0 = GPIO 0 (5V Rail Divider)
-            // Channel 1 = GPIO 1 (Capacitive Soil Sensor)
-            // Channel 3 = GPIO 3 (Ambient Light LDR)
-            // Channel 4 = GPIO 4 (18650 Battery Divider)
+            // Channel 0 = GPIO 0 (18650 Battery Divider from TB4 Pin 3)
+            // Channel 1 = GPIO 1 (Ambient Light LDR Divider)
+            // Channel 3 = GPIO 3 (Capacitive Soil Sensor AOUT from TB2 Pin 1)
+            // Channel 4 = GPIO 4 (5V Rail Divider)
             adc1_config_channel_atten(adc1_channel_t_ADC1_CHANNEL_0, adc_atten_t_ADC_ATTEN_DB_11);
             adc1_config_channel_atten(adc1_channel_t_ADC1_CHANNEL_1, adc_atten_t_ADC_ATTEN_DB_11);
             adc1_config_channel_atten(adc1_channel_t_ADC1_CHANNEL_3, adc_atten_t_ADC_ATTEN_DB_11);
@@ -120,13 +120,13 @@ impl HardwareSensorManager {
         self.preventive_resets_count.fetch_add(1, Ordering::Relaxed);
     }
 
-    /// Measures ultrasonic distance in centimeters with multi-sample median filtering
+    /// Measures ultrasonic distance in centimeters with 5-sample median filtering
     /// and hard timeout recovery.
     pub fn read_ultrasonic_distance_cm(&self) -> f32 {
-        let mut samples = [0.0f32; 3];
+        let mut samples = [0.0f32; 5];
         let mut valid_samples = 0;
 
-        for _ in 0..3 {
+        for _ in 0..5 {
             unsafe {
                 // If ECHO pin is stuck HIGH before trigger, clear immediately
                 if gpio_get_level(PIN_ULTRASONIC_ECHO) == 1 {
@@ -181,7 +181,8 @@ impl HardwareSensorManager {
                 }
             }
 
-            sleep(Duration::from_millis(20));
+            // 60ms pause between pings to allow acoustic decay
+            sleep(Duration::from_millis(60));
         }
 
         if valid_samples == 0 {

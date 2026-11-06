@@ -1,5 +1,12 @@
 # ESP32-C3 SuperMini 18×24 Perfboard Assembly Guide (Descending Rows R $\to$ A)
 
+> [!IMPORTANT]
+> **Canonical Pinout Reference:**
+> All pin assignments strictly follow the official [LastMinuteEngineers ESP32-C3 SuperMini Pinout Reference](https://lastminuteengineers.com/esp32-c3-super-mini-pinout-reference/).
+> When the SuperMini is plugged into Row J and Row D (USB-C extending off Left Edge / Cols 1–2):
+> * **Row J (Top Header, Cols 3–10):** Pin 1 (5V), Pin 2 (GND), Pin 3 (3V3), Pin 4 (**GPIO 4**), Pin 5 (**GPIO 3**), Pin 6 (**GPIO 2**), Pin 7 (**GPIO 1**), Pin 8 (**GPIO 0**).
+> * **Row D (Bottom Header, Cols 3–10):** Pin 1 (**GPIO 5**), Pin 2 (**GPIO 6**), Pin 3 (**GPIO 7**), Pin 4 (**GPIO 8** / LED), Pin 5 (**GPIO 9** / BOOT), Pin 6 (**GPIO 10**), Pin 7 (**GPIO 20**), Pin 8 (**GPIO 21**).
+
 This guide details the permanent, soldered build of the Plant Monitor & Automatic Watering system on a standard **0.1" (2.54 mm) pitch plated through-hole perfboard** with **18 Rows descending from R (Top) to A (Bottom)** and **24 Columns (1 to 24)**.
 
 ---
@@ -48,13 +55,13 @@ Every electrical connection in this build is explicitly realized using one of fo
     ROW M: [·] [·] [5V] [M4] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] (Col 3: 5V Track | Col 4: GND Track)
     ROW L: [·] [·] [C3+][C3-/C1][·][·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] (100µF VCC-GND & C1 GND)
     ROW K: [·] [·] [5V][R2G] [·] [K6] [K7] [K8] [K9][K10] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] (Row K: K4 GND, K6 Node, K7-K10 Signal Breakouts)
-    ROW J: [·] [·] [ 5V GND 3V3  G0  G1  G2  G3  G4 ]  (ESP32-C3 SuperMini Header 1)        [·] [·] [·] [·]
+    ROW J: [·] [·] [ 5V GND 3V3  G4  G3  G2  G1  G0 ]  (ESP32-C3 SuperMini Header 1)        [·] [·] [·] [·]
     ROW I: [·] [·] |                                |                                      [·] [·] [·] [·]
     ROW H: [·] [·] |      SOCKET CAVITY             |                                      [·] [·] [·] [·]
     ROW G: [·] [·] |      (CLEAR UNDERNEATH)        |                                      [·] [·] [·] [·]
     ROW F: [·] [·] |                                |                                      [·] [·] [·] [·]
     ROW E: [·] [·] |                                | [·] [·] [D1A] [·] [D1K] [·] [·] [·] [·] [·] [·] [·] [·] [·] (FLYBACK DIODE)
-    ROW D: [·] [·] [ G21 G20 G10 G9  G8  G7  G6  G5 ]  (ESP32-C3 SuperMini Header 2) [GND] [·] [·] [·] [·] [·] [·] [·]
+    ROW D: [·] [·] [ G5  G6  G7  G8  G9  G10 G20 G21 ]  (ESP32-C3 SuperMini Header 2) [GND] [·] [·] [·] [·] [·] [·] [·]
     ROW C: [·] [·] [·] [·] [·] [·] [·] [R5] [·] [·] [R5] [Q1G Q1D Q1S] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·]
     ROW B: [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [TB3-] [GND] [TB3+] [·] [·] [·] [·] [·] [·] [·] [·] [·]
     ROW A: [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [·] [ POWER GND (A12-A14) ] [·] [·] [·] [·] [·] [·] [·] [·] (BOTTOM EDGE)

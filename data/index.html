@@ -14,7 +14,7 @@
             <div class="header-title">
                 <h1>🌱 Plant Monitor P2</h1>
                 <span class="badge" id="host-badge">plants.local</span>
-                <span class="badge" id="version-badge" style="background: #1e293b; color: #38bdf8; border: 1px solid #334155; font-size: 0.75rem;">v0.2.6 📈</span>
+                <span class="badge" id="version-badge" style="background: #1e293b; color: #38bdf8; border: 1px solid #334155; font-size: 0.75rem;">v0.2.7 📈</span>
             </div>
             <div class="header-status">
                 <span id="conn-status" class="dot dot-disconnected"></span>
@@ -187,7 +187,7 @@
                     <div class="pump-actions">
                         <div class="action-inputs">
                             <label for="water-duration">Duration (s):</label>
-                            <input type="number" id="water-duration" min="1" max="60" value="10">
+                            <input type="number" id="water-duration" min="1" max="60" value="5">
                         </div>
                         <button id="btn-water" class="btn btn-primary">Water Now</button>
                     </div>
@@ -389,9 +389,14 @@
                     <p class="section-desc">Configure tank physical dimensions, dry-run safety level, and refill alerts.</p>
                     <div class="form-grid">
                         <div class="form-group">
-                            <label for="cfg-tank-height">Tank Depth (cm):</label>
+                            <label for="cfg-tank-height">Sensor to Tank Bottom (cm):</label>
                             <input type="number" id="cfg-tank-height" min="5" max="200" step="0.5" required>
-                            <span class="field-hint">Total vertical distance from sensor to bottom of reservoir.</span>
+                            <span class="field-hint">Total vertical distance from the ultrasonic sensor face down to the inside bottom of the tank.</span>
+                        </div>
+                        <div class="form-group">
+                            <label for="cfg-sensor-offset">Sensor to Full Water Level (cm):</label>
+                            <input type="number" id="cfg-sensor-offset" min="0" max="30" step="0.5" required>
+                            <span class="field-hint">Air gap from sensor face down to the 100% full water surface (default: 3.0 cm).</span>
                         </div>
                         <div class="form-group">
                             <label for="cfg-tank-min-safe">Min Safe Level (cm):</label>
@@ -500,7 +505,16 @@
                         <div class="form-group">
                             <label for="cfg-timing-auto-water-duration">Automated Watering Duration (s):</label>
                             <input type="number" id="cfg-timing-auto-water-duration" min="1" max="180" step="1" required>
-                            <span class="field-hint">Pump run time when automatic watering triggers (default: 30s).</span>
+                            <span class="field-hint">Pump run time when automatic watering triggers (default: 5s).</span>
+                        </div>
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label for="cfg-timing-pump-speed">Pump Motor Speed: <strong id="cfg-timing-pump-speed-val" style="color: var(--accent); font-weight: 700;">60%</strong></label>
+                            <div style="display: flex; align-items: center; gap: 12px; margin-top: 6px;">
+                                <span style="font-size: 0.82rem; color: var(--text-muted);">20% (Quiet)</span>
+                                <input type="range" id="cfg-timing-pump-speed" min="20" max="100" step="5" value="60" style="flex: 1; cursor: pointer;">
+                                <span style="font-size: 0.82rem; color: var(--text-muted);">100% (Max)</span>
+                            </div>
+                            <span class="field-hint">Hardware 5 kHz PWM duty cycle. 60% runs whisper-quiet with gentle, splash-free flow.</span>
                         </div>
                     </div>
                 </div>

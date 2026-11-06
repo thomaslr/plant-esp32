@@ -24,10 +24,11 @@ Optimized specifically for **JLCPCB SMT Assembly** using **100% Basic Parts Libr
 
 * **100% Top-Side SMT Placement**: All SMD parts are on the `F.Cu` / `F.Paste` layer, requiring only single-sided stencil setup ($0 double-sided setup fees).
 * **100% Basic Parts Library ($0 Feeder Fees)**: All 8 unique SMD parts (R1–R9, C1–C6, D1, D2, Q1) are selected from JLCPCB's permanent Basic Parts catalog. Total feeder setup fee: **\$0.00**.
+* **Authoritative Pinout Reference**: All pins match the official [LastMinuteEngineers ESP32-C3 SuperMini Pinout Reference](https://lastminuteengineers.com/esp32-c3-super-mini-pinout-reference/).
 * **Dedicated Dual ADC Voltage Monitoring (Zero Jumpers!)**:
   * **No selector header or jumper shunt required (`JP1` eliminated completely)**. Both voltages are sampled concurrently in real time by firmware!
-  * **5V Supply Rail Monitor (GPIO 0 / `ADC1_CH0`)**: Dedicated 100 kΩ / 100 kΩ divider (`R1`, `R2`, `#C149504`) + 100 nF filter (`C1`, `#C28233`). Monitors USB/Mains 5V health and detects pump brownouts.
-  * **18650 Battery Monitor (GPIO 4 / `ADC1_CH4`)**: Dedicated 100 kΩ / 100 kΩ divider (`R8`, `R9`, `#C149504`) + 100 nF filter (`C6`, `#C28233`). Directly measures raw 18650 Li-ion battery voltage ($3.0\text{V}\text{–}4.2\text{V}$) from `TB4 Pin 3 (BAT)`. Quiescent drain is **only 21 µA** ($\sim 15\text{ mAh}$ per month), far below the battery's chemical self-discharge!
+  * **5V Supply Rail Monitor (GPIO 4 / `ADC1_CH4`)**: Dedicated 100 kΩ / 100 kΩ divider (`R1`, `R2`, `#C149504`) + 100 nF filter (`C1`, `#C28233`). Monitors USB/Mains 5V health and detects pump brownouts.
+  * **18650 Battery Monitor (GPIO 0 / `ADC1_CH0`)**: Dedicated 100 kΩ / 100 kΩ divider (`R8`, `R9`, `#C149504`) + 100 nF filter (`C6`, `#C28233`). Directly measures raw 18650 Li-ion battery voltage ($3.0\text{V}\text{–}4.2\text{V}$) from `TB4 Pin 3 (BAT)`. Quiescent drain is **only 21 µA** ($\sim 15\text{ mAh}$ per month), far below the battery's chemical self-discharge!
   * Both channels reside on **ADC1**, guaranteeing 100% reliable concurrent analog reads during active Wi-Fi streaming.
 * **External Solar / 18650 Battery Power Terminal (`TB4`, DNP)**:
   * 3-pin KF301 screw terminal block (5.00 mm pitch) located on the right edge with wire entries facing outwards (`+X`).
@@ -40,24 +41,26 @@ Optimized specifically for **JLCPCB SMT Assembly** using **100% Basic Parts Libr
   * When USB-C is plugged into the ESP32 while the battery/solar module is connected, `D2` is reverse-biased and **physically blocks 100% of reverse current** from backfeeding into the booster or solar charger.
   * Ultra-low forward drop ($\sim 0.25\text{–}0.35\text{V}$) delivers $\sim 4.75\text{V}$ to the board under pump load, well above the 3.5V ESP32 LDO brownout limit.
 * **Flyback Diode (`D1`)**: **SS34** (SMA / DO-214AC package, 40V 3A Schottky rectifier, JLCPCB Basic Part `#C8678`, shared reel with D2).
-* **Logic-Level High-Current MOSFET (`Q1`)**: **AO3400A** (SOT-23-3, 30V 5.7A, $V_{GS(th)} \approx 0.65\text{–}1.45\text{V}$, $R_{DS(on)} < 0.033\,\Omega$, LCSC `#C20917`).
+* **Logic-Level High-Current MOSFET (`Q1`)**: **AO3400A** (SOT-23-3, 30V 5.7A, $V_{GS(th)} \approx 0.65\text{–}1.45\text{V}$, $R_{DS(on)} < 0.033\,\Omega$, LCSC `#C20917`). Gate driven by **GPIO 10**.
 * **Dual-Stage Brownout & High-Frequency Decoupling**:
   * **Factory Pre-Soldered Ceramics (`C3`, `C5`)**: 2× 10 µF 25V 0805 MLCCs (LCSC `#C15850`, Basic Part, $0 fee). Total 20 µF with ultra-low ESR ($< 0.02\,\Omega$) handles microsecond motor startup dips and Wi-Fi bursts.
   * **Through-Hole Brownout Expansion (`C_EXT`, DNP)**: 2.50 mm pitch radial footprint (labeled `OPT BULK` on silkscreen, supporting Ø6.3 mm to Ø10.0 mm cans) located on the far right directly adjacent to pump terminal TB3 (>55 mm away from the ESP32 USB-C port). Leaves the entire USB-C corridor 100% unobstructed.
-* **Switched Soil Sensor Power on GPIO 5**: Duty-cycled soil power is assigned to `GPIO 5` (digital out on header J2).
-* **Ambient Light Sensor LDR Divider on GPIO 3 (`ADC1_CH3`)**:
-  * **Zero Boot Strapping Risk**: Moved to **GPIO 3** (non-strapping pin) to completely eliminate boot hangs in total darkness or when `LDR1` is unpopulated (DNP).
+* **Switched Soil Sensor Power on GPIO 21 & Analog DATA on GPIO 3**:
+  * Duty-cycled soil power is assigned to `GPIO 21` (digital out on header J2-8, routed to `TB2-2`).
+  * Capacitive probe analog output is sampled on `GPIO 3` (`ADC1_CH3` on header J1-5, routed from `TB2-1`).
+* **Ambient Light Sensor LDR Divider on GPIO 1 (`ADC1_CH1`)**:
+  * **Zero Boot Strapping Risk**: Placed on **GPIO 1** (`ADC1_CH1`) to completely eliminate boot hangs.
   * **LDR1 (DNP)**: 2-pin through-hole footprint (2.54 mm pitch) for **GL5506, GL5516, GL5528, GL5537, GL5539** photoresistors.
-  * **R7 (10 kΩ 0805 SMD)**: Factory pre-soldered basic part ($V_{out} \to$ GPIO 3).
+  * **R7 (10 kΩ 0805 SMD)**: Factory pre-soldered basic part ($V_{out} \to$ GPIO 1).
   * **C4 (100 nF 0805 SMD)**: Factory pre-soldered basic part for AC light flicker suppression.
-  * **100% Wi-Fi Safe**: Because GPIO 3 is on **ADC1**, `analogRead(3)` functions seamlessly while Wi-Fi is actively streaming.
-* **Ultrasonic Sensor on GPIO 10 (TRIG) & GPIO 6 (ECHO)**:
-  * Ultrasonic TRIG is assigned to **GPIO 10** (digital out on bottom header J2, routed to `TB1-2`).
-  * Ultrasonic ECHO is assigned to **GPIO 6** via the 1k/2k 0805 level divider (`TB1-3` $\to$ R3/R4 $\to$ J2 Pin 7).
-* **GPIO 2 Left Unconnected**: Protected strapping pin left free on header J1 to ensure rock-solid boot reliability under all conditions.
+  * **100% Wi-Fi Safe**: Because GPIO 1 is on **ADC1**, `analogRead(1)` functions seamlessly while Wi-Fi is actively streaming.
+* **Ultrasonic Sensor on GPIO 7 (TRIG) & GPIO 20 (ECHO)**:
+  * Ultrasonic TRIG is assigned to **GPIO 7** (digital out on header J2-3, routed to `TB1-2`).
+  * Ultrasonic ECHO is assigned to **GPIO 20** via the 1k/2k 0805 level divider (`TB1-3` $\to$ R3/R4 $\to$ J2-7).
+* **GPIO 2 Left Unconnected**: Protected strapping pin left free on header J1-6 to ensure rock-solid boot reliability under all conditions.
 * **I2C Expansion Ports for SHT30 & BH1750 (DNP)**:
-  * **MOD1 (SHT30 Socket)**: 4-pin header (`3V3`, `GND`, `SCL` $\to$ GPIO 21, `SDA` $\to$ GPIO 20).
-  * **MOD2 (BH1750 Socket)**: 5-pin header (`VCC`, `GND`, `SCL` $\to$ GPIO 21, `SDA` $\to$ GPIO 20, `ADD` $\to$ GND for default `0x23` address).
+  * **MOD1 (SHT30 Socket)**: 4-pin header (`3V3`, `GND`, `SCL` $\to$ GPIO 5, `SDA` $\to$ GPIO 6).
+  * **MOD2 (BH1750 Socket)**: 5-pin header (`VCC`, `GND`, `SCL` $\to$ GPIO 5, `SDA` $\to$ GPIO 6, `ADD` $\to$ GND for default `0x23` address).
   * Both headers are left unpopulated (DNP) by JLCPCB at **\$0.00 extra cost**, giving an instant drop-in upgrade path.
 
 ---

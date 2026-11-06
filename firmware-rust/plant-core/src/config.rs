@@ -125,6 +125,8 @@ pub struct TimingConfig {
     pub sensor_read_interval_sec: u32,
     pub automated_water_duration_sec: u32,
     pub manual_water_duration_sec: u32,
+    /// Motor PWM power level percentage (10..100%). Default 60%.
+    pub pump_speed_pct: u32,
 }
 
 impl Default for TimingConfig {
@@ -133,8 +135,9 @@ impl Default for TimingConfig {
             startup_delay_sec: 30,
             check_interval_sec: 3600,
             sensor_read_interval_sec: 3600,
-            automated_water_duration_sec: 30,
-            manual_water_duration_sec: 10,
+            automated_water_duration_sec: 5,
+            manual_water_duration_sec: 5,
+            pump_speed_pct: 60,
         }
     }
 }
@@ -317,6 +320,11 @@ impl AppConfig {
                     return Err("automated_water_duration_sec must be at least 1".to_string());
                 }
             }
+            if let Some(p) = t.pump_speed_pct {
+                if p < 10 || p > 100 {
+                    return Err("pump_speed_pct must be between 10 and 100".to_string());
+                }
+            }
         }
 
         // Application phase
@@ -333,6 +341,7 @@ impl AppConfig {
             }
             if let Some(ref w) = g.water_level {
                 if let Some(h) = w.tank_height_cm { self.gauges.water_level.tank_height_cm = h; }
+                if let Some(off) = w.sensor_offset_cm { self.gauges.water_level.sensor_offset_cm = off; }
                 if let Some(safe) = w.min_safe_level_cm { self.gauges.water_level.min_safe_level_cm = safe; }
                 if let Some(r) = w.refill_warning_pct { self.gauges.water_level.refill_warning_pct = r; }
             }
@@ -361,6 +370,7 @@ impl AppConfig {
             if let Some(r) = t.sensor_read_interval_sec { self.timing.sensor_read_interval_sec = r; }
             if let Some(w) = t.automated_water_duration_sec { self.timing.automated_water_duration_sec = w; }
             if let Some(m) = t.manual_water_duration_sec { self.timing.manual_water_duration_sec = m; }
+            if let Some(p) = t.pump_speed_pct { self.timing.pump_speed_pct = p; }
         }
         Ok(())
     }
@@ -380,6 +390,7 @@ pub struct TimingPatch {
     pub sensor_read_interval_sec: Option<u32>,
     pub automated_water_duration_sec: Option<u32>,
     pub manual_water_duration_sec: Option<u32>,
+    pub pump_speed_pct: Option<u32>,
 }
 
 #[derive(Debug, Clone, Default, Deserialize)]
@@ -406,6 +417,7 @@ pub struct SoilMoisturePatch {
 #[derive(Debug, Clone, Default, Deserialize)]
 pub struct WaterLevelPatch {
     pub tank_height_cm: Option<f32>,
+    pub sensor_offset_cm: Option<f32>,
     pub min_safe_level_cm: Option<f32>,
     pub refill_warning_pct: Option<f32>,
 }
@@ -569,5 +581,25 @@ mod tests {
         // disabling the pump run-time limit.
         assert!(serde_json::from_str::<ConfigPatch>(r#"{"safety":{"max_continuous_pump_sec":-1}}"#)
             .is_err());
+    }
+
+    #[test]
+    fn pump_speed_patch_and_validation() {
+        let mut c = AppConfig::default();
+        assert_eq!(c.timing.pump_speed_pct, 60);
+
+        let patch: ConfigPatch = serde_json::from_str(r#"{"timing":{"pump_speed_pct":75}}"#).unwrap();
+        c.apply_patch(&patch).unwrap();
+        assert_eq!(c.timing.pump_speed_pct, 75);
+
+        // Under 10 rejected
+        let too_low: ConfigPatch = serde_json::from_str(r#"{"timing":{"pump_speed_pct":5}}"#).unwrap();
+        assert!(c.apply_patch(&too_low).is_err());
+        assert_eq!(c.timing.pump_speed_pct, 75);
+
+        // Over 100 rejected
+        let too_high: ConfigPatch = serde_json::from_str(r#"{"timing":{"pump_speed_pct":105}}"#).unwrap();
+        assert!(c.apply_patch(&too_high).is_err());
+        assert_eq!(c.timing.pump_speed_pct, 75);
     }
 }

@@ -330,18 +330,18 @@
                             <path class="trace" d="M 665 410 L 635 410 L 635 150 L 460.5 150 L 460.5 195" stroke="#3fb950" stroke-width="4" stroke-dasharray="6,4" fill="none" opacity="0.85"/>
                         </g>
 
-                        <!-- 5V Sense (GPIO 0 ADC) from R1/R2/C1 to J1-4 (Cyan) -->
-                        <g class="net-adc0">
+                        <!-- 5V Sense (GPIO 4 ADC) from R1/R2/C1 to J1-4 (Cyan) -->
+                        <g class="net-adc4">
                             <path class="trace" d="M 124.5 195 L 124.5 240 L 165.5 240 L 216.2 291 L 216.2 300" stroke="#39c5cf" stroke-width="4" fill="none" opacity="0.85"/>
                         </g>
 
-                        <!-- 18650 Battery Sense (GPIO 4 ADC) from R8/R9/C6 to J1-8 (Green) -->
-                        <g class="net-adc4">
+                        <!-- 18650 Battery Sense (GPIO 0 ADC) from R8/R9/C6 to J1-8 (Green) -->
+                        <g class="net-adc0">
                             <path class="trace" d="M 479.5 195 L 479.5 240 L 317.8 240 L 317.8 300" stroke="#2ea043" stroke-width="4" fill="none" opacity="0.85"/>
                             <path class="trace" d="M 479.5 240 L 479.5 285" stroke="#2ea043" stroke-width="4" fill="none" opacity="0.85"/>
                         </g>
 
-                        <!-- Ultrasonic Echo (GPIO 6) from R3/R4 to J2-7 (Purple) -->
+                        <!-- Ultrasonic Echo (GPIO 20) from R3/R4 to J2-7 (Purple) -->
                         <g class="net-ultra">
                             <path class="trace" d="M 415 100 L 415 175 L 439.5 175 L 439.5 195" stroke="#bc8cff" stroke-width="4" fill="none" opacity="0.85"/>
                             <path class="trace" d="M 420.5 195 L 420.5 240" stroke="#bc8cff" stroke-width="4" fill="none" opacity="0.85"/>
@@ -349,7 +349,7 @@
                             <path class="trace" d="M 365 100 L 365 300 L 190.8 300 L 190.8 452.4" stroke="#d29922" stroke-width="4" fill="none" opacity="0.7"/>
                         </g>
 
-                        <!-- Soil Moisture (GPIO 1 DATA & GPIO 5 VCC) (Yellow / Blue) -->
+                        <!-- Soil Moisture (GPIO 3 DATA & GPIO 21 VCC) (Yellow / Blue) -->
                         <g class="net-soil">
                             <path class="trace" d="M 140 100 L 140 170 L 190 170 L 190 195" stroke="#d29922" stroke-width="4" fill="none" opacity="0.85"/>
                             <path class="trace" d="M 190 195 L 241.6 246.6 L 241.6 300" stroke="#d29922" stroke-width="4" fill="none" opacity="0.85"/>
@@ -363,7 +363,7 @@
                             <path class="trace" d="M 585 100 L 585 190 L 580 195 L 580 290" stroke="#f0883e" stroke-width="8" fill="none" opacity="0.9"/>
                         </g>
 
-                        <!-- Ambient Light Sensor LDR on GPIO 3 (Light Yellow) -->
+                        <!-- Ambient Light Sensor LDR on GPIO 1 (Light Yellow) -->
                         <g class="net-ldr">
                             <path class="trace" d="M 292.4 195 L 292.4 235 L 292.4 300" stroke="#e3b341" stroke-width="4" fill="none" opacity="0.85"/>
                         </g>
@@ -373,8 +373,8 @@
                     <!-- TB2 (Soil Sensor, KF301-3P) at X=140, Y=100 -->
                     <g id="comp-TB2" transform="translate(140, 100)">
                         <rect x="-25" y="-38" width="150" height="76" fill="#1b4332" stroke="#2d6a4f" stroke-width="2" rx="4"/>
-                        <circle cx="0" cy="0" r="13" fill="#e3b341" stroke="#fff" stroke-width="1.5" class="pad" onmouseover="showTip('TB2 Pin 1: DATA (Soil Moisture Analog Out -> GPIO 1)')" onmouseout="hideTip()"/>
-                        <circle cx="50" cy="0" r="13" fill="#58a6ff" stroke="#fff" stroke-width="1.5" class="pad" onmouseover="showTip('TB2 Pin 2: VCC (Switched 3.3V Power <- GPIO 5)')" onmouseout="hideTip()"/>
+                        <circle cx="0" cy="0" r="13" fill="#e3b341" stroke="#fff" stroke-width="1.5" class="pad" onmouseover="showTip('TB2 Pin 1: DATA (Soil Moisture Analog Out -> GPIO 3)')" onmouseout="hideTip()"/>
+                        <circle cx="50" cy="0" r="13" fill="#58a6ff" stroke="#fff" stroke-width="1.5" class="pad" onmouseover="showTip('TB2 Pin 2: VCC (Switched 3.3V Power <- GPIO 21)')" onmouseout="hideTip()"/>
                         <circle cx="100" cy="0" r="13" fill="#30363d" stroke="#fff" stroke-width="1.5" class="pad" onmouseover="showTip('TB2 Pin 3: GND (System Ground)')" onmouseout="hideTip()"/>
                         <text x="50" y="-45" fill="#f0f6fc" font-size="11" font-weight="bold" text-anchor="middle">TB2 - Soil</text>
                         <text x="0" y="30" fill="#e3b341" font-size="9" text-anchor="middle">DATA</text>
@@ -386,8 +386,8 @@
                     <g id="comp-TB1" transform="translate(315, 100)">
                         <rect x="-25" y="-38" width="200" height="76" fill="#1b4332" stroke="#2d6a4f" stroke-width="2" rx="4"/>
                         <circle cx="0" cy="0" r="13" fill="#f85149" stroke="#fff" stroke-width="1.5" class="pad" onmouseover="showTip('TB1 Pin 1: +5V Power')" onmouseout="hideTip()"/>
-                        <circle cx="50" cy="0" r="13" fill="#d29922" stroke="#fff" stroke-width="1.5" class="pad" onmouseover="showTip('TB1 Pin 2: TRIG (Trigger Pulse <- GPIO 10)')" onmouseout="hideTip()"/>
-                        <circle cx="100" cy="0" r="13" fill="#bc8cff" stroke="#fff" stroke-width="1.5" class="pad" onmouseover="showTip('TB1 Pin 3: ECHO (5V Echo Pulse -> R3/R4 Divider -> GPIO 6)')" onmouseout="hideTip()"/>
+                        <circle cx="50" cy="0" r="13" fill="#d29922" stroke="#fff" stroke-width="1.5" class="pad" onmouseover="showTip('TB1 Pin 2: TRIG (Trigger Pulse <- GPIO 7)')" onmouseout="hideTip()"/>
+                        <circle cx="100" cy="0" r="13" fill="#bc8cff" stroke="#fff" stroke-width="1.5" class="pad" onmouseover="showTip('TB1 Pin 3: ECHO (5V Echo Pulse -> R3/R4 Divider -> GPIO 20)')" onmouseout="hideTip()"/>
                         <circle cx="150" cy="0" r="13" fill="#30363d" stroke="#fff" stroke-width="1.5" class="pad" onmouseover="showTip('TB1 Pin 4: GND')" onmouseout="hideTip()"/>
                         <text x="75" y="-45" fill="#f0f6fc" font-size="11" font-weight="bold" text-anchor="middle">TB1 - Ultra</text>
                         <text x="0" y="30" fill="#f85149" font-size="9" text-anchor="middle">5V</text>
@@ -411,7 +411,7 @@
                         <rect x="-38" y="-25" width="76" height="150" fill="#1b4332" stroke="#2d6a4f" stroke-width="2" rx="4"/>
                         <circle cx="0" cy="0" r="13" fill="#f0883e" stroke="#fff" stroke-width="1.5" class="pad" onmouseover="showTip('TB4 Pin 1: EXT_5V (Solar 5V Boost Input -> D2 SS34)')" onmouseout="hideTip()"/>
                         <circle cx="0" cy="50" r="13" fill="#30363d" stroke="#fff" stroke-width="1.5" class="pad" onmouseover="showTip('TB4 Pin 2: GND (System Ground)')" onmouseout="hideTip()"/>
-                        <circle cx="0" cy="100" r="13" fill="#3fb950" stroke="#fff" stroke-width="1.5" class="pad" onmouseover="showTip('TB4 Pin 3: BAT (18650 Battery Direct -> R8/R9 Divider -> GPIO 4)')" onmouseout="hideTip()"/>
+                        <circle cx="0" cy="100" r="13" fill="#3fb950" stroke="#fff" stroke-width="1.5" class="pad" onmouseover="showTip('TB4 Pin 3: BAT (18650 Battery Direct -> R8/R9 Divider -> GPIO 0)')" onmouseout="hideTip()"/>
                         <text x="0" y="145" fill="#f0f6fc" font-size="11" font-weight="bold" text-anchor="middle">TB4 (EXT PWR)</text>
                         <text x="-25" y="4" fill="#f0883e" font-size="9" text-anchor="end">5V</text>
                         <text x="-25" y="54" fill="#8b949e" font-size="9" text-anchor="end">GND</text>
@@ -423,47 +423,47 @@
                     <rect x="105" y="278" width="240" height="196" fill="#161b22" stroke="#388bfd" stroke-width="1.5" stroke-dasharray="4,4" rx="6" opacity="0.6"/>
                     <text x="225" y="380" fill="#79c0ff" font-size="14" font-weight="bold" text-anchor="middle">ESP32-C3 SuperMini</text>
 
-                    <!-- J1 Header (Top: 5V, GND, 3V3, G0, G1, G2, G3, G4) at Y=300 -->
+                    <!-- J1 Header (Top: 5V, GND, 3V3, G4, G3, G2, G1, G0) at Y=300 -->
                     <g id="comp-J1" transform="translate(140, 300)">
                         <rect x="-10" y="-10" width="198" height="20" fill="#21262d" stroke="#30363d" rx="3"/>
                         <!-- 8 Pins with 25.4 spacing -->
                         <circle cx="0" cy="0" r="8" fill="#f85149" class="pad" onmouseover="showTip('J1-1: +5V Power Input')" onmouseout="hideTip()"/>
                         <circle cx="25.4" cy="0" r="8" fill="#30363d" class="pad" onmouseover="showTip('J1-2: GND')" onmouseout="hideTip()"/>
                         <circle cx="50.8" cy="0" r="8" fill="#388bfd" class="pad" onmouseover="showTip('J1-3: +3.3V Regulated Output')" onmouseout="hideTip()"/>
-                        <circle cx="76.2" cy="0" r="8" fill="#39c5cf" class="pad" onmouseover="showTip('J1-4: GPIO 0 (ADC1_CH0: Dedicated 5V Supply Rail Monitor)')" onmouseout="hideTip()"/>
-                        <circle cx="101.6" cy="0" r="8" fill="#d29922" class="pad" onmouseover="showTip('J1-5: GPIO 1 (ADC1_CH1: Soil Moisture Sensor Analog Read)')" onmouseout="hideTip()"/>
+                        <circle cx="76.2" cy="0" r="8" fill="#39c5cf" class="pad" onmouseover="showTip('J1-4: GPIO 4 (ADC1_CH4: Dedicated 5V Supply Rail Monitor)')" onmouseout="hideTip()"/>
+                        <circle cx="101.6" cy="0" r="8" fill="#d29922" class="pad" onmouseover="showTip('J1-5: GPIO 3 (ADC1_CH3: Soil Moisture Sensor Analog Read)')" onmouseout="hideTip()"/>
                         <circle cx="127" cy="0" r="8" fill="#484f58" class="pad" onmouseover="showTip('J1-6: GPIO 2 (NC / Protected Strapping Pin - Never Pulled Down)')" onmouseout="hideTip()"/>
-                        <circle cx="152.4" cy="0" r="8" fill="#e3b341" class="pad" onmouseover="showTip('J1-7: GPIO 3 (ADC1_CH3: Ambient Light LDR Voltage Divider)')" onmouseout="hideTip()"/>
-                        <circle cx="177.8" cy="0" r="8" fill="#3fb950" class="pad" onmouseover="showTip('J1-8: GPIO 4 (ADC1_CH4: Dedicated 18650 Battery Monitor)')" onmouseout="hideTip()"/>
+                        <circle cx="152.4" cy="0" r="8" fill="#e3b341" class="pad" onmouseover="showTip('J1-7: GPIO 1 (ADC1_CH1: Ambient Light LDR Voltage Divider)')" onmouseout="hideTip()"/>
+                        <circle cx="177.8" cy="0" r="8" fill="#3fb950" class="pad" onmouseover="showTip('J1-8: GPIO 0 (ADC1_CH0: Dedicated 18650 Battery Monitor)')" onmouseout="hideTip()"/>
                         <text x="0" y="-14" fill="#f85149" font-size="8" text-anchor="middle">5V</text>
                         <text x="25.4" y="-14" fill="#8b949e" font-size="8" text-anchor="middle">GND</text>
                         <text x="50.8" y="-14" fill="#388bfd" font-size="8" text-anchor="middle">3V3</text>
-                        <text x="76.2" y="-14" fill="#39c5cf" font-size="8" text-anchor="middle">G0</text>
-                        <text x="101.6" y="-14" fill="#d29922" font-size="8" text-anchor="middle">G1</text>
+                        <text x="76.2" y="-14" fill="#39c5cf" font-size="8" text-anchor="middle">G4</text>
+                        <text x="101.6" y="-14" fill="#d29922" font-size="8" text-anchor="middle">G3</text>
                         <text x="127" y="-14" fill="#484f58" font-size="8" text-anchor="middle">G2(NC)</text>
-                        <text x="152.4" y="-14" fill="#e3b341" font-size="8" text-anchor="middle">G3</text>
-                        <text x="177.8" y="-14" fill="#3fb950" font-size="8" text-anchor="middle">G4</text>
+                        <text x="152.4" y="-14" fill="#e3b341" font-size="8" text-anchor="middle">G1</text>
+                        <text x="177.8" y="-14" fill="#3fb950" font-size="8" text-anchor="middle">G0</text>
                     </g>
 
-                    <!-- J2 Header (Bottom: G21, G20, G10, G9, G8, G7, G6, G5) at Y=452.4 -->
+                    <!-- J2 Header (Bottom: G5, G6, G7, G8, G9, G10, G20, G21) at Y=452.4 -->
                     <g id="comp-J2" transform="translate(140, 452.4)">
                         <rect x="-10" y="-10" width="198" height="20" fill="#21262d" stroke="#30363d" rx="3"/>
-                        <circle cx="0" cy="0" r="8" fill="#39c5cf" class="pad" onmouseover="showTip('J2-1: GPIO 21 (I2C SCL Clock)')" onmouseout="hideTip()"/>
-                        <circle cx="25.4" cy="0" r="8" fill="#39c5cf" class="pad" onmouseover="showTip('J2-2: GPIO 20 (I2C SDA Data)')" onmouseout="hideTip()"/>
-                        <circle cx="50.8" cy="0" r="8" fill="#d29922" class="pad" onmouseover="showTip('J2-3: GPIO 10 (Ultrasonic TRIG Pulse)')" onmouseout="hideTip()"/>
-                        <circle cx="76.2" cy="0" r="8" fill="#484f58" class="pad" onmouseover="showTip('J2-4: GPIO 9 (Boot Button / Spare)')" onmouseout="hideTip()"/>
-                        <circle cx="101.6" cy="0" r="8" fill="#388bfd" class="pad" onmouseover="showTip('J2-5: GPIO 8 (Onboard Blue LED)')" onmouseout="hideTip()"/>
-                        <circle cx="127" cy="0" r="8" fill="#ff7b72" class="pad" onmouseover="showTip('J2-6: GPIO 7 (Pump MOSFET Gate)')" onmouseout="hideTip()"/>
-                        <circle cx="152.4" cy="0" r="8" fill="#bc8cff" class="pad" onmouseover="showTip('J2-7: GPIO 6 (Ultrasonic ECHO Input via 1k/2k Divider)')" onmouseout="hideTip()"/>
-                        <circle cx="177.8" cy="0" r="8" fill="#58a6ff" class="pad" onmouseover="showTip('J2-8: GPIO 5 (Switched VCC Power for Soil Sensor)')" onmouseout="hideTip()"/>
-                        <text x="0" y="22" fill="#39c5cf" font-size="8" text-anchor="middle">G21</text>
-                        <text x="25.4" y="22" fill="#39c5cf" font-size="8" text-anchor="middle">G20</text>
-                        <text x="50.8" y="22" fill="#d29922" font-size="8" text-anchor="middle">G10</text>
-                        <text x="76.2" y="22" fill="#484f58" font-size="8" text-anchor="middle">G9</text>
-                        <text x="101.6" y="22" fill="#388bfd" font-size="8" text-anchor="middle">G8</text>
-                        <text x="127" y="22" fill="#ff7b72" font-size="8" text-anchor="middle">G7</text>
-                        <text x="152.4" y="22" fill="#bc8cff" font-size="8" text-anchor="middle">G6</text>
-                        <text x="177.8" y="22" fill="#58a6ff" font-size="8" text-anchor="middle">G5</text>
+                        <circle cx="0" cy="0" r="8" fill="#39c5cf" class="pad" onmouseover="showTip('J2-1: GPIO 5 (I2C SCL Clock)')" onmouseout="hideTip()"/>
+                        <circle cx="25.4" cy="0" r="8" fill="#39c5cf" class="pad" onmouseover="showTip('J2-2: GPIO 6 (I2C SDA Data)')" onmouseout="hideTip()"/>
+                        <circle cx="50.8" cy="0" r="8" fill="#d29922" class="pad" onmouseover="showTip('J2-3: GPIO 7 (Ultrasonic TRIG Pulse)')" onmouseout="hideTip()"/>
+                        <circle cx="76.2" cy="0" r="8" fill="#388bfd" class="pad" onmouseover="showTip('J2-4: GPIO 8 (Onboard Blue LED)')" onmouseout="hideTip()"/>
+                        <circle cx="101.6" cy="0" r="8" fill="#484f58" class="pad" onmouseover="showTip('J2-5: GPIO 9 (Boot Button / Spare)')" onmouseout="hideTip()"/>
+                        <circle cx="127" cy="0" r="8" fill="#ff7b72" class="pad" onmouseover="showTip('J2-6: GPIO 10 (Pump MOSFET Gate)')" onmouseout="hideTip()"/>
+                        <circle cx="152.4" cy="0" r="8" fill="#bc8cff" class="pad" onmouseover="showTip('J2-7: GPIO 20 (Ultrasonic ECHO Input via 1k/2k Divider)')" onmouseout="hideTip()"/>
+                        <circle cx="177.8" cy="0" r="8" fill="#58a6ff" class="pad" onmouseover="showTip('J2-8: GPIO 21 (Switched VCC Power for Soil Sensor)')" onmouseout="hideTip()"/>
+                        <text x="0" y="22" fill="#39c5cf" font-size="8" text-anchor="middle">G5</text>
+                        <text x="25.4" y="22" fill="#39c5cf" font-size="8" text-anchor="middle">G6</text>
+                        <text x="50.8" y="22" fill="#d29922" font-size="8" text-anchor="middle">G7</text>
+                        <text x="76.2" y="22" fill="#388bfd" font-size="8" text-anchor="middle">G8</text>
+                        <text x="101.6" y="22" fill="#484f58" font-size="8" text-anchor="middle">G9</text>
+                        <text x="127" y="22" fill="#ff7b72" font-size="8" text-anchor="middle">G10</text>
+                        <text x="152.4" y="22" fill="#bc8cff" font-size="8" text-anchor="middle">G20</text>
+                        <text x="177.8" y="22" fill="#58a6ff" font-size="8" text-anchor="middle">G21</text>
                     </g>
 
                     <!-- 5. SURFACE MOUNT PASSIVES (0805 & SMA & SOT-23) -->
@@ -514,7 +514,7 @@
                         <rect x="-10" y="-6" width="20" height="12" fill="#21262d" stroke="#3fb950" stroke-width="1.2" rx="2"/>
                         <text x="0" y="16" fill="#3fb950" font-size="8" text-anchor="middle">R9: 100k</text>
                     </g>
-                    <g id="comp-C6" transform="translate(470, 285)" class="pad" onmouseover="showTip('C6: 100nF 0805 (C28233) — Battery ADC Smoothing Filter on GPIO 4')" onmouseout="hideTip()">
+                    <g id="comp-C6" transform="translate(470, 285)" class="pad" onmouseover="showTip('C6: 100nF 0805 (C28233) — Battery ADC Smoothing Filter on GPIO 0')" onmouseout="hideTip()">
                         <rect x="-10" y="-6" width="20" height="12" fill="#21262d" stroke="#3fb950" stroke-width="1.2" rx="2"/>
                         <text x="0" y="16" fill="#3fb950" font-size="8" text-anchor="middle">C6: 100nF</text>
                     </g>
@@ -606,10 +606,11 @@
                 <h2>⚡ Rev 2.3 Turnkey Architecture</h2>
                 <div class="highlight-box">
                     <strong>🎯 Dual Independent ADC Channels (No Jumpers!):</strong><br>
-                    • <strong>5V Supply Rail:</strong> Monitored on <strong>GPIO 0</strong> (ADC1_CH0) via R1/R2 (100k/100k) + C1.<br>
-                    • <strong>18650 Battery:</strong> Monitored on <strong>GPIO 4</strong> (ADC1_CH4) via R8/R9 (100k/100k) + C6.<br>
-                    • <strong>Ultrasonic ECHO:</strong> Digital input moved to <strong>GPIO 6</strong> via R3/R4 (1k/2k).<br>
-                    • <strong>Strapping Protection:</strong> GPIO 2 left unconnected to guarantee 100% reliable booting.
+                    • <strong>5V Supply Rail:</strong> Monitored on <strong>GPIO 4</strong> (ADC1_CH4) via R1/R2 (100k/100k) + C1.<br>
+                    • <strong>18650 Battery:</strong> Monitored on <strong>GPIO 0</strong> (ADC1_CH0) via R8/R9 (100k/100k) + C6.<br>
+                    • <strong>Ultrasonic ECHO:</strong> Digital input on <strong>GPIO 20</strong> via R3/R4 (1k/2k).<br>
+                    • <strong>Strapping Protection:</strong> GPIO 2 left unconnected to guarantee 100% reliable booting.<br>
+                    • <strong>Pinout Reference:</strong> <a href="https://lastminuteengineers.com/esp32-c3-super-mini-pinout-reference/" target="_blank" style="color: var(--accent-blue);">LastMinuteEngineers Reference</a>
                 </div>
                 <div class="highlight-box" style="border-left-color: var(--accent-orange); background: rgba(240, 136, 62, 0.08);">
                     <strong>🛡️ Anti-Backfeeding Schottky Diode (D2):</strong><br>
@@ -631,12 +632,12 @@
                         <tr>
                             <td><span class="badge-pin">GPIO 0</span></td>
                             <td>ADC1_CH0</td>
-                            <td>Dedicated 5V Supply Rail Monitor (100k/100k)</td>
+                            <td><strong>Dedicated 18650 Battery Monitor</strong> (from TB4-3)</td>
                         </tr>
                         <tr>
                             <td><span class="badge-pin">GPIO 1</span></td>
                             <td>ADC1_CH1</td>
-                            <td>Capacitive Soil Sensor AOUT (from TB2-1)</td>
+                            <td>Ambient Light Sensor (LDR1 + 10k R7)</td>
                         </tr>
                         <tr>
                             <td><span class="badge-pin">GPIO 2</span></td>
@@ -646,27 +647,27 @@
                         <tr>
                             <td><span class="badge-pin">GPIO 3</span></td>
                             <td>ADC1_CH3</td>
-                            <td>Ambient Light Sensor (LDR1 + 10k R7)</td>
+                            <td>Capacitive Soil Sensor AOUT (from TB2-1)</td>
                         </tr>
                         <tr>
                             <td><span class="badge-pin">GPIO 4</span></td>
                             <td>ADC1_CH4</td>
-                            <td><strong>Dedicated 18650 Battery Monitor</strong> (from TB4-3)</td>
+                            <td>Dedicated 5V Supply Rail Monitor (100k/100k)</td>
                         </tr>
                         <tr>
                             <td><span class="badge-pin">GPIO 5</span></td>
-                            <td>Digital OUT</td>
-                            <td>Switched VCC Power for Soil Sensor (TB2-2)</td>
+                            <td>I2C SCL</td>
+                            <td>I2C Expansion Bus Clock (MOD1/MOD2)</td>
                         </tr>
                         <tr>
                             <td><span class="badge-pin">GPIO 6</span></td>
-                            <td>Digital IN</td>
-                            <td><strong>Ultrasonic ECHO</strong> (TB1-3 via 1k/2k divider)</td>
+                            <td>I2C SDA</td>
+                            <td>I2C Expansion Bus Data (MOD1/MOD2)</td>
                         </tr>
                         <tr>
                             <td><span class="badge-pin">GPIO 7</span></td>
                             <td>Digital OUT</td>
-                            <td>Pump MOSFET Gate Drive (AO3400A)</td>
+                            <td>Ultrasonic TRIG Trigger Pulse (TB1-2)</td>
                         </tr>
                         <tr>
                             <td><span class="badge-pin">GPIO 8</span></td>
@@ -676,17 +677,17 @@
                         <tr>
                             <td><span class="badge-pin">GPIO 10</span></td>
                             <td>Digital OUT</td>
-                            <td>Ultrasonic TRIG Trigger Pulse (TB1-2)</td>
+                            <td>Pump MOSFET Gate Drive (AO3400A)</td>
                         </tr>
                         <tr>
                             <td><span class="badge-pin">GPIO 20</span></td>
-                            <td>I2C SDA</td>
-                            <td>I2C Expansion Bus Data (MOD1/MOD2)</td>
+                            <td>Digital IN</td>
+                            <td><strong>Ultrasonic ECHO</strong> (TB1-3 via 1k/2k divider)</td>
                         </tr>
                         <tr>
                             <td><span class="badge-pin">GPIO 21</span></td>
-                            <td>I2C SCL</td>
-                            <td>I2C Expansion Bus Clock (MOD1/MOD2)</td>
+                            <td>Digital OUT</td>
+                            <td>Switched VCC Power for Soil Sensor (TB2-2)</td>
                         </tr>
                     </tbody>
                 </table>

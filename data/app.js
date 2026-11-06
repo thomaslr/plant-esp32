@@ -15,7 +15,8 @@ const DEFAULT_CONFIG = {
     },
     timing: {
         sensor_read_interval_sec: 3600,
-        automated_water_duration_sec: 30
+        automated_water_duration_sec: 30,
+        pump_speed_pct: 60
     },
     safety: {
         max_continuous_pump_sec: 60,
@@ -53,6 +54,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Settings Form
     document.getElementById('config-form').addEventListener('submit', handleConfigSubmit);
     document.getElementById('btn-reload-cfg').addEventListener('click', fetchConfig);
+    const pumpSpeedSlider = document.getElementById('cfg-timing-pump-speed');
+    if (pumpSpeedSlider) {
+        pumpSpeedSlider.addEventListener('input', (e) => {
+            const badge = document.getElementById('cfg-timing-pump-speed-val');
+            if (badge) badge.textContent = e.target.value + '%';
+        });
+    }
 
     // Initial Data Fetches
     fetchConfig();
@@ -413,6 +421,7 @@ function loadConfigToForm() {
     if (sm.optimal_max !== undefined) document.getElementById('cfg-soil-opt-max').value = sm.optimal_max;
 
     if (wl.tank_height_cm !== undefined) document.getElementById('cfg-tank-height').value = wl.tank_height_cm;
+    if (wl.sensor_offset_cm !== undefined) document.getElementById('cfg-sensor-offset').value = wl.sensor_offset_cm;
     if (wl.min_safe_level_cm !== undefined) document.getElementById('cfg-tank-min-safe').value = wl.min_safe_level_cm;
     if (wl.refill_warning_pct !== undefined) document.getElementById('cfg-water-refill-warn').value = wl.refill_warning_pct;
 
@@ -431,6 +440,11 @@ function loadConfigToForm() {
 
     if (tm.sensor_read_interval_sec !== undefined) document.getElementById('cfg-timing-read-interval').value = tm.sensor_read_interval_sec;
     if (tm.automated_water_duration_sec !== undefined) document.getElementById('cfg-timing-auto-water-duration').value = tm.automated_water_duration_sec;
+    const pSpeed = tm.pump_speed_pct !== undefined ? tm.pump_speed_pct : 60;
+    const speedSlider = document.getElementById('cfg-timing-pump-speed');
+    const speedVal = document.getElementById('cfg-timing-pump-speed-val');
+    if (speedSlider) speedSlider.value = pSpeed;
+    if (speedVal) speedVal.textContent = pSpeed + '%';
 }
 
 async function handleConfigSubmit(e) {
@@ -456,6 +470,7 @@ async function handleConfigSubmit(e) {
             },
             water_level: {
                 tank_height_cm: parseFloat(document.getElementById('cfg-tank-height').value),
+                sensor_offset_cm: parseFloat(document.getElementById('cfg-sensor-offset').value),
                 min_safe_level_cm: parseFloat(document.getElementById('cfg-tank-min-safe').value),
                 refill_warning_pct: parseFloat(document.getElementById('cfg-water-refill-warn').value)
             },
@@ -482,7 +497,8 @@ async function handleConfigSubmit(e) {
         },
         timing: {
             sensor_read_interval_sec: parseInt(document.getElementById('cfg-timing-read-interval').value, 10),
-            automated_water_duration_sec: parseInt(document.getElementById('cfg-timing-auto-water-duration').value, 10)
+            automated_water_duration_sec: parseInt(document.getElementById('cfg-timing-auto-water-duration').value, 10),
+            pump_speed_pct: parseInt(document.getElementById('cfg-timing-pump-speed').value, 10)
         }
     };
 

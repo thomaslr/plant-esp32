@@ -1,5 +1,12 @@
 # ESP32-C3 SuperMini 15-Column Breadboard Guide (Top-Half Staggered Terminals)
 
+> [!IMPORTANT]
+> **Canonical Pinout Reference:**
+> All pin assignments strictly follow the official [LastMinuteEngineers ESP32-C3 SuperMini Pinout Reference](https://lastminuteengineers.com/esp32-c3-super-mini-pinout-reference/).
+> When the SuperMini is plugged into the breadboard (USB-C pointing Left / West):
+> * **Upper Header (Row F, Cols 1–8):** Pin 1 (5V), Pin 2 (GND), Pin 3 (3V3), Pin 4 (**GPIO 4**), Pin 5 (**GPIO 3**), Pin 6 (**GPIO 2**), Pin 7 (**GPIO 1**), Pin 8 (**GPIO 0**).
+> * **Lower Header (Row B, Cols 1–8):** Pin 1 (**GPIO 5**), Pin 2 (**GPIO 6**), Pin 3 (**GPIO 7**), Pin 4 (**GPIO 8** / LED), Pin 5 (**GPIO 9** / BOOT), Pin 6 (**GPIO 10**), Pin 7 (**GPIO 20**), Pin 8 (**GPIO 21**).
+
 This guide documents the physical build for your **15-column mini breadboard** with dual power rails (Top and Bottom), matching the exact board from your photo.
 
 ### Key Layout Highlights:
@@ -10,13 +17,13 @@ This guide documents the physical build for your **15-column mini breadboard** w
 2. **Bottom-Half Isolation for Pump**:
    * **TB3 (2-pin DC Pump)** sits in **Row A** across **Cols 13, 15** (facing **DOWNWARDS** off the bottom edge).
    * The entire bottom half (Cols 8–10, 12) is left open and clean, isolating the pump power circuit from sensitive analog signals.
-3. **Hardware Pin Assignments**:
-   * **`GPIO 0` (Col 4 Top)**: 5V Supply Rail Monitor (10k/10k divider + 100nF filter cap).
-   * **`GPIO 1` (Col 5 Top)**: Soil Moisture Analog In (`AOUT`).
-   * **`GPIO 2` (Col 6 Top)**: Switched Soil Moisture Power (`VCC`) — duty-cycled 3.3V to eliminate 7mA idle draw and galvanic corrosion.
-   * **`GPIO 3` (Col 7 Top)**: Ultrasonic `TRIG` Output.
-   * **`GPIO 4` (Col 8 Top)**: Ultrasonic `ECHO` Input (via 1k/2k 5V-to-3.3V divider).
-   * **`GPIO 7` (Col 6 Bottom)**: Pump MOSFET Gate (via 1k gate resistor and 100k pull-down).
+3. **Hardware Pin Assignments (Physical Connections)**:
+   * **`GPIO 4` (Col 4 Top, J1 Pin 4)**: 5V Supply Rail Monitor (10k/10k divider + 100nF filter cap, ADC1_CH4).
+   * **`GPIO 3` (Col 5 Top, J1 Pin 5)**: Soil Moisture Analog In (`AOUT`, ADC1_CH3).
+   * **`GPIO 2` (Col 6 Top, J1 Pin 6)**: Switched Soil Moisture Power (`VCC`) — duty-cycled 3.3V to eliminate 7mA idle draw and galvanic corrosion.
+   * **`GPIO 1` (Col 7 Top, J1 Pin 7)**: Ultrasonic `TRIG` Output (or LDR on SMD board).
+   * **`GPIO 0` (Col 8 Top, J1 Pin 8)**: Ultrasonic `ECHO` Input (via 1k/2k 5V-to-3.3V divider) or 18650 Battery Monitor.
+   * **`GPIO 10` (Col 6 Bottom, J2 Pin 6)**: Pump MOSFET Gate (via 1k gate resistor and 100k pull-down).
 
 The visual, interactive diagram is saved at:
 👉 [circuit_diagram.html](file:///Users/robertlongbottom/dev/plant-esp32/pcb/circuit_diagram.html) (open in any web browser).
@@ -60,14 +67,14 @@ Bridge the top and bottom blue ground lines together (under the board) for a sin
 
 | Col | Upper Half (Rows F–J) | Lower Half (Rows A–E) | Function & Exact Connections |
 | :---: | :--- | :--- | :--- |
-| **1** | **ESP32 5V In (Row F)** | ESP32 GPIO 21 (Row B) | • Jumper from Col 1 Top into **Top (+) 5V Rail** |
-| **2** | **ESP32 GND (Row F)** | ESP32 GPIO 20 (Row B) | • Jumper from Col 2 Top into **Top (-) GND Rail** |
-| **3** | **ESP32 3V3 Out (Row F)**| ESP32 GPIO 10 (Row B) | • Jumper from Col 3 Top into **Bottom (+) 3.3V Rail** |
-| **4** | **ESP32 GPIO 0 (Row F)** | ESP32 GPIO 9 (Row B) | • **5V Supply Monitor Tap**: Connected to R1 (10k), R2 (10k), and C1 (100nF) |
-| **5** | **ESP32 GPIO 1 (Row F)** | ESP32 GPIO 8 (Row B) | • **Soil Moisture Analog In**: Jumper from Col 12 Row G (TB2 AOUT) |
-| **6** | **ESP32 GPIO 2 (Row F)** | **ESP32 GPIO 7 (Row B)**| • **Switched Soil VCC (GPIO 2)**: Jumper from Col 6 Row G to Col 10 Row G (TB2 VCC)<br>• Row A on Col 6: R5 (1kΩ) Gate Resistor running to Col 12 Row C (Gate) |
-| **7** | **ESP32 GPIO 3 (Row F)** | ESP32 GPIO 6 (Row B) | • Ultrasonic TRIG Out: Jumper running to Col 11 Top (TB1 TRIG) |
-| **8** | **ESP32 GPIO 4 (Row F)** | *(Open spacer)* | • Top: R3 (1kΩ) from Col 13 Row I, R4 (2kΩ) to Top (-) GND Rail |
+| **1** | **ESP32 Pin 1: 5V In (Row F)** | **ESP32 Pin 1: GPIO 5 (Row B)** | • Jumper from Col 1 Top into **Top (+) 5V Rail** |
+| **2** | **ESP32 Pin 2: GND (Row F)** | **ESP32 Pin 2: GPIO 6 (Row B)** | • Jumper from Col 2 Top into **Top (-) GND Rail** |
+| **3** | **ESP32 Pin 3: 3V3 Out (Row F)**| **ESP32 Pin 3: GPIO 7 (Row B)** | • Jumper from Col 3 Top into **Bottom (+) 3.3V Rail** |
+| **4** | **ESP32 Pin 4: GPIO 4 (Row F)** | **ESP32 Pin 4: GPIO 8 / LED (Row B)** | • **5V Supply Monitor Tap**: Connected to R1 (10k), R2 (10k), and C1 (100nF) on ADC1_CH4 |
+| **5** | **ESP32 Pin 5: GPIO 3 (Row F)** | **ESP32 Pin 5: GPIO 9 / BOOT (Row B)**| • **Soil Moisture Analog In**: Jumper from Col 12 Row G (TB2 AOUT) on ADC1_CH3 |
+| **6** | **ESP32 Pin 6: GPIO 2 (Row F)** | **ESP32 Pin 6: GPIO 10 (Row B)**| • **Switched Soil VCC (GPIO 2)**: Jumper from Col 6 Row G to Col 10 Row G (TB2 VCC)<br>• Row A on Col 6: R5 (1kΩ) Gate Resistor running to Col 12 Row C (Gate) driven by GPIO 10 |
+| **7** | **ESP32 Pin 7: GPIO 1 (Row F)** | **ESP32 Pin 7: GPIO 20 (Row B)**| • Ultrasonic TRIG Out: Jumper running to Col 11 Top (TB1 TRIG) |
+| **8** | **ESP32 Pin 8: GPIO 0 (Row F)** | **ESP32 Pin 8: GPIO 21 (Row B)**| • Top: R3 (1kΩ) from Col 13 Row I, R4 (2kΩ) to Top (-) GND Rail |
 | **9** | **TB1 Pin 1: Ultrasonic 5V (Row J)** | *(Open spacer)* | • Top: Jumper from Col 9 into **Top (+) 5V Rail** |
 | **10** | **TB2 Pin 1: Soil Switched VCC (Row F)** | *(Open spacer)* | • Top: Jumper from Col 10 Row G to Col 6 Row G (ESP32 GPIO 2 Switched Power) |
 | **11** | **TB1 Pin 2: TRIG (Row J)** | *(Open spacer)* | • Top: Jumper from Col 7 Top (GPIO 3)<br>• Bottom: Open (clean spacer) |

@@ -2,6 +2,7 @@
 //!
 //! Serves the embedded web UI and provides REST endpoints matching the C++ firmware contract.
 
+use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::{Arc, Mutex};
 
 use embedded_svc::http::server::Request;
@@ -38,6 +39,7 @@ pub struct AppState {
     pub storage: NvsConfigStorage,
     pub ip_address: String,
     pub wifi_rssi: i32,
+    pub pump_speed: Arc<AtomicU32>,
 }
 
 pub fn create_web_server(
@@ -163,6 +165,8 @@ pub fn create_web_server(
                         let _ = app.storage.save(&app.config);
                         let cfg = app.config.clone();
                         app.safety.update_config(&cfg);
+                        app.pump_speed.store(cfg.timing.pump_speed_pct, Ordering::Relaxed);
+                        info!("[CONFIG] Updated pump PWM speed to {}%", cfg.timing.pump_speed_pct);
                         (200, r#"{"status":"success"}"#)
                     }
                     Err(_) => (400, r#"{"error":"Validation failed"}"#),
@@ -481,6 +485,7 @@ fn send_file(
     content_type: &str,
     content: &str,
 ) -> Result<(), EspIOError> {
+    crate::led::notify_web_access();
     let headers = [
         ("Content-Type", content_type),
         ("Cache-Control", "no-cache, must-revalidate"),
@@ -495,6 +500,7 @@ fn send_json(
     status: u16,
     json: &str,
 ) -> Result<(), EspIOError> {
+    crate::led::notify_web_access();
     let headers = [
         ("Content-Type", "application/json"),
         ("Access-Control-Allow-Origin", "*"),

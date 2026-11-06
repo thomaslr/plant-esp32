@@ -8,12 +8,14 @@
 //!
 //! Visual Signaling Patterns:
 //! - Watering Active: Solid ON while pump is running.
+//! - Remote Web Access: Quick double-pulse flicker (40ms ON, 60ms OFF, 40ms ON, 400ms pause) on HTTP activity.
 //! - Wi-Fi Connecting: Distinct beacon blink (200ms ON, 800ms OFF).
 //! - Reservoir Dry: Accelerando frequency sweep (low to high blink) over 3 seconds.
 //! - Ultrasonic Sensor Fault: 4 blips (4 pulses: 160ms ON, 240ms OFF, 2000ms pause).
 //! - Soil Moisture Sensor Fault: Triple blip (3 pulses: 160ms ON, 240ms OFF, 2000ms pause).
 //! - Normal Healthy Idle: Single calm 100ms blip once every 10 seconds.
 
+use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
@@ -26,6 +28,15 @@ use plant_core::sensors::{is_valid_distance, is_valid_soil_raw};
 
 use crate::pins::PIN_STATUS_LED;
 use crate::web::AppState;
+
+/// Shared millisecond timestamp of the most recent HTTP webserver request.
+pub static LAST_HTTP_ACTIVITY_MS: AtomicU32 = AtomicU32::new(0);
+
+/// Notifies the visual signaling system of an incoming web request.
+pub fn notify_web_access() {
+    let now_ms = unsafe { (esp_idf_svc::sys::esp_timer_get_time() / 1000) as u32 };
+    LAST_HTTP_ACTIVITY_MS.store(now_ms, Ordering::Relaxed);
+}
 
 /// Active fault categories monitored by the visual signaling supervisor.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -44,6 +55,7 @@ pub struct SystemLedStatus {
     pub pump_active: bool,
     pub wifi_connected: bool,
     pub active_faults: Vec<FaultType>,
+    pub web_active: bool,
 }
 
 #[inline]
@@ -94,10 +106,15 @@ pub fn query_status(state: &Arc<Mutex<AppState>>) -> SystemLedStatus {
         }
     }
 
+    let now_ms = unsafe { (esp_idf_svc::sys::esp_timer_get_time() / 1000) as u32 };
+    let last_http = LAST_HTTP_ACTIVITY_MS.load(Ordering::Relaxed);
+    let web_active = last_http > 0 && now_ms.saturating_sub(last_http) < 2500;
+
     SystemLedStatus {
         pump_active,
         wifi_connected,
         active_faults,
+        web_active,
     }
 }
 
@@ -155,7 +172,7 @@ fn play_soil_fault_pattern() {
 }
 
 /// Normal healthy idle heartbeat: 100ms pulse once every 10 seconds.
-/// Slices the 9900ms sleep into 100ms intervals so state changes (pump active, faults)
+/// Slices the 9900ms sleep into 100ms intervals so state changes (pump active, faults, web traffic)
 /// are reacted to promptly without lagging behind the 10-second timer.
 fn play_idle_heartbeat(state: &Arc<Mutex<AppState>>) {
     // 100ms ON (doubled from 50ms for a calmer, clearly visible pulse)
@@ -170,7 +187,7 @@ fn play_idle_heartbeat(state: &Arc<Mutex<AppState>>) {
             break;
         }
         let status = query_status(state);
-        if status.pump_active || !status.wifi_connected || !status.active_faults.is_empty() {
+        if status.pump_active || !status.wifi_connected || !status.active_faults.is_empty() || status.web_active {
             break;
         }
     }
@@ -234,7 +251,15 @@ pub fn run_led_supervisor(state: Arc<Mutex<AppState>>) -> ! {
             continue;
         }
 
-        // 4. Normal Healthy Idle: 100ms pulse once every 10 seconds
+        // 4. Web Traffic Activity (Remote user browsing/interacting with Web UI)
+        // Distinct fast double-tap flicker (40ms ON, 60ms OFF, 40ms ON, 400ms pause)
+        if status.web_active {
+            pulse(40, 60);
+            pulse(40, 400);
+            continue;
+        }
+
+        // 5. Normal Healthy Idle: 100ms pulse once every 10 seconds
         play_idle_heartbeat(&state);
     }
 }

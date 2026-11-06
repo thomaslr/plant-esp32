@@ -1,12 +1,23 @@
 #!/usr/bin/env python3
 """
 Precision KiCad 8 SMD Router & Generator for Plant ESP32 Controller (SMD Edition Rev 2.3)
+Canonical Pinout Reference:
+https://lastminuteengineers.com/esp32-c3-super-mini-pinout-reference/
+
 - Dedicated Dual ADC Voltage Monitoring (Zero Jumpers!):
-    * 5V Supply Rail Monitor: Dedicated 100kΩ/100kΩ divider (R1/R2) + 100nF (C1) on GPIO 0 (ADC1_CH0).
-    * 18650 Battery Monitor: Dedicated 100kΩ/100kΩ divider (R8/R9) + 100nF (C6) on GPIO 4 (ADC1_CH4).
+    * 5V Supply Rail Monitor: Dedicated 100kΩ/100kΩ divider (R1/R2) + 100nF (C1) on GPIO 4 (ADC1_CH4).
+    * 18650 Battery Monitor: Dedicated 100kΩ/100kΩ divider (R8/R9) + 100nF (C6) on GPIO 0 (ADC1_CH0).
     * Quiescent drain on 18650 cell: only 21 µA (negligible!).
     * Concurrent real-time sampling in software without any manual jumper headers.
-- Ultrasonic ECHO moved to GPIO 6 (via R3/R4 1kΩ/2kΩ level divider).
+- Capacitive Soil Sensor:
+    * Analog DATA on GPIO 3 (ADC1_CH3) via TB2 Pin 1.
+    * Switched VCC on GPIO 21 via TB2 Pin 2 (duty-cycled to eliminate galvanic corrosion).
+- Ultrasonic Rangefinder (HC-SR04):
+    * TRIG on GPIO 7 via TB1 Pin 2.
+    * ECHO on GPIO 20 via R3/R4 1kΩ/2kΩ level divider from TB1 Pin 3.
+- Pump MOSFET Gate Driver on GPIO 10 (via R5 1k / R6 100k).
+- Ambient Light LDR on GPIO 1 (ADC1_CH1) via LDR1/R7/C4.
+- I2C Bus: SCL on GPIO 5, SDA on GPIO 6 for optional SHT30/BH1750 sensors.
 - Protected strapping pin GPIO 2 left completely unconnected to eliminate boot hangs.
 - Added External 5V Solar / 18650 Battery Terminal Block TB4 (KF301-3P, 5.00mm pitch, DNP).
 - Added Surface-Mount Schottky Diode D2 (SS34, SMA package, JLCPCB Basic Part C8678, $0 fee):
@@ -102,21 +113,21 @@ def generate_smd_board():
         (0, ""),
         (1, "GND"),
         (2, "+5V"),
-        (3, "GPIO0_5V_ADC"),
-        (4, "GPIO1_SOIL"),
-        (5, "GPIO5_SOIL_VCC"),
-        (6, "GPIO3_LDR"),
-        (7, "GPIO4_VBAT_ADC"),
+        (3, "GPIO4_5V_ADC"),
+        (4, "GPIO3_SOIL"),
+        (5, "GPIO21_SOIL_VCC"),
+        (6, "GPIO1_LDR"),
+        (7, "GPIO0_VBAT_ADC"),
         (8, "ECHO_5V"),
-        (9, "GPIO7_GATE"),
+        (9, "GPIO10_GATE"),
         (10, "GATE_DRIVE"),
         (11, "PUMP_DRAIN"),
         (12, "+3V3"),
-        (13, "GPIO10_TRIG"),
-        (14, "GPIO21_SCL"),
-        (15, "GPIO20_SDA"),
+        (13, "GPIO7_TRIG"),
+        (14, "GPIO5_SCL"),
+        (15, "GPIO6_SDA"),
         (16, "EXT_5V"),
-        (17, "GPIO6_ECHO"),
+        (17, "GPIO20_ECHO"),
         (18, "VBAT_SENSE")
     ]
     for nid, nname in nets:
@@ -179,15 +190,15 @@ def generate_smd_board():
 
     # Terminals on top edge (Y = 7.5mm, moved 0.1" / 2.54mm closer to board top edge)
     # TB2 and TB1 spaced apart by an additional 0.1" (2.54mm)
-    # TB2: Soil Sensor at X=11.7 (pins: 1=SIG/DATA GPIO1, 2=VCC GPIO5, 3=GND)
+    # TB2: Soil Sensor at X=11.7 (pins: 1=SIG/DATA GPIO3, 2=VCC GPIO21, 3=GND)
     kf301_terminal("TB2", "KF301-3P", 11.7, 7.5, 3,
-                   [(4, "GPIO1_SOIL"), (5, "GPIO5_SOIL_VCC"), (1, "GND")],
+                   [(4, "GPIO3_SOIL"), (5, "GPIO21_SOIL_VCC"), (1, "GND")],
                    ["DATA", "VCC", "GND"])
     lines.append(f'\t(gr_text "SOIL SENSOR" (at 16.7 1.8) (layer "F.SilkS") (uuid "{u()}") (effects (font (size 0.75 0.75) bold (thickness 0.13))))')
 
-    # TB1: Ultrasonic at X=33.3 (pins: 1=+5V, 2=TRIG GPIO10, 3=ECHO GPIO6 via div, 4=GND)
+    # TB1: Ultrasonic at X=33.3 (pins: 1=+5V, 2=TRIG GPIO7, 3=ECHO GPIO20 via div, 4=GND)
     kf301_terminal("TB1", "KF301-4P", 33.3, 7.5, 4,
-                   [(2, "+5V"), (13, "GPIO10_TRIG"), (8, "ECHO_5V"), (1, "GND")],
+                   [(2, "+5V"), (13, "GPIO7_TRIG"), (8, "ECHO_5V"), (1, "GND")],
                    ["+5V", "TRIG", "ECHO", "GND"])
     lines.append(f'\t(gr_text "ULTRASONIC" (at 40.8 1.8) (layer "F.SilkS") (uuid "{u()}") (effects (font (size 0.75 0.75) bold (thickness 0.13))))')
 
@@ -210,15 +221,16 @@ def generate_smd_board():
     lines.append(f'\t(gr_text "BAT SENSE" (at 47.0 16.5) (layer "F.SilkS") (uuid "{u()}") (effects (font (size 0.8 0.8) bold (thickness 0.14))))')
 
     # ESP32-C3 SuperMini 2x 1x8 Female Headers
+    # Canonical Pinout: https://lastminuteengineers.com/esp32-c3-super-mini-pinout-reference/
     lines.append(f'\t(footprint "PinSocket_1x08_P2.54mm_Vertical"')
     lines.append(f'\t\t(layer "F.Cu") (uuid "{u()}") (at 14.0 30.0)')
     lines.append(f'\t\t(property "Reference" "J1" (at -2.4 0 90) (layer "F.SilkS") (effects (font (size 0.8 0.8) bold (thickness 0.14))))')
     lines.append(f'\t\t(property "Value" "Conn_01x08_Socket" (at 10.0 -2.0) (layer "F.Fab") (effects (font (size 0.8 0.8) (thickness 0.12))))')
     j1_nets = [
-        (2, "+5V"), (1, "GND"), (12, "+3V3"), (3, "GPIO0_5V_ADC"),
-        (4, "GPIO1_SOIL"), (0, ""), (6, "GPIO3_LDR"), (7, "GPIO4_VBAT_ADC")
+        (2, "+5V"), (1, "GND"), (12, "+3V3"), (3, "GPIO4_5V_ADC"),
+        (4, "GPIO3_SOIL"), (0, ""), (6, "GPIO1_LDR"), (7, "GPIO0_VBAT_ADC")
     ]
-    j1_names = ["5V", "GND", "3V3", "G0", "G1", "G2", "G3", "G4"]
+    j1_names = ["5V", "GND", "3V3", "G4", "G3", "G2", "G1", "G0"]
     for p in range(8):
         px = p * 2.54
         nid, nname = j1_nets[p]
@@ -231,10 +243,10 @@ def generate_smd_board():
     lines.append(f'\t\t(property "Reference" "J2" (at -2.4 0 90) (layer "F.SilkS") (effects (font (size 0.8 0.8) bold (thickness 0.14))))')
     lines.append(f'\t\t(property "Value" "Conn_01x08_Socket" (at 10.0 2.0) (layer "F.Fab") (effects (font (size 0.8 0.8) (thickness 0.12))))')
     j2_nets = [
-        (14, "GPIO21_SCL"), (15, "GPIO20_SDA"), (13, "GPIO10_TRIG"), (0, ""),
-        (0, ""), (9, "GPIO7_GATE"), (17, "GPIO6_ECHO"), (5, "GPIO5_SOIL_VCC")
+        (14, "GPIO5_SCL"), (15, "GPIO6_SDA"), (13, "GPIO7_TRIG"), (0, ""),
+        (0, ""), (9, "GPIO10_GATE"), (17, "GPIO20_ECHO"), (5, "GPIO21_SOIL_VCC")
     ]
-    j2_names = ["G21", "G20", "G10", "G9", "G8", "G7", "G6", "G5"]
+    j2_names = ["G5", "G6", "G7", "G8", "G9", "G10", "G20", "G21"]
     for p in range(8):
         px = p * 2.54
         nid, nname = j2_nets[p]
@@ -308,31 +320,31 @@ def generate_smd_board():
         cpl_data.append((ref, val, "SOT-23", mx, my, 90.0, "Top", lcsc_pn))
 
     # --- PLACEMENT OF STANDARD SMD PASSIVES ---
-    # 1. 5V Supply Rail Voltage Divider (100k / 100k, JLCPCB Basic Part C149504) -> GPIO 0
+    # 1. 5V Supply Rail Voltage Divider (100k / 100k, JLCPCB Basic Part C149504) -> GPIO 4
     # R1 printed clearly to the left (at -2.4, 0)
-    smd_resistor_0805("R1", "100k", 11.5, 19.5, (2, "+5V"), (3, "GPIO0_5V_ADC"), "C149504", hide_ref=False, ref_pos=(-2.4, 0))
-    smd_resistor_0805("R2", "100k", 11.5, 24.0, (1, "GND"), (3, "GPIO0_5V_ADC"), "C149504", ref_pos=(-2.4, 0))
+    smd_resistor_0805("R1", "100k", 11.5, 19.5, (2, "+5V"), (3, "GPIO4_5V_ADC"), "C149504", hide_ref=False, ref_pos=(-2.4, 0))
+    smd_resistor_0805("R2", "100k", 11.5, 24.0, (1, "GND"), (3, "GPIO4_5V_ADC"), "C149504", ref_pos=(-2.4, 0))
 
     # C1: 5V ADC Filter Capacitor (100nF, JLCPCB Basic Part C28233)
-    smd_cap_0805("C1", "100nF", 17.5, 24.0, (3, "GPIO0_5V_ADC"), (1, "GND"), "C28233")
+    smd_cap_0805("C1", "100nF", 17.5, 24.0, (3, "GPIO4_5V_ADC"), (1, "GND"), "C28233")
 
     # C2: Soil Analog Filter
-    smd_cap_0805("C2", "100nF", 19.0, 19.5, (4, "GPIO1_SOIL"), (1, "GND"), "C28233")
+    smd_cap_0805("C2", "100nF", 19.0, 19.5, (4, "GPIO3_SOIL"), (1, "GND"), "C28233")
 
-    # 2. Ultrasonic Echo Level Divider (1k / 2k, JLCPCB Basic Parts C17513 & C17604) -> GPIO 6
-    smd_resistor_0805("R3", "1k", 43.0, 19.5, (17, "GPIO6_ECHO"), (8, "ECHO_5V"), "C17513")
-    smd_resistor_0805("R4", "2k", 43.0, 24.0, (17, "GPIO6_ECHO"), (1, "GND"), "C17604")
+    # 2. Ultrasonic Echo Level Divider (1k / 2k, JLCPCB Basic Parts C17513 & C17604) -> GPIO 20
+    smd_resistor_0805("R3", "1k", 43.0, 19.5, (17, "GPIO20_ECHO"), (8, "ECHO_5V"), "C17513")
+    smd_resistor_0805("R4", "2k", 43.0, 24.0, (17, "GPIO20_ECHO"), (1, "GND"), "C17604")
 
-    # 3. 18650 Battery Voltage Divider (100k / 100k, JLCPCB Basic Part C149504) -> GPIO 4
+    # 3. 18650 Battery Voltage Divider (100k / 100k, JLCPCB Basic Part C149504) -> GPIO 0
     # R8 printed clearly to the right (at 2.4, 0)
-    smd_resistor_0805("R8", "100k", 47.0, 19.5, (18, "VBAT_SENSE"), (7, "GPIO4_VBAT_ADC"), "C149504", hide_ref=False, ref_pos=(2.4, 0))
-    smd_resistor_0805("R9", "100k", 47.0, 24.0, (1, "GND"), (7, "GPIO4_VBAT_ADC"), "C149504", ref_pos=(2.4, 0))
+    smd_resistor_0805("R8", "100k", 47.0, 19.5, (18, "VBAT_SENSE"), (7, "GPIO0_VBAT_ADC"), "C149504", hide_ref=False, ref_pos=(2.4, 0))
+    smd_resistor_0805("R9", "100k", 47.0, 24.0, (1, "GND"), (7, "GPIO0_VBAT_ADC"), "C149504", ref_pos=(2.4, 0))
 
     # C6: Battery ADC Filter Capacitor (100nF, JLCPCB Basic Part C28233)
-    smd_cap_0805("C6", "100nF", 47.0, 28.5, (1, "GND"), (7, "GPIO4_VBAT_ADC"), "C28233")
+    smd_cap_0805("C6", "100nF", 47.0, 28.5, (1, "GND"), (7, "GPIO0_VBAT_ADC"), "C28233")
 
-    # R5 & R6: MOSFET Gate Drive (Placed at X=39.0 to give generous clearance to MOD1 & MOD2)
-    smd_resistor_0805("R5", "1k", 39.0, 38.0, (9, "GPIO7_GATE"), (10, "GATE_DRIVE"), "C17513")
+    # R5 & R6: MOSFET Gate Drive (Placed at X=39.0 to give generous clearance to MOD1 & MOD2) -> GPIO 10
+    smd_resistor_0805("R5", "1k", 39.0, 38.0, (9, "GPIO10_GATE"), (10, "GATE_DRIVE"), "C17513")
     smd_resistor_0805("R6", "100k", 39.0, 42.0, (1, "GND"), (10, "GATE_DRIVE"), "C149504")
 
     # D1: SMA SS34 Flyback Diode (across TB3 pump motor, JLCPCB Basic Part C8678 - 40V 3A Schottky)
@@ -365,10 +377,10 @@ def generate_smd_board():
     lines.append(f'\t\t(pad "2" thru_hole circle (at 0 1.25) (size 1.8 1.8) (drill 0.9) (layers "*.Cu" "*.Mask") (net 1 "GND"))')
     lines.append(f'\t)')
 
-    # --- LDR AMBIENT LIGHT SENSOR DIVIDER (on GPIO 3 / ADC1_CH3 — Non-strapping!) ---
+    # --- LDR AMBIENT LIGHT SENSOR DIVIDER (on GPIO 1 / ADC1_CH1 — Non-strapping!) ---
     # R7 printed clearly to the right (at 2.4, 0)
-    smd_resistor_0805("R7", "10k", 29.24, 23.5, (6, "GPIO3_LDR"), (1, "GND"), "C17414", hide_ref=False, ref_pos=(2.4, 0))
-    smd_cap_0805("C4", "100nF", 29.24, 26.5, (6, "GPIO3_LDR"), (1, "GND"), "C28233")
+    smd_resistor_0805("R7", "10k", 29.24, 23.5, (6, "GPIO1_LDR"), (1, "GND"), "C17414", hide_ref=False, ref_pos=(2.4, 0))
+    smd_cap_0805("C4", "100nF", 29.24, 26.5, (6, "GPIO1_LDR"), (1, "GND"), "C28233")
 
     lines.append(f'\t(footprint "PinHeader_1x02_P2.54mm_Vertical"')
     lines.append(f'\t\t(layer "F.Cu") (uuid "{u()}") (at 29.24 19.5)')
@@ -377,7 +389,7 @@ def generate_smd_board():
     lines.append(f'\t\t(fp_rect (start -2.5 -1.5) (end 2.5 1.5) (stroke (width 0.15) (type solid)) (fill none) (layer "F.Fab"))')
     lines.append(f'\t\t(fp_text user "LDR (LIGHT)" (at 0 -2.4) (layer "F.SilkS") (uuid "{u()}") (effects (font (size 0.8 0.8) bold (thickness 0.13))))')
     lines.append(f'\t\t(pad "1" thru_hole roundrect (at -1.27 0) (size 1.7 1.7) (drill 1.0) (roundrect_rratio 0.25) (layers "*.Cu" "*.Mask") (net 12 "+3V3"))')
-    lines.append(f'\t\t(pad "2" thru_hole oval (at 1.27 0) (size 1.7 1.7) (drill 1.0) (layers "*.Cu" "*.Mask") (net 6 "GPIO3_LDR"))')
+    lines.append(f'\t\t(pad "2" thru_hole oval (at 1.27 0) (size 1.7 1.7) (drill 1.0) (layers "*.Cu" "*.Mask") (net 6 "GPIO1_LDR"))')
     lines.append(f'\t\t(fp_text user "3V3" (at -1.27 1.7) (layer "F.SilkS") (uuid "{u()}") (effects (font (size 0.8 0.8) (thickness 0.12))))')
     lines.append(f'\t\t(fp_text user "SIG" (at 1.27 1.7) (layer "F.SilkS") (uuid "{u()}") (effects (font (size 0.8 0.8) (thickness 0.12))))')
     lines.append(f'\t)')
@@ -389,7 +401,7 @@ def generate_smd_board():
     lines.append(f'\t\t(property "Value" "SHT30_DNP" (at 3.81 2.7) (layer "F.Fab") (effects (font (size 0.8 0.8) (thickness 0.12))))')
     lines.append(f'\t\t(fp_rect (start -1.6 -1.6) (end 9.24 1.6) (stroke (width 0.15) (type solid)) (fill none) (layer "F.Fab"))')
     lines.append(f'\t\t(fp_text user "SHT30 (TEMP/HUM)" (at 3.81 -5.0) (layer "F.SilkS") (uuid "{u()}") (effects (font (size 0.75 0.75) bold (thickness 0.13))))')
-    sht_nets = [(12, "+3V3"), (1, "GND"), (14, "GPIO21_SCL"), (15, "GPIO20_SDA")]
+    sht_nets = [(12, "+3V3"), (1, "GND"), (14, "GPIO5_SCL"), (15, "GPIO6_SDA")]
     sht_names = ["3V3", "GND", "SCL", "SDA"]
     for p in range(4):
         px = p * 2.54
@@ -405,7 +417,7 @@ def generate_smd_board():
     lines.append(f'\t\t(property "Value" "BH1750_DNP" (at 5.08 2.7) (layer "F.Fab") (effects (font (size 0.8 0.8) (thickness 0.12))))')
     lines.append(f'\t\t(fp_rect (start -1.6 -1.6) (end 11.78 1.6) (stroke (width 0.15) (type solid)) (fill none) (layer "F.Fab"))')
     lines.append(f'\t\t(fp_text user "BH1750 (LIGHT)" (at 5.08 -2.2) (layer "F.SilkS") (uuid "{u()}") (effects (font (size 0.75 0.75) bold (thickness 0.13))))')
-    bh_nets = [(12, "+3V3"), (1, "GND"), (14, "GPIO21_SCL"), (15, "GPIO20_SDA"), (1, "GND")]
+    bh_nets = [(12, "+3V3"), (1, "GND"), (14, "GPIO5_SCL"), (15, "GPIO6_SDA"), (1, "GND")]
     bh_names = ["3V3", "GND", "SCL", "SDA", "ADDR"]
     for p in range(5):
         px = p * 2.54
@@ -461,25 +473,25 @@ def generate_smd_board():
     via(46.05, 17.5, 18)
     seg(46.05, 17.5, 46.05, 19.5, 0.4, 18)
 
-    # Net 3 (GPIO0_5V_ADC) — From R1/R2/C1 to ESP32 J1 Pin 4 (21.62, 30.0)
+    # Net 3 (GPIO4_5V_ADC) — From R1/R2/C1 to ESP32 J1 Pin 4 (21.62, 30.0)
     seg(12.45, 19.5, 12.45, 24.0, 0.35, 3)
     seg(12.45, 24.0, 16.55, 24.0, 0.35, 3)
     seg(16.55, 24.0, 21.62, 29.07, 0.35, 3)
     seg(21.62, 29.07, 21.62, 30.0, 0.35, 3)
 
-    # Net 7 (GPIO4_VBAT_ADC) — From R8/R9/C6 to ESP32 J1 Pin 8 (31.78, 30.0)
+    # Net 7 (GPIO0_VBAT_ADC) — From R8/R9/C6 to ESP32 J1 Pin 8 (31.78, 30.0)
     seg(47.95, 19.5, 47.95, 28.5, 0.35, 7)
     seg(47.95, 28.5, 47.95, 30.0, 0.35, 7)
     via(47.95, 30.0, 7)
     seg(47.95, 30.0, 31.78, 30.0, 0.35, 7, layer="B.Cu")
 
-    # Net 4 (GPIO1_SOIL)
+    # Net 4 (GPIO3_SOIL) — From TB2 Pin 1 to ESP32 J1 Pin 5 (24.16, 30.0)
     seg(11.7, 7.5, 11.7, 13.15, 0.35, 4)
     seg(11.7, 13.15, 18.05, 19.5, 0.35, 4)
     seg(18.05, 19.5, 24.16, 25.61, 0.35, 4)
     seg(24.16, 25.61, 24.16, 30.0, 0.35, 4)
 
-    # Net 5 (GPIO5_SOIL_VCC) — Switched VCC on GPIO 5 (J2 Pin 8 at X=31.78, Y=45.24)
+    # Net 5 (GPIO21_SOIL_VCC) — Switched VCC on GPIO 21 (J2 Pin 8 at X=31.78, Y=45.24)
     # Routes along western corridor (X=10.0) on B.Cu to bypass ESP32 completely
     seg(16.7, 7.5, 16.7, 12.0, 0.5, 5)
     via(16.7, 12.0, 5)
@@ -489,7 +501,7 @@ def generate_smd_board():
     via(31.78, 43.5, 5)
     seg(31.78, 43.5, 31.78, 45.24, 0.5, 5)
 
-    # Net 6 (GPIO3_LDR) — From LDR1 / R7 / C4 to ESP32 J1 Pin 7 (29.24, 30.0)
+    # Net 6 (GPIO1_LDR) — From LDR1 / R7 / C4 to ESP32 J1 Pin 7 (29.24, 30.0)
     seg(30.51, 19.5, 30.51, 21.5, 0.35, 6)
     seg(30.51, 21.5, 28.29, 21.5, 0.35, 6)
     seg(28.29, 21.5, 28.29, 26.5, 0.35, 6)
@@ -497,7 +509,7 @@ def generate_smd_board():
     seg(28.29, 28.5, 29.24, 29.45, 0.35, 6)
     seg(29.24, 29.45, 29.24, 30.0, 0.35, 6)
 
-    # Net 17 (GPIO6_ECHO) — From R3/R4 to ESP32 J2 Pin 7 (29.24, 45.24)
+    # Net 17 (GPIO20_ECHO) — From R3/R4 to ESP32 J2 Pin 7 (29.24, 45.24)
     seg(42.05, 19.5, 42.05, 32.5, 0.35, 17)
     via(42.05, 32.5, 17)
     seg(42.05, 32.5, 29.24, 38.0, 0.35, 17, layer="B.Cu")
@@ -509,7 +521,7 @@ def generate_smd_board():
     seg(43.3, 7.5, 43.3, 18.85, 0.35, 8)
     seg(43.3, 18.85, 43.95, 19.5, 0.35, 8)
 
-    # Net 9 (GPIO7_GATE)
+    # Net 9 (GPIO10_GATE) — To Gate drive resistor R5 from ESP32 J2 Pin 6 (26.70, 45.24)
     seg(26.70, 45.24, 26.70, 38.0, 0.35, 9)
     seg(26.70, 38.0, 38.05, 38.0, 0.35, 9)
 
@@ -535,13 +547,13 @@ def generate_smd_board():
     seg(48.0, 38.0, 46.0, 40.0, 0.5, 12, layer="B.Cu")
     seg(46.0, 40.0, 46.0, 44.5, 0.5, 12, layer="B.Cu")
 
-    # Net 13 (GPIO10_TRIG) — From TB1 Pin 2 (38.3, 7.5) to ESP32 J2 Pin 3 (19.08, 45.24)
+    # Net 13 (GPIO7_TRIG) — From TB1 Pin 2 (38.3, 7.5) to ESP32 J2 Pin 3 (19.08, 45.24)
     seg(38.3, 7.5, 38.3, 33.0, 0.35, 13)
     seg(38.3, 33.0, 21.08, 33.0, 0.35, 13)
     seg(21.08, 33.0, 19.08, 35.0, 0.35, 13)
     seg(19.08, 35.0, 19.08, 45.24, 0.35, 13)
 
-    # Net 14 (GPIO21_SCL) — on B.Cu (Isolated from F.Cu SDA!)
+    # Net 14 (GPIO5_SCL) — on B.Cu (Isolated from F.Cu SDA!)
     # J2 Pin 1 (14.0, 45.24) -> runs across on B.Cu at Y=48.0 -> connects through-hole pads:
     # MOD2 Pin 3 (51.08, 44.5) & MOD1 Pin 3 (53.08, 38.0)
     seg(14.0, 45.24, 14.0, 48.0, 0.35, 14, layer="B.Cu")
@@ -550,7 +562,7 @@ def generate_smd_board():
     seg(51.08, 44.5, 53.08, 42.5, 0.35, 14, layer="B.Cu")
     seg(53.08, 42.5, 53.08, 38.0, 0.35, 14, layer="B.Cu")
 
-    # Net 15 (GPIO20_SDA) — on F.Cu
+    # Net 15 (GPIO6_SDA) — on F.Cu
     # J2 Pin 2 (16.54, 45.24) -> runs across on F.Cu at Y=49.5 -> MOD2 Pin 4 (53.62, 44.5) & MOD1 Pin 4 (55.62, 38.0)
     seg(16.54, 45.24, 16.54, 49.5, 0.35, 15)
     seg(16.54, 49.5, 53.62, 49.5, 0.35, 15)

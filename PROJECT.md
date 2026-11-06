@@ -17,6 +17,7 @@ The system addresses the historical pitfalls of microcontroller IoT (heap exhaus
 ## 2. Hardware Architecture & Electrical Specifications
 
 ### 2.1 Microcontroller: ESP32-C3 SuperMini
+* **Authoritative Physical Pinout Reference:** [LastMinuteEngineers ESP32-C3 SuperMini Pinout Reference](https://lastminuteengineers.com/esp32-c3-super-mini-pinout-reference/)
 * **Core:** 32-bit single-core RISC-V processor clocked at 80 MHz / 160 MHz.
 * **Memory:** 400 KB SRAM, 4 MB embedded SPI Flash (DIO mode, 40 MHz).
 * **Connectivity:** Integrated 2.4 GHz 802.11b/g/n Wi-Fi (WPA2/WPA3-SAE) & Bluetooth 5 (LE).
@@ -27,34 +28,37 @@ The system addresses the historical pitfalls of microcontroller IoT (heap exhaus
 
 ### 2.2 Complete Pin & Peripheral Mapping
 
+All pin assignments strictly follow the canonical [LastMinuteEngineers ESP32-C3 SuperMini Pinout Reference](https://lastminuteengineers.com/esp32-c3-super-mini-pinout-reference/):
+
 | ESP32-C3 Pin | Connected Component | Function & Conditioning | Direction / Mode |
 | :--- | :--- | :--- | :--- |
-| **GPIO 0** | 5V Supply Rail Monitor | ADC1_CH0 via 100kΩ/100kΩ divider (R1/R2) + 100nF filter (C1) | Analog IN |
-| **GPIO 1** | Capacitive Soil Sensor | ADC1_CH1 connected to TB2 Pin 1 (`AOUT`) + 100nF filter (C2) | Analog IN |
+| **GPIO 0** | 18650 Battery Monitor | ADC1_CH0 via 100kΩ/100kΩ divider (R8/R9) + 100nF (C6) from TB4 Pin 3 | Analog IN |
+| **GPIO 1** | Ambient Light Sensor | ADC1_CH1 via LDR1 + 10kΩ divider (R7) + 100nF (C4) | Analog IN |
 | **GPIO 2** | Strapping Protected | **Unconnected / High-Z** (Guarantees zero boot hangs) | High-Z |
-| **GPIO 3** | Ambient Light Sensor | ADC1_CH3 via LDR1 + 10kΩ divider (R7) + 100nF (C4) | Analog IN |
-| **GPIO 4** | 18650 Battery Monitor | ADC1_CH4 via 100kΩ/100kΩ divider (R8/R9) + 100nF (C6) | Analog IN |
-| **GPIO 5** | Switched Soil Sensor VCC | Digital switched 3.3V power to TB2 Pin 2 (Duty-cycled reading) | Digital OUT |
-| **GPIO 6** | Ultrasonic Sensor `ECHO`| Digital input via 1kΩ/2kΩ divider (R3/R4) stepping 5V down to 3.3V | Digital IN |
-| **GPIO 7** | Pump MOSFET Gate | Digital output to AO3400A / FQP30N06L Gate via 1kΩ (R5) + 100kΩ pull-down (R6) | Digital OUT |
+| **GPIO 3** | Capacitive Soil Sensor | ADC1_CH3 connected to TB2 Pin 1 (`AOUT`) + 100nF filter (C2) | Analog IN |
+| **GPIO 4** | 5V Supply Rail Monitor | ADC1_CH4 via 100kΩ/100kΩ divider (R1/R2) + 100nF filter (C1) | Analog IN |
+| **GPIO 5** | I2C SCL | I2C Clock bus for optional SHT30 / BH1750 environmental modules | Open Drain |
+| **GPIO 6** | I2C SDA | I2C Data bus for optional SHT30 / BH1750 environmental modules | Open Drain |
+| **GPIO 7** | Ultrasonic Sensor `TRIG`| 10 µs trigger pulse output to HC-SR04 (TB1 Pin 2) | Digital OUT |
 | **GPIO 8** | Onboard Status LED | Active LOW blue LED (Active: 0, Inactive: 1) | Digital OUT |
-| **GPIO 10** | Ultrasonic Sensor `TRIG`| 10 µs trigger pulse output to HC-SR04 | Digital OUT |
-| **GPIO 20** | I2C SDA | I2C Data bus for optional SHT30 / BH1750 environmental modules | Open Drain |
-| **GPIO 21** | I2C SCL | I2C Clock bus for optional SHT30 / BH1750 environmental modules | Open Drain |
+| **GPIO 9** | BOOT Button | Onboard tactile button (pulls LOW when pressed) | Digital IN |
+| **GPIO 10** | Pump MOSFET Gate | Digital output to AO3400A / FQP30N06L Gate via 1kΩ (R5) + 100kΩ pull-down (R6) | Digital OUT |
+| **GPIO 20** | Ultrasonic Sensor `ECHO`| Digital input via 1kΩ/2kΩ divider (R3/R4) stepping 5V down to 3.3V (TB1 Pin 3) | Digital IN |
+| **GPIO 21** | Switched Soil Sensor VCC | Digital switched 3.3V power to TB2 Pin 2 (Duty-cycled reading) | Digital OUT |
 
 ### 2.3 Actuator & Sensor Conditioning Circuitry
 * **Low-Side Pump Driver:** N-Channel logic-level MOSFET (AO3400A SMD or FQP30N06L TO-220).
   * **Gate Pull-Down (R6, 100 kΩ):** Held firmly to GND to keep the pump disabled during bootloader startup, brownouts, and chip resets.
-  * **Gate Damping (R5, 1 kΩ):** Protects GPIO 7 against inrush capacitance and ringing.
-  * **Flyback Diode (D1, 1N4001 / 1N5819):** Clamps inductive voltage spikes across pump motor terminals.
+  * **Gate Damping (R5, 1 kΩ):** Protects GPIO 10 against inrush capacitance and ringing.
+  * **Flyback Diode (D1, 1N4001 / 1N5819 / SS34):** Clamps inductive voltage spikes across pump motor terminals.
   * **Bulk Decoupling (C3, 100 µF):** Dampens transient motor startup current dips on the 5V bus.
 * **Acoustic Ultrasonic Rangefinder (HC-SR04):**
   * Powered from 5V rail for reliable transducer range.
-  * 1kΩ / 2kΩ resistive voltage divider steps the 5V `ECHO` output down to a 3.3V-safe logic level.
+  * 1kΩ / 2kΩ resistive voltage divider steps the 5V `ECHO` output down to a 3.3V-safe logic level into GPIO 20.
   * Firmware implements a strict 30 ms timeout and software un-latch reset pulse to clear stuck third-party clone sensors.
 * **Corrosion-Resistant Capacitive Soil Moisture Sensor:**
-  * Switched power from GPIO 5 eliminates continuous galvanic bias in damp soil.
-  * 100nF capacitor on `AOUT` filters RF noise and ADC switching ripple.
+  * Switched power from GPIO 21 eliminates continuous galvanic bias in damp soil.
+  * Analog `AOUT` sampled on GPIO 3 (`ADC1_CH3`) with 100nF filter capacitor.
 
 ---
 
@@ -171,7 +175,7 @@ graph TD
 
 ## 7. Multi-Tiered Safety Supervisor & Plant Protection
 
-1. **Hardware Watchdog Timer (WDT):** 5-second timeout triggers immediate CPU reset if the scheduler stalls, releasing GPIO 7 LOW via R6.
+1. **Hardware Watchdog Timer (WDT):** 5-second timeout triggers immediate CPU reset if the scheduler stalls, releasing GPIO 10 LOW via R6.
 2. **Maximum Continuous Pump Runtime:** Hard cutoff after 60 seconds (configurable) prevents tank drainage during pipe fractures.
 3. **Minimum Cycle Cooldown:** Mandatory 300-second pause between watering events allows water absorption through soil substrate.
 4. **Daily Cumulative Watering Limit:** Prevents root drowning by capping total daily watering duration (e.g. 93 seconds/day max), resetting at local midnight via SNTP.

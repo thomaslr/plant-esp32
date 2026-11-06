@@ -60,10 +60,11 @@ pcb/
 | **MOSFET** | AO3400A (SOT-23, 30V 5.7A, Low $R_{DS(on)}$) | FQP30N06L / IRLZ44N (TO-220-3) |
 | **Flyback Diode** | SS34 (SMA / DO-214AC, 3A 40V Schottky) | 1N4001 (DO-41 axial) |
 | **Solar / Battery Input** | **TB4** (KF301-3P) + **D2** (SS34 Anti-Backfeed Diode) | N/A (USB / 5V rail direct) |
-| **Battery Monitoring** | **Dedicated Dual ADC** (5V Rail on G0 + 18650 on G4, 0 jumpers) | 5V Rail Divider only (210 µA drain) |
+| **Battery Monitoring** | **Dedicated Dual ADC** (5V Rail on G4 + 18650 on G0, 0 jumpers) | 5V Rail Divider only (210 µA drain) |
 | **5V Power Decoupling** | **Hybrid**: 2× 10 µF Basic MLCCs + Radial `C_EXT` (DNP) | 100 µF Radial Electrolytic can |
 | **Expansion Sockets** | **Included**: LDR divider, SHT30, BH1750 (DNP) | Standard core functionality |
-| **Firmware Mapping** | Soil on **G5**, LDR on **G3**, TRIG on **G10**, ECHO on **G6**, Bat on **G4** | Soil Power on **GPIO 2**, TRIG on **GPIO 3**, ECHO on **GPIO 4** |
+| **Firmware Mapping** | Soil on **G3/G21**, LDR on **G1**, TRIG on **G7**, ECHO on **G20**, Bat on **G0**, 5V on **G4** | Soil Power on **GPIO 2**, TRIG on **GPIO 3**, ECHO on **GPIO 4** |
+| **Canonical Pinout** | [LastMinuteEngineers Pinout Reference](https://lastminuteengineers.com/esp32-c3-super-mini-pinout-reference/) | [LastMinuteEngineers Pinout Reference](https://lastminuteengineers.com/esp32-c3-super-mini-pinout-reference/) |
 
 ---
 
@@ -98,17 +99,17 @@ pcb/
 ```
 
 * **TB2 (Soil Sensor)**:
-  * `DATA` $\to$ Sensor Analog Out (GPIO1)
-  * `VCC` $\to$ Sensor VCC (GPIO5 on SMD edition / GPIO2 on THT edition)
+  * `DATA` $\to$ Sensor Analog Out (GPIO 3 on SMD edition / GPIO 1 on THT edition)
+  * `VCC` $\to$ Sensor VCC (GPIO 21 on SMD edition / GPIO 2 on THT edition)
   * `GND` $\to$ Sensor GND
 * **TB1 (Ultrasonic Sensor - HC-SR04 / RCWL-1601)**:
   * `5V` $\to$ Sensor VCC
-  * `TRIG` $\to$ Sensor Trig (GPIO10 on SMD edition / GPIO3 on THT edition)
-  * `ECHO` $\to$ Sensor Echo (GPIO6 on SMD edition / GPIO4 on THT edition via 1k/2k level-divider)
+  * `TRIG` $\to$ Sensor Trig (GPIO 7 on SMD edition / GPIO 3 on THT edition)
+  * `ECHO` $\to$ Sensor Echo (GPIO 20 on SMD edition / GPIO 4 on THT edition via 1k/2k level-divider)
   * `GND` $\to$ Sensor GND
 * **TB3 (Submersible Water Pump)**:
   * `+` $\to$ Pump Positive lead (connected to +5V)
-  * `-` $\to$ Pump Negative lead (switched to GND via MOSFET Drain)
+  * `-` $\to$ Pump Negative lead (switched to GND via MOSFET Drain, Gate on GPIO 10)
 
 ### Right Edge Terminal (SMD Edition Only - Rev 2.3)
 
@@ -123,6 +124,6 @@ pcb/
   * `GND` (Pin 2) $\to$ Common system ground
   * `BAT` (Pin 3) $\to$ Direct connection to 18650 Li-ion battery positive terminal (`BAT+`)
 * **Dedicated Dual ADC Voltage Monitoring (No Jumpers!)**:
-  * **GPIO 0 (`ADC1_CH0`)**: Dedicated 5V supply rail monitor via 100k/100k divider + 100nF
-  * **GPIO 4 (`ADC1_CH4`)**: Dedicated 18650 battery monitor via 100k/100k divider + 100nF from TB4 Pin 3 (21 µA drain)
+  * **GPIO 4 (`ADC1_CH4`)**: Dedicated 5V supply rail monitor via 100k/100k divider + 100nF
+  * **GPIO 0 (`ADC1_CH0`)**: Dedicated 18650 battery monitor via 100k/100k divider + 100nF from TB4 Pin 3 (21 µA drain)
   * Both voltages sampled simultaneously in real-time firmware with zero selector headers or manual jumpers.
