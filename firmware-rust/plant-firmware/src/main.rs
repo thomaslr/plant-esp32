@@ -29,7 +29,7 @@ use esp_idf_svc::mdns::EspMdns;
 use esp_idf_svc::nvs::EspDefaultNvsPartition;
 use esp_idf_svc::sntp::EspSntp;
 use esp_idf_svc::sys::{esp_timer_get_time, link_patches};
-use log::{info, warn};
+use log::{error, info, warn};
 use plant_core::ring_buffer::RingBuffer;
 use plant_core::safety::SafetyManager;
 use plant_core::timeutil::{local_day, local_hour, MidnightTracker};
@@ -331,6 +331,62 @@ fn main() -> anyhow::Result<()> {
         .stack_size(4096)
         .spawn(move || {
             run_led_supervisor(s_led);
+        })?;
+
+    // 14. Task 5: Network Heartbeat, Live RSSI & Watchdog (Priority: LOW, every 30s)
+    // - Broadcasts periodic UDP keep-alive / Gratuitous ARP to prevent mesh routers
+    //   (e.g. TP-Link Deco) from dropping the station from bridge and ARP tables.
+    // - Queries driver directly for real-time Wi-Fi signal strength (RSSI in dBm).
+    // - Automatically self-heals via reboot if connection is lost continuously for >4 minutes.
+    let s_net = Arc::clone(&state);
+    thread::Builder::new()
+        .name("NetworkWatchdog".to_string())
+        .stack_size(4096)
+        .spawn(move || {
+            let mut failed_checks = 0u32;
+            let socket = std::net::UdpSocket::bind("0.0.0.0:0").ok();
+            if let Some(ref s) = socket {
+                let _ = s.set_broadcast(true);
+                let _ = s.set_write_timeout(Some(Duration::from_millis(500)));
+            }
+
+            loop {
+                thread::sleep(Duration::from_secs(30));
+
+                let mut ap_info = std::mem::MaybeUninit::<esp_idf_svc::sys::wifi_ap_record_t>::uninit();
+                let is_connected = unsafe {
+                    esp_idf_svc::sys::esp_wifi_sta_get_ap_info(ap_info.as_mut_ptr()) == 0
+                };
+
+                if is_connected {
+                    let ap_record = unsafe { ap_info.assume_init() };
+                    let rssi = ap_record.rssi as i32;
+                    failed_checks = 0;
+
+                    // Update live signal strength in shared state
+                    {
+                        let mut app = s_net.lock().unwrap();
+                        app.wifi_rssi = rssi;
+                    }
+
+                    // Transmit periodic heartbeat frame to refresh router ARP/bridge tables
+                    if let Some(ref s) = socket {
+                        let _ = s.send_to(b"PLANT_HEARTBEAT", "255.255.255.255:3826");
+                    }
+                } else {
+                    failed_checks += 1;
+                    warn!(
+                        "[NET] Wi-Fi link inactive or disconnected (consecutive check: {})",
+                        failed_checks
+                    );
+                    if failed_checks >= 8 {
+                        error!("[NET] Connection lost for >4 minutes. Triggering self-recovery reboot...");
+                        unsafe {
+                            esp_idf_svc::sys::esp_restart();
+                        }
+                    }
+                }
+            }
         })?;
 
     info!("[SYS] All background tasks successfully spawned. System running.");

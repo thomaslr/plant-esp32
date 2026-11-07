@@ -12,8 +12,7 @@ use esp_idf_svc::hal::modem::Modem;
 use esp_idf_svc::nvs::EspDefaultNvsPartition;
 use esp_idf_svc::sys::{
     esp_netif_get_handle_from_ifkey, esp_netif_set_hostname, esp_wifi_get_max_tx_power,
-    esp_wifi_set_max_tx_power, esp_wifi_set_ps, wifi_ps_type_t_WIFI_PS_MIN_MODEM,
-    wifi_ps_type_t_WIFI_PS_NONE,
+    esp_wifi_set_max_tx_power, esp_wifi_set_ps, wifi_ps_type_t_WIFI_PS_NONE,
 };
 use esp_idf_svc::wifi::{
     AccessPointConfiguration, AuthMethod, BlockingWifi, ClientConfiguration, Configuration, EspWifi,
@@ -87,24 +86,34 @@ pub fn start_wifi(
                 for attempt in 1..=MAX_STA_ATTEMPTS {
                     if attempt > 1 {
                         warn!(
-                            "[WIFI] Retrying saved network (attempt {}/{} in 15s)...",
+                            "[WIFI] Retrying saved network (attempt {}/{} in 15s with radio cycle)...",
                             attempt, MAX_STA_ATTEMPTS
                         );
                         let _ = wifi.disconnect();
-                        std::thread::sleep(std::time::Duration::from_secs(15));
+                        let _ = wifi.stop();
+                        std::thread::sleep(std::time::Duration::from_millis(500));
+                        let _ = wifi.start();
+                        unsafe {
+                            let _ = esp_wifi_set_max_tx_power(78);
+                            let _ = esp_wifi_set_ps(wifi_ps_type_t_WIFI_PS_NONE);
+                        }
+                        std::thread::sleep(std::time::Duration::from_secs(14));
                     }
 
                     if let Ok(()) = wifi.connect() {
-                        info!("[WIFI] Associated with AP. Waiting for DHCP lease...");
+                        info!("[WIFI] Associated with AP. Settling 750ms before DHCP negotiation (ESPEasy connect wait)...");
+                        std::thread::sleep(std::time::Duration::from_millis(750));
                         if let Ok(()) = wifi.wait_netif_up() {
                             if let Ok(info) = wifi.wifi().sta_netif().get_ip_info() {
                                 let ip_str = info.ip.to_string();
                                 if ip_str != "0.0.0.0" {
                                     info!("[WIFI] Station Mode active! IP: {}", ip_str);
-                                    // Connection and DHCP lease established; safely enable modem sleep
+                                    // Keep modem sleep permanently OFF (WIFI_PS_NONE) since device is wall-powered.
+                                    // Prevents mesh APs (e.g. TP-Link Deco) from dropping unicast frames to sleeping stations.
                                     unsafe {
-                                        let _ = esp_wifi_set_ps(wifi_ps_type_t_WIFI_PS_MIN_MODEM);
+                                        let _ = esp_wifi_set_ps(wifi_ps_type_t_WIFI_PS_NONE);
                                     }
+                                    info!("[WIFI] Modem sleep disabled (WIFI_PS_NONE 24/7) for zero-latency mesh reachability");
                                     return Ok(WifiState::StationConnected {
                                         ip_address: ip_str,
                                         wifi_handle: wifi,

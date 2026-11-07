@@ -4,6 +4,21 @@ All notable changes to the Plant ESP32 firmware and web dashboard will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.11] - 2026-11-07
+
+### 📶 Wi-Fi Mesh Stability Enhancements (ESPEasy Best Practices)
+- **Zero-Sleep Wi-Fi (`WIFI_PS_NONE`)**: Disabled modem sleep 24/7. Prevents mesh routers (e.g. TP-Link Deco) from dropping unicast frames directed to sleeping stations.
+- **Connection Settling Delay**: Added a 750ms settling pause after WPA2 association before DHCP lease negotiation to avoid router handshake timing bugs.
+- **Periodic Gratuitous Heartbeat (Task 5)**: Broadcasts keep-alive frames every 30s to keep the station active in router ARP and bridge port tables so the device never drops off the network.
+- **Live Signal Strength (RSSI)**: Network watchdog queries the hardware driver directly to display real-time Wi-Fi signal strength in dBm on the dashboard.
+- **Self-Healing Watchdog**: Automatically initiates a clean reboot if Wi-Fi connection is continuously lost for >4 minutes.
+
+### 🌐 Dashboard UI & Changelog
+- **Clickable Links in OTA Modal**: Markdown links in GitHub release notes are now rendered as clickable links (`target="_blank"`), and release highlights display as clean bulleted lists.
+- **Automated Release Summaries**: Release workflow automatically extracts curated highlights from `CHANGELOG.md`.
+
+---
+
 ## [0.2.10] - 2026-11-07
 
 ### 🛡️ Safety & Bug Fixes
