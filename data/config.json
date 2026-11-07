@@ -60,7 +60,8 @@
   },
   "wifi": {
     "modem_sleep": false,
-    "tx_power": 68,
-    "force_20mhz": true
+    "tx_power": 78,
+    "force_20mhz": false,
+    "radio_profile_v2": true
   }
 }

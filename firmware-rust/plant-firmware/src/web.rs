@@ -24,12 +24,17 @@ use crate::pump::HardwarePumpGate;
 use crate::sensors::HardwareSensorManager;
 use crate::storage::NvsConfigStorage;
 
-// Embed web UI assets directly into firmware flash binary
+// Embed web UI assets directly into firmware flash binary (both raw and pre-compressed Gzip)
 static INDEX_HTML: &str = include_str!("../../../data/index.html");
+static INDEX_HTML_GZ: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/index.html.gz"));
 static APP_JS: &str = include_str!("../../../data/app.js");
+static APP_JS_GZ: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/app.js.gz"));
 static STYLE_CSS: &str = include_str!("../../../data/style.css");
+static STYLE_CSS_GZ: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/style.css.gz"));
 static SETUP_HTML: &str = include_str!("../../../data/setup.html");
+static SETUP_HTML_GZ: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/setup.html.gz"));
 static FAVICON_SVG: &str = include_str!("../../../data/favicon.svg");
+static FAVICON_SVG_GZ: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/favicon.svg.gz"));
 
 pub struct AppState {
     pub config: AppConfig,
@@ -54,28 +59,28 @@ pub fn create_web_server(
 
     // 1. Static Asset: GET / and GET /index.html
     server.fn_handler("/", Method::Get, |req| {
-        send_file(req, "text/html; charset=utf-8", INDEX_HTML)
+        send_file(req, "text/html; charset=utf-8", INDEX_HTML, INDEX_HTML_GZ)
     })?;
     server.fn_handler("/index.html", Method::Get, |req| {
-        send_file(req, "text/html; charset=utf-8", INDEX_HTML)
+        send_file(req, "text/html; charset=utf-8", INDEX_HTML, INDEX_HTML_GZ)
     })?;
 
     // 2. Static Asset: GET /app.js
     server.fn_handler("/app.js", Method::Get, |req| {
-        send_file(req, "application/javascript", APP_JS)
+        send_file(req, "application/javascript", APP_JS, APP_JS_GZ)
     })?;
 
     // 3. Static Asset: GET /style.css
     server.fn_handler("/style.css", Method::Get, |req| {
-        send_file(req, "text/css", STYLE_CSS)
+        send_file(req, "text/css", STYLE_CSS, STYLE_CSS_GZ)
     })?;
 
     // 4. Static Asset: GET /favicon.svg and GET /favicon.ico
     server.fn_handler("/favicon.svg", Method::Get, |req| {
-        send_file(req, "image/svg+xml", FAVICON_SVG)
+        send_file(req, "image/svg+xml", FAVICON_SVG, FAVICON_SVG_GZ)
     })?;
     server.fn_handler("/favicon.ico", Method::Get, |req| {
-        send_file(req, "image/svg+xml", FAVICON_SVG)
+        send_file(req, "image/svg+xml", FAVICON_SVG, FAVICON_SVG_GZ)
     })?;
 
     // 5. GET /api/status
@@ -413,35 +418,35 @@ pub fn create_provisioning_server(
 
     // 1. Setup Page (GET / and GET /setup)
     server.fn_handler("/", Method::Get, |req| {
-        send_file(req, "text/html; charset=utf-8", SETUP_HTML)
+        send_file(req, "text/html; charset=utf-8", SETUP_HTML, SETUP_HTML_GZ)
     })?;
     server.fn_handler("/setup", Method::Get, |req| {
-        send_file(req, "text/html; charset=utf-8", SETUP_HTML)
+        send_file(req, "text/html; charset=utf-8", SETUP_HTML, SETUP_HTML_GZ)
     })?;
 
     // 2. Captive Portal Detection endpoints (iOS, Android, Windows)
     server.fn_handler("/hotspot-detect.html", Method::Get, |req| {
-        send_file(req, "text/html; charset=utf-8", SETUP_HTML)
+        send_file(req, "text/html; charset=utf-8", SETUP_HTML, SETUP_HTML_GZ)
     })?;
     server.fn_handler("/generate_204", Method::Get, |req| {
-        send_file(req, "text/html; charset=utf-8", SETUP_HTML)
+        send_file(req, "text/html; charset=utf-8", SETUP_HTML, SETUP_HTML_GZ)
     })?;
     server.fn_handler("/gen_204", Method::Get, |req| {
-        send_file(req, "text/html; charset=utf-8", SETUP_HTML)
+        send_file(req, "text/html; charset=utf-8", SETUP_HTML, SETUP_HTML_GZ)
     })?;
     server.fn_handler("/ncsi.txt", Method::Get, |req| {
-        send_file(req, "text/html; charset=utf-8", SETUP_HTML)
+        send_file(req, "text/html; charset=utf-8", SETUP_HTML, SETUP_HTML_GZ)
     })?;
     server.fn_handler("/connecttest.txt", Method::Get, |req| {
-        send_file(req, "text/html; charset=utf-8", SETUP_HTML)
+        send_file(req, "text/html; charset=utf-8", SETUP_HTML, SETUP_HTML_GZ)
     })?;
 
     // Favicon endpoints
     server.fn_handler("/favicon.svg", Method::Get, |req| {
-        send_file(req, "image/svg+xml", FAVICON_SVG)
+        send_file(req, "image/svg+xml", FAVICON_SVG, FAVICON_SVG_GZ)
     })?;
     server.fn_handler("/favicon.ico", Method::Get, |req| {
-        send_file(req, "image/svg+xml", FAVICON_SVG)
+        send_file(req, "image/svg+xml", FAVICON_SVG, FAVICON_SVG_GZ)
     })?;
 
     // 3. GET /api/scan
@@ -511,15 +516,34 @@ fn send_file(
     req: Request<&mut EspHttpConnection>,
     content_type: &str,
     content: &str,
+    content_gz: &[u8],
 ) -> Result<(), EspIOError> {
     crate::led::notify_web_access();
-    let headers = [
-        ("Content-Type", content_type),
-        ("Cache-Control", "no-cache, must-revalidate"),
-        ("Connection", "close"),
-    ];
-    let mut resp = req.into_response(200, Some("OK"), &headers)?;
-    let _ = resp.write_all(content.as_bytes());
+    let accepts_gzip = req
+        .header("Accept-Encoding")
+        .map(|v| v.contains("gzip"))
+        .unwrap_or(false);
+
+    if accepts_gzip {
+        let headers = [
+            ("Content-Type", content_type),
+            ("Content-Encoding", "gzip"),
+            ("Cache-Control", "no-cache"),
+        ];
+        let mut resp = req.into_response(200, Some("OK"), &headers)?;
+        for chunk in content_gz.chunks(2048) {
+            let _ = resp.write_all(chunk);
+        }
+    } else {
+        let headers = [
+            ("Content-Type", content_type),
+            ("Cache-Control", "no-cache"),
+        ];
+        let mut resp = req.into_response(200, Some("OK"), &headers)?;
+        for chunk in content.as_bytes().chunks(2048) {
+            let _ = resp.write_all(chunk);
+        }
+    }
     Ok(())
 }
 
@@ -534,9 +558,10 @@ fn send_json(
         ("Access-Control-Allow-Origin", "*"),
         ("Access-Control-Allow-Methods", "GET, POST, OPTIONS"),
         ("Access-Control-Allow-Headers", "*"),
-        ("Connection", "close"),
     ];
     let mut resp = req.into_response(status, None, &headers)?;
-    let _ = resp.write_all(json.as_bytes());
+    for chunk in json.as_bytes().chunks(2048) {
+        let _ = resp.write_all(chunk);
+    }
     Ok(())
 }

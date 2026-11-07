@@ -62,13 +62,21 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Initial Data Fetches
-    fetchConfig();
-    startPolling();
+    // Initial Data Fetches — sequence status first so top-right badge flips to 'Online' immediately
+    // without competing with 3 other requests on ESP-IDF's single-threaded HTTP server.
     setupChartToggles();
+    initDashboardSequence();
+});
+
+async function initDashboardSequence() {
+    await fetchStatus();
+    if (!pollTimer) {
+        pollTimer = setInterval(fetchStatus, 60000);
+    }
+    await fetchConfig();
     fetchLogs();
     fetchOtaStatus();
-});
+}
 
 // =============================================================================
 // Tab Switching
@@ -475,7 +483,7 @@ function loadConfigToForm() {
         if (txSelect) txSelect.value = w.tx_power;
     }
     const wifi20Check = document.getElementById('cfg-wifi-force-20mhz');
-    if (wifi20Check) wifi20Check.checked = w.force_20mhz !== undefined ? w.force_20mhz : true;
+    if (wifi20Check) wifi20Check.checked = w.force_20mhz !== undefined ? w.force_20mhz : false;
 
     if (sm.trigger_threshold !== undefined) document.getElementById('cfg-soil-trigger').value = sm.trigger_threshold;
     if (sm.optimal_min !== undefined) document.getElementById('cfg-soil-opt-min').value = sm.optimal_min;
@@ -579,7 +587,7 @@ async function handleConfigSubmit(e) {
         wifi: {
             modem_sleep: document.getElementById('cfg-wifi-modem-sleep') ? document.getElementById('cfg-wifi-modem-sleep').checked : false,
             tx_power: parseInt(document.getElementById('cfg-wifi-tx-power').value, 10),
-            force_20mhz: document.getElementById('cfg-wifi-force-20mhz') ? document.getElementById('cfg-wifi-force-20mhz').checked : true
+            force_20mhz: document.getElementById('cfg-wifi-force-20mhz') ? document.getElementById('cfg-wifi-force-20mhz').checked : false
         }
     };
 

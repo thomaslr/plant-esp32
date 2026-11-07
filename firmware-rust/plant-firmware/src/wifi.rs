@@ -13,7 +13,7 @@ use esp_idf_svc::nvs::EspDefaultNvsPartition;
 use esp_idf_svc::sys::{
     esp_netif_get_handle_from_ifkey, esp_netif_set_hostname, esp_wifi_get_max_tx_power,
     esp_wifi_set_bandwidth, esp_wifi_set_max_tx_power, esp_wifi_set_ps,
-    wifi_bandwidth_t_WIFI_BW_HT20, wifi_interface_t_WIFI_IF_STA,
+    wifi_bandwidth_t_WIFI_BW_HT20, wifi_bandwidth_t_WIFI_BW_HT40, wifi_interface_t_WIFI_IF_STA,
     wifi_ps_type_t_WIFI_PS_MIN_MODEM, wifi_ps_type_t_WIFI_PS_NONE,
 };
 use esp_idf_svc::wifi::{
@@ -28,9 +28,12 @@ use crate::storage::WifiCredentials;
 pub fn apply_wifi_radio_config(cfg: &WifiConfig) {
     unsafe {
         let _ = esp_wifi_set_max_tx_power(cfg.tx_power);
-        if cfg.force_20mhz {
-            let _ = esp_wifi_set_bandwidth(wifi_interface_t_WIFI_IF_STA, wifi_bandwidth_t_WIFI_BW_HT20);
-        }
+        let bw = if cfg.force_20mhz {
+            wifi_bandwidth_t_WIFI_BW_HT20
+        } else {
+            wifi_bandwidth_t_WIFI_BW_HT40
+        };
+        let _ = esp_wifi_set_bandwidth(wifi_interface_t_WIFI_IF_STA, bw);
         let ps = if cfg.modem_sleep {
             wifi_ps_type_t_WIFI_PS_MIN_MODEM
         } else {
@@ -92,9 +95,12 @@ pub fn start_wifi(
                 // to optimize signal reach with wall-powered operation.
                 unsafe {
                     let _ = esp_wifi_set_max_tx_power(wifi_cfg.tx_power);
-                    if wifi_cfg.force_20mhz {
-                        let _ = esp_wifi_set_bandwidth(wifi_interface_t_WIFI_IF_STA, wifi_bandwidth_t_WIFI_BW_HT20);
-                    }
+                    let bw = if wifi_cfg.force_20mhz {
+                        wifi_bandwidth_t_WIFI_BW_HT20
+                    } else {
+                        wifi_bandwidth_t_WIFI_BW_HT40
+                    };
+                    let _ = esp_wifi_set_bandwidth(wifi_interface_t_WIFI_IF_STA, bw);
                     let mut actual_pwr: i8 = 0;
                     if esp_wifi_get_max_tx_power(&mut actual_pwr) == 0 {
                         info!("[WIFI] TX power configured: {} (quarter-dBm, ~{:.1} dBm)", actual_pwr, (actual_pwr as f32) / 4.0);
@@ -121,9 +127,12 @@ pub fn start_wifi(
                         let _ = wifi.start();
                         unsafe {
                             let _ = esp_wifi_set_max_tx_power(wifi_cfg.tx_power);
-                            if wifi_cfg.force_20mhz {
-                                let _ = esp_wifi_set_bandwidth(wifi_interface_t_WIFI_IF_STA, wifi_bandwidth_t_WIFI_BW_HT20);
-                            }
+                            let bw = if wifi_cfg.force_20mhz {
+                                wifi_bandwidth_t_WIFI_BW_HT20
+                            } else {
+                                wifi_bandwidth_t_WIFI_BW_HT40
+                            };
+                            let _ = esp_wifi_set_bandwidth(wifi_interface_t_WIFI_IF_STA, bw);
                             let _ = esp_wifi_set_ps(wifi_ps_type_t_WIFI_PS_NONE);
                         }
                         std::thread::sleep(std::time::Duration::from_secs(14));

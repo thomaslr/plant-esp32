@@ -14,7 +14,7 @@
             <div class="header-title">
                 <h1>🌱 Plant Monitor & Waterer</h1>
                 <span class="badge" id="host-badge">plants.local</span>
-                <span class="badge" id="version-badge" style="background: #1e293b; color: #38bdf8; border: 1px solid #334155; font-size: 0.75rem;">v0.2.20 📈</span>
+                <span class="badge" id="version-badge" style="background: #1e293b; color: #38bdf8; border: 1px solid #334155; font-size: 0.75rem;">v0.2.21 📈</span>
             </div>
             <div class="header-status">
                 <span id="conn-status" class="dot dot-disconnected"></span>
@@ -375,10 +375,10 @@
                                 <option value="44">+11.0 dBm (Lowest Heat / Same Room, ~13mW)</option>
                                 <option value="52">+13.0 dBm (Low Power, ~20mW)</option>
                                 <option value="60">+15.0 dBm (Medium Power, ~32mW)</option>
-                                <option value="68" selected>+17.0 dBm (Balanced / Recommended, ~50mW)</option>
-                                <option value="78">+19.5 dBm (Maximum Range, ~100mW)</option>
+                                <option value="68">+17.0 dBm (High Power, ~50mW)</option>
+                                <option value="78" selected>+19.5 dBm (Maximum Reliability / Recommended, ~100mW)</option>
                             </select>
-                            <span class="field-hint">Balances strong Wi-Fi signal across walls with reduced chip heat. Recommended: +17 dBm for solid connection across rooms.</span>
+                            <span class="field-hint">ESP32-C3 SuperMini's miniature ceramic antenna requires +19.5 dBm for fast, zero-retransmission web UI loading.</span>
                         </div>
                         <div class="form-group">
                             <label class="checkbox-label" for="cfg-wifi-modem-sleep" style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-top: 8px;">
@@ -635,6 +635,6 @@
         </div>
     </div>
 
-    <script src="app.js?v=10"></script>
+    <script src="app.js?v=11"></script>
 </body>
 </html>

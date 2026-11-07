@@ -223,18 +223,22 @@ impl Default for SystemConfig {
 pub struct WifiConfig {
     /// Wi-Fi Modem Sleep (false = WIFI_PS_NONE for zero-latency, true = WIFI_PS_MIN_MODEM)
     pub modem_sleep: bool,
-    /// Transmit power level in quarter-dBm: 44 (11 dBm), 52 (13 dBm), 60 (15 dBm), 78 (19.5 dBm max)
+    /// Transmit power level in quarter-dBm: 44 (11 dBm), 52 (13 dBm), 60 (15 dBm), 68 (17 dBm), 78 (19.5 dBm max)
     pub tx_power: i8,
     /// Lock Wi-Fi station to 20 MHz bandwidth (HT20) to reduce RF baseband power
     pub force_20mhz: bool,
+    /// Migration flag so pre-v0.2.21 low-power NVS profiles upgrade once to full reliability defaults
+    #[serde(default)]
+    pub radio_profile_v2: bool,
 }
 
 impl Default for WifiConfig {
     fn default() -> Self {
         Self {
             modem_sleep: false,
-            tx_power: 68,
-            force_20mhz: true,
+            tx_power: 78,
+            force_20mhz: false,
+            radio_profile_v2: true,
         }
     }
 }
@@ -716,8 +720,9 @@ mod tests {
     fn wifi_settings_patch_and_validation() {
         let mut c = AppConfig::default();
         assert!(!c.wifi.modem_sleep);
-        assert_eq!(c.wifi.tx_power, 68);
-        assert!(c.wifi.force_20mhz);
+        assert_eq!(c.wifi.tx_power, 78);
+        assert!(!c.wifi.force_20mhz);
+        assert!(c.wifi.radio_profile_v2);
 
         let patch: ConfigPatch = serde_json::from_str(
             r#"{"wifi":{"modem_sleep":true,"tx_power":60,"force_20mhz":false}}"#,

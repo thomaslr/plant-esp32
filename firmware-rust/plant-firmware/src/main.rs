@@ -72,7 +72,12 @@ fn main() -> anyhow::Result<()> {
 
     // 3. Load persistent configuration from NVS flash
     let storage = NvsConfigStorage::new(nvs.clone())?;
-    let config = storage.load();
+    let mut config = storage.load();
+    if !config.wifi.radio_profile_v2 {
+        info!("[CONFIG] Upgrading legacy Wi-Fi radio profile to v2 high-reliability defaults (TX=78, HT40, PS=NONE)");
+        config.wifi = plant_core::config::WifiConfig::default();
+        let _ = storage.save(&config);
+    }
 
     // 4. Resolve saved Wi-Fi credentials (NVS first, secrets.rs developer fallback second)
     let saved_wifi = storage.load_wifi().or_else(|| {
