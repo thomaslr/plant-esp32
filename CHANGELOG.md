@@ -6,9 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.2.19] - 2026-11-08
 
-### 🎨 Web Server Asset Delivery & CSS Fix
-- **Fix Unstyled Page (FOUC)**: Removed `Connection: close` header injection from `send_file` and `send_json`. In ESP-IDF's HTTP server, setting `Connection: close` causes the internal server loop to close the socket immediately after headers, aborting chunked multi-packet payloads like `style.css` (17.6 KB) and `app.js` (60.7 KB), which caused the browser to render the page unstyled with raw SVG gauge outlines.
-- Reverted to standard HTTP/1.1 chunked transport which delivers complete CSS, JS, and HTML assets reliably.
+### 💓 Double-Flash Heartbeat & Web Server Socket Capacity
+- **Double-Flash Heartbeat Pattern**: Replaced the single LED blip every 10 seconds with a distinct "thump-thump" double-flash heartbeat pattern (80ms ON / 120ms OFF / 80ms ON / ~9.7s sleep) to intuitively signal that the system is fully healthy and operational.
+- **Increased Web Server Socket Capacity**: Increased ESP-IDF `max_open_sockets` from 4 to 8. This ensures modern browsers loading multiple assets simultaneously (`index.html`, `app.js`, `style.css`, `favicon.svg`, `/api/status`, `/api/config`) never exhaust the connection pool or stall.
+- **Balanced Default Wi-Fi Power**: Increased default RF transmit power from +13.0 dBm (52) to +17.0 dBm (68, ~50mW) to eliminate packet loss and weak signal dropouts across living room walls while still maintaining lower chip temperatures than the +19.5 dBm maximum.
 
 ---
 

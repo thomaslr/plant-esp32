@@ -373,12 +373,12 @@
                             <label for="cfg-wifi-tx-power">RF Transmit Power:</label>
                             <select id="cfg-wifi-tx-power">
                                 <option value="44">+11.0 dBm (Lowest Heat / Same Room, ~13mW)</option>
-                                <option value="52">+13.0 dBm (Balanced / Recommended, ~20mW)</option>
-                                <option value="60">+15.0 dBm (Extended Range, ~32mW)</option>
-                                <option value="68">+17.0 dBm (High Power, ~50mW)</option>
-                                <option value="78">+19.5 dBm (Maximum Range / Hot, ~100mW)</option>
+                                <option value="52">+13.0 dBm (Low Power, ~20mW)</option>
+                                <option value="60">+15.0 dBm (Medium Power, ~32mW)</option>
+                                <option value="68" selected>+17.0 dBm (Balanced / Recommended, ~50mW)</option>
+                                <option value="78">+19.5 dBm (Maximum Range, ~100mW)</option>
                             </select>
-                            <span class="field-hint">Lowering TX power dramatically drops internal chip temperatures. Recommended: +13 dBm for router in same or adjacent room.</span>
+                            <span class="field-hint">Balances strong Wi-Fi signal across walls with reduced chip heat. Recommended: +17 dBm for solid connection across rooms.</span>
                         </div>
                         <div class="form-group">
                             <label class="checkbox-label" for="cfg-wifi-modem-sleep" style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-top: 8px;">
@@ -635,6 +635,6 @@
         </div>
     </div>
 
-    <script src="app.js?v=8"></script>
+    <script src="app.js?v=9"></script>
 </body>
 </html>

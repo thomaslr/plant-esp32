@@ -60,7 +60,7 @@
   },
   "wifi": {
     "modem_sleep": false,
-    "tx_power": 52,
+    "tx_power": 68,
     "force_20mhz": true
   }
 }

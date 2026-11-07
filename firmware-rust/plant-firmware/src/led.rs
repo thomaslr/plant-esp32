@@ -171,17 +171,23 @@ fn play_soil_fault_pattern() {
     pulse(160, 2000);
 }
 
-/// Normal healthy idle heartbeat: 100ms pulse once every 10 seconds.
-/// Slices the 9900ms sleep into 100ms intervals so state changes (pump active, faults, web traffic)
+/// Normal healthy idle heartbeat: double-pulse heartbeat (thump-thump) every 10 seconds.
+/// Slices the ~9700ms sleep into 100ms intervals so state changes (pump active, faults, web traffic)
 /// are reacted to promptly without lagging behind the 10-second timer.
 fn play_idle_heartbeat(state: &Arc<Mutex<AppState>>) {
-    // 100ms ON (doubled from 50ms for a calmer, clearly visible pulse)
+    // Pulse 1: 80ms ON, 120ms OFF
     led_on();
-    thread::sleep(Duration::from_millis(100));
+    thread::sleep(Duration::from_millis(80));
+    led_off();
+    thread::sleep(Duration::from_millis(120));
+
+    // Pulse 2: 80ms ON
+    led_on();
+    thread::sleep(Duration::from_millis(80));
     led_off();
 
-    // 9900ms OFF with responsive exit
-    for _ in 0..99 {
+    // 9720ms OFF with responsive exit
+    for _ in 0..97 {
         thread::sleep(Duration::from_millis(100));
         if crate::ota::is_ota_in_progress() {
             break;

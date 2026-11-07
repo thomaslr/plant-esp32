@@ -233,7 +233,7 @@ impl Default for WifiConfig {
     fn default() -> Self {
         Self {
             modem_sleep: false,
-            tx_power: 52,
+            tx_power: 68,
             force_20mhz: true,
         }
     }
@@ -716,7 +716,7 @@ mod tests {
     fn wifi_settings_patch_and_validation() {
         let mut c = AppConfig::default();
         assert!(!c.wifi.modem_sleep);
-        assert_eq!(c.wifi.tx_power, 52);
+        assert_eq!(c.wifi.tx_power, 68);
         assert!(c.wifi.force_20mhz);
 
         let patch: ConfigPatch = serde_json::from_str(
