@@ -48,8 +48,22 @@ fn main() -> anyhow::Result<()> {
     EspLogger::initialize_default();
 
     info!("============================================");
-    info!("   Plant Monitor ESP32-C3 (Rust Edition)");
+    info!("   Plant Monitor & Waterer (Rust Edition)");
     info!("============================================");
+
+    // Boot partition audit: guarantee dual-OTA layout is active
+    let ota_status = crate::ota::get_ota_status();
+    info!(
+        "[BOOT] Running slot: '{}', Standby OTA slot: '{}'",
+        ota_status.running_slot, ota_status.next_update_slot
+    );
+    if ota_status.next_update_slot == "none" || ota_status.running_slot == "factory" {
+        log::error!("*******************************************************************************");
+        log::error!("⚠️ CRITICAL CONFIGURATION FAULT: FLASH IS NOT PARTITIONED FOR DUAL-OTA!");
+        log::error!("   Running on single factory slot without standby partition.");
+        log::error!("   Wireless OTA updates WILL FAIL until flashed with plant-firmware/partitions.csv.");
+        log::error!("*******************************************************************************");
+    }
 
     // 2. Hardware Peripherals, System Event Loop, and NVS Partition
     let peripherals = Peripherals::take()?;

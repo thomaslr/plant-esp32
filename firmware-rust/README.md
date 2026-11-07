@@ -83,17 +83,28 @@ Canonical Pinout Reference: [LastMinuteEngineers ESP32-C3 SuperMini Pinout](http
 
 ## How to Build & Flash
 
+> [!WARNING]
+> **CRITICAL: NEVER FLASH WITHOUT THE DUAL-OTA PARTITION TABLE**
+> The hardware MUST always be partitioned with `plant-firmware/partitions.csv` (`ota_0` and `ota_1`, 1984 KB each). 
+> If `espflash` is run without `--partition-table`, it defaults to flashing a single 4 MB `factory` partition table, which permanently disables Over-The-Air (OTA) updates with error 258 (`ESP_ERR_INVALID_ARG`).
+
 ### 1. Run Host Unit Tests
 ```bash
-cargo test --manifest-path plant-core/Cargo.toml
+cargo test --manifest-path plant-core/Cargo.toml --target aarch64-apple-darwin
 ```
 
 ### 2. Configure Wi-Fi
-Copy `plant-firmware/src/secrets.rs.example` to `plant-firmware/src/secrets.rs` and update your SSID and password.
+Copy `plant-firmware/src/secrets.rs.example` to `plant-firmware/src/secrets.rs` and update your SSID and password (or use the web dashboard / captive portal).
 
-### 3. Flash to ESP32-C3 SuperMini
+### 3. Flash to ESP32-C3 SuperMini (USB-C)
 Plug your ESP32-C3 into USB, then run:
 ```bash
-cd plant-firmware
-cargo espflash flash --monitor
+# Recommended: Uses .cargo/config.toml runner which automatically includes the partition table
+cargo run --release
+
+# Or use the flash script:
+../scripts/flash_firmware.sh
+
+# If invoking espflash directly, ALWAYS pass the partition table:
+espflash flash --partition-table plant-firmware/partitions.csv target/riscv32imc-esp-espidf/release/plant-firmware --monitor
 ```

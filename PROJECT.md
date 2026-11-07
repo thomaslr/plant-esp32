@@ -92,16 +92,28 @@ graph TD
 
 ## 4. Dual-Slot Over-The-Air (OTA) Updates & Rollback
 
-### 4.1 4 MB Flash Partition Table (`partitions.csv`)
+> [!IMPORTANT]
+> **MANDATORY INVARIANT: FLASH MUST ALWAYS USE DUAL-OTA PARTITIONS**
+> The ESP32-C3 flash table MUST NEVER be converted to a single `factory` partition. 
+> If `espflash` is executed without `--partition-table plant-firmware/partitions.csv`, it defaults to creating a single 4 MB `factory` partition. In single-partition mode, wireless OTA updates are physically impossible and fail immediately with `ESP_ERR_INVALID_ARG (258)` because the hardware partition table contains no OTA slots (`esp_ota_get_next_update_partition()` returns `NULL`).
+> 
+> To guarantee the dual-OTA layout is permanently preserved across all developer and CI workflows:
+> 1. `.cargo/config.toml` hardcodes: `runner = "espflash flash --partition-table plant-firmware/partitions.csv --monitor"`.
+> 2. `scripts/flash_firmware.sh` always enforces `--partition-table plant-firmware/partitions.csv`.
+> 3. Firmware boot check verifies that an active standby OTA slot exists and logs a critical error if a single factory slot is detected.
+
+### 4.1 4 MB Flash Partition Table (`plant-firmware/partitions.csv`)
 
 ```text
+# ESP-IDF Partition Table for 4MB Flash Dual-OTA (1984KB per slot)
 # Name,   Type, SubType, Offset,   Size,     Flags
-nvs,      data, nvs,     0x9000,   0x6000,   # 24 KB User config & Wi-Fi
-otadata,  data, ota,     0xf000,   0x2000,   # 8 KB Active slot pointers
-phy_init, data, phy,     0x11000,  0x1000,   # 4 KB RF calibration
-ota_0,    app,  ota_0,   0x20000,  0x1a9000, # 1700 KB Application Slot 0
-ota_1,    app,  ota_1,   0x1d0000, 0x1a9000, # 1700 KB Application Slot 1
+nvs,      data, nvs,     0x9000,   0x6000,   # 24 KB User config & Wi-Fi credentials
+otadata,  data, ota,     0xf000,   0x2000,   # 8 KB Active boot slot pointers (A/B state)
+phy_init, data, phy,     0x11000,  0x1000,   # 4 KB RF calibration data
+ota_0,    app,  ota_0,   0x20000,  0x1f0000, # 1984 KB Application Slot 0 (Active / Standby)
+ota_1,    app,  ota_1,   0x210000, 0x1f0000, # 1984 KB Application Slot 1 (Active / Standby)
 ```
+*Total Flash Budget: exactly 4,194,304 bytes (4.00 MB).*
 
 ### 4.2 Hardware Rollback Protection
 Under `CONFIG_BOOTLOADER_APP_ROLLBACK_ENABLE=y`:
