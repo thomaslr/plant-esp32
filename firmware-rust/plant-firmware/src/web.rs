@@ -47,7 +47,7 @@ pub fn create_web_server(
 ) -> Result<EspHttpServer<'static>, EspIOError> {
     let server_config = ServerConfig {
         stack_size: 10240,
-        max_open_sockets: 8,
+        max_open_sockets: 6,
         ..Default::default()
     };
     let mut server = EspHttpServer::new(&server_config)?;
@@ -406,7 +406,7 @@ pub fn create_provisioning_server(
 ) -> Result<EspHttpServer<'static>, EspIOError> {
     let server_config = ServerConfig {
         stack_size: 10240,
-        max_open_sockets: 8,
+        max_open_sockets: 6,
         ..Default::default()
     };
     let mut server = EspHttpServer::new(&server_config)?;

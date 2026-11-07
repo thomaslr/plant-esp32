@@ -4,6 +4,13 @@ All notable changes to the Plant ESP32 firmware and web dashboard will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.20] - 2026-11-08
+
+### 🩹 Web Server Socket Limit Tuning
+- **Max Open Sockets Adjustment**: Set `max_open_sockets: 6` in `ServerConfig`. In ESP-IDF, lwIP limits total system sockets to 10 (with 3 consumed internally by HTTP control loops). Setting `max_open_sockets: 6` prevents the `ESP_ERR_INVALID_ARG (258)` bind failure while still providing 50% more socket concurrency than the default 4.
+
+---
+
 ## [0.2.19] - 2026-11-08
 
 ### 💓 Double-Flash Heartbeat & Web Server Socket Capacity
