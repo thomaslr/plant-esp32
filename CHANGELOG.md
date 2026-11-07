@@ -4,6 +4,14 @@ All notable changes to the Plant ESP32 firmware and web dashboard will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.18] - 2026-11-08
+
+### 🩹 Web Server Response Header Hotfix
+- **Remove Conflicting `Content-Length` Header**: Removed manually specified `Content-Length` header from `send_file` and `send_json`. In ESP-IDF, setting a manual `Content-Length` header conflicts with `into_response()` and `write_all()` (which use ESP-IDF chunked transfer encoding), causing large responses (like `index.html` and full `config.json`) to abort.
+- **Retain Clean `Connection: close`**: Retained `("Connection", "close")` to reliably instruct browsers not to hold open idle TCP sessions.
+
+---
+
 ## [0.2.17] - 2026-11-08
 
 ### 📶 Wi-Fi Radio Power Controls & Web Server Keep-Alive Hardening

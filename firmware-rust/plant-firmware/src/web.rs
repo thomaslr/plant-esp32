@@ -511,12 +511,10 @@ fn send_file(
     content: &str,
 ) -> Result<(), EspIOError> {
     crate::led::notify_web_access();
-    let len_str = content.len().to_string();
     let headers = [
         ("Content-Type", content_type),
         ("Cache-Control", "no-cache, must-revalidate"),
         ("Connection", "close"),
-        ("Content-Length", &len_str),
     ];
     let mut resp = req.into_response(200, Some("OK"), &headers)?;
     let _ = resp.write_all(content.as_bytes());
@@ -529,14 +527,12 @@ fn send_json(
     json: &str,
 ) -> Result<(), EspIOError> {
     crate::led::notify_web_access();
-    let len_str = json.len().to_string();
     let headers = [
         ("Content-Type", "application/json"),
         ("Access-Control-Allow-Origin", "*"),
         ("Access-Control-Allow-Methods", "GET, POST, OPTIONS"),
         ("Access-Control-Allow-Headers", "*"),
         ("Connection", "close"),
-        ("Content-Length", &len_str),
     ];
     let mut resp = req.into_response(status, None, &headers)?;
     let _ = resp.write_all(json.as_bytes());
