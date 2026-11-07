@@ -259,7 +259,16 @@ impl HardwareSensorManager {
 
     /// Reads all hardware sensors and compiles a `SensorReading` struct.
     pub fn read_all_sensors(&self, pump_active: bool, config: &AppConfig) -> SensorReading {
-        let now_sec = unsafe { (esp_timer_get_time() / 1_000_000) as u32 };
+        // Prefer true UNIX epoch timestamp from synchronized NTP, fallback to boot uptime
+        let unix_secs = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_secs() as u32)
+            .unwrap_or(0);
+        let now_sec = if unix_secs > 1_600_000_000 {
+            unix_secs
+        } else {
+            unsafe { (esp_timer_get_time() / 1_000_000) as u32 }
+        };
 
         let supply_voltage = self.read_supply_voltage();
         let battery_voltage = self.read_battery_voltage();

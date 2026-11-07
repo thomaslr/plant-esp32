@@ -898,10 +898,49 @@ function updateFullStatusUI(data) {
     document.getElementById('diag-rssi').innerText = `${data.wifi_rssi || '--'} dBm`;
 
     const uptime = data.uptime_sec || 0;
+    latestDeviceUptimeSec = uptime;
+    statusFetchWallTime = Date.now();
     const hrs = Math.floor(uptime / 3600);
     const mins = Math.floor((uptime % 3600) / 60);
     const secs = uptime % 60;
     document.getElementById('diag-uptime').innerText = `${hrs}h ${mins}m ${secs}s`;
+}
+
+let latestDeviceUptimeSec = null;
+let statusFetchWallTime = null;
+
+function getReadingDate(timestampSec) {
+    if (!timestampSec && timestampSec !== 0) return null;
+    if (timestampSec > 1000000000) {
+        return new Date(timestampSec * 1000);
+    }
+    if (latestDeviceUptimeSec !== null && statusFetchWallTime !== null) {
+        const currentEstimatedBoot = latestDeviceUptimeSec + (Date.now() - statusFetchWallTime) / 1000;
+        const secondsAgo = Math.max(0, currentEstimatedBoot - timestampSec);
+        return new Date(Date.now() - secondsAgo * 1000);
+    }
+    return null;
+}
+
+function formatReadingTime(timestampSec, includeSeconds = true) {
+    const d = getReadingDate(timestampSec);
+    if (!d) return `+${timestampSec}s`;
+    const opts = {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+    };
+    if (includeSeconds) opts.second = '2-digit';
+    return d.toLocaleTimeString([], opts);
+}
+
+function formatReadingRelative(timestampSec) {
+    const d = getReadingDate(timestampSec);
+    if (!d) return `+${timestampSec}s`;
+    const diffSec = Math.round((Date.now() - d.getTime()) / 1000);
+    if (diffSec < 60) return `${diffSec}s ago`;
+    if (diffSec < 3600) return `${Math.round(diffSec / 60)}m ago`;
+    return `${Math.round(diffSec / 3600)}h ago`;
 }
 
 function renderLogTable(logs) {
@@ -919,15 +958,21 @@ function renderLogTable(logs) {
         badge.innerText = `${logs.length} / 100 in RAM`;
     }
 
-    tbody.innerHTML = logs.map(r => `
+    tbody.innerHTML = logs.map(r => {
+        const timeDisplay = formatReadingTime(r.timestamp, true);
+        const relDisplay = formatReadingRelative(r.timestamp);
+        return `
         <tr>
-            <td>+${r.timestamp}s</td>
+            <td title="Recorded: ${timeDisplay} (${relDisplay}, boot +${Math.round(r.timestamp)}s)">
+                <div style="font-weight: 500; color: #f8fafc;">${timeDisplay}</div>
+                <div style="font-size: 0.72rem; color: #64748b;">${relDisplay}</div>
+            </td>
             <td>${r.soil_percent}%</td>
             <td>${r.water_level_cm} cm</td>
             <td>${r.supply_voltage.toFixed(2)}V${r.battery_voltage > 0.5 ? ' / ' + r.battery_voltage.toFixed(2) + 'V Bat' : ''}</td>
             <td>${r.chip_temp.toFixed(1)}°C</td>
         </tr>
-    `).join('');
+    `}).join('');
 
     renderTelemetryChart(currentLogs);
 }
@@ -1093,7 +1138,7 @@ function showChartTooltip(pt, idx, total, canvasRect) {
     }
 
     tooltip.innerHTML = `
-        <div class="chart-tooltip-title">Timestamp: +${pt.timestamp}s (${idx + 1} of ${total})</div>
+        <div class="chart-tooltip-title">${formatReadingTime(pt.timestamp, true)} (${formatReadingRelative(pt.timestamp)})</div>
         ${rowsHtml}
     `;
     tooltip.style.display = 'block';
@@ -1167,7 +1212,7 @@ function renderTelemetryChart(logs) {
         const idx = Math.round((k / (xLabelCount - 1 || 1)) * (pts.length - 1));
         const pt = pts[idx];
         const x = pad.left + (pts.length > 1 ? (idx / (pts.length - 1)) * plotWidth : plotWidth / 2);
-        ctx.fillText(`+${pt.timestamp}s`, x, pad.top + plotHeight + 10);
+        ctx.fillText(formatReadingTime(pt.timestamp, false), x, pad.top + plotHeight + 10);
     }
 
     // 3. Draw Active Series Curves

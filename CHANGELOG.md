@@ -4,6 +4,15 @@ All notable changes to the Plant ESP32 firmware and web dashboard will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.14] - 2026-11-07
+
+### ⏱️ Telemetry Timestamps & SNTP Epoch
+- **Table Timestamps**: Replaced raw relative seconds (`+4840s`) in the telemetry log table with formatted local time (`14:48:30`) and relative elapsed badges (`10m ago`).
+- **Interactive Chart & Tooltip**: Telemetry trends X-axis and hover tooltips now display local time timestamps instead of raw seconds.
+- **SNTP Epoch Storage**: Sensor readings record true UNIX epoch timestamps when NTP is synchronized, falling back seamlessly to boot uptime.
+
+---
+
 ## [0.2.13] - 2026-11-07
 
 ### 🏷️ UI & Title Branding Update
