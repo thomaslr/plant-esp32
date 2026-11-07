@@ -4,6 +4,15 @@ All notable changes to the Plant ESP32 firmware and web dashboard will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.12] - 2026-11-07
+
+### 🔄 Dual-OTA Hardware Partitioning & Validation
+- **Partition Verification**: Verified dual-OTA hardware partition layout (`ota_0` and `ota_1`, 1984 KB per slot) initialized in flash.
+- **OTA Diagnostic Reporting**: Improved `get_ota_status()` fallback logic to accurately distinguish between active OTA standby slots and unpartitioned flash.
+- **Diagnostic UI Feedback**: Updated web dashboard settings panel to clearly report partition status.
+
+---
+
 ## [0.2.11] - 2026-11-07
 
 ### 📶 Wi-Fi Mesh Stability Enhancements (ESPEasy Best Practices)

@@ -64,7 +64,7 @@ pub fn mark_running_app_valid() {
 /// Returns details about current running slot and target update slot.
 pub fn get_ota_status() -> OtaStatus {
     let mut running_slot = "factory".to_string();
-    let mut next_update_slot = "ota_0".to_string();
+    let mut next_update_slot = "none".to_string();
 
     if let Ok(ota) = EspOta::new() {
         if let Ok(slot) = ota.get_running_slot() {

@@ -276,7 +276,10 @@ async function fetchOtaStatus() {
             if (badge) badge.innerText = `${ver} 📈`;
         }
         if (data.running_slot) {
-            document.getElementById('diag-ota-slot').innerText = `${data.running_slot} (Next: ${data.next_update_slot})`;
+            const nextSlotText = (data.next_update_slot === 'none') 
+                ? 'No OTA slot (USB flash required)' 
+                : `Next: ${data.next_update_slot}`;
+            document.getElementById('diag-ota-slot').innerText = `${data.running_slot} (${nextSlotText})`;
         }
     } catch (_) {}
 }
