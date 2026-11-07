@@ -4,6 +4,14 @@ All notable changes to the Plant ESP32 firmware and web dashboard will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.19] - 2026-11-08
+
+### 🎨 Web Server Asset Delivery & CSS Fix
+- **Fix Unstyled Page (FOUC)**: Removed `Connection: close` header injection from `send_file` and `send_json`. In ESP-IDF's HTTP server, setting `Connection: close` causes the internal server loop to close the socket immediately after headers, aborting chunked multi-packet payloads like `style.css` (17.6 KB) and `app.js` (60.7 KB), which caused the browser to render the page unstyled with raw SVG gauge outlines.
+- Reverted to standard HTTP/1.1 chunked transport which delivers complete CSS, JS, and HTML assets reliably.
+
+---
+
 ## [0.2.18] - 2026-11-08
 
 ### 🩹 Web Server Response Header Hotfix

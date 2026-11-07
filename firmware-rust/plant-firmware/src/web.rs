@@ -514,7 +514,6 @@ fn send_file(
     let headers = [
         ("Content-Type", content_type),
         ("Cache-Control", "no-cache, must-revalidate"),
-        ("Connection", "close"),
     ];
     let mut resp = req.into_response(200, Some("OK"), &headers)?;
     let _ = resp.write_all(content.as_bytes());
@@ -532,7 +531,6 @@ fn send_json(
         ("Access-Control-Allow-Origin", "*"),
         ("Access-Control-Allow-Methods", "GET, POST, OPTIONS"),
         ("Access-Control-Allow-Headers", "*"),
-        ("Connection", "close"),
     ];
     let mut resp = req.into_response(status, None, &headers)?;
     let _ = resp.write_all(json.as_bytes());
