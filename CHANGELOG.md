@@ -4,6 +4,14 @@ All notable changes to the Plant ESP32 firmware and web dashboard will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.15] - 2026-11-07
+
+### ❄️ Power & Thermal Optimization
+- **Re-enable Wi-Fi Modem Sleep**: Enabled `WIFI_PS_MIN_MODEM` once connected in Station mode to allow the RF receiver and PLL to sleep between DTIM beacons, reducing continuous power draw and cooling silicon operating temperatures from ~65°C back towards ~44°C.
+- **Robust Connection Handshake**: Retained zero-sleep (`WIFI_PS_NONE`) during association and DHCP negotiation to prevent packet drops and router timeouts during initial connection.
+
+---
+
 ## [0.2.14] - 2026-11-07
 
 ### ⏱️ Telemetry Timestamps & SNTP Epoch

@@ -12,7 +12,8 @@ use esp_idf_svc::hal::modem::Modem;
 use esp_idf_svc::nvs::EspDefaultNvsPartition;
 use esp_idf_svc::sys::{
     esp_netif_get_handle_from_ifkey, esp_netif_set_hostname, esp_wifi_get_max_tx_power,
-    esp_wifi_set_max_tx_power, esp_wifi_set_ps, wifi_ps_type_t_WIFI_PS_NONE,
+    esp_wifi_set_max_tx_power, esp_wifi_set_ps, wifi_ps_type_t_WIFI_PS_MIN_MODEM,
+    wifi_ps_type_t_WIFI_PS_NONE,
 };
 use esp_idf_svc::wifi::{
     AccessPointConfiguration, AuthMethod, BlockingWifi, ClientConfiguration, Configuration, EspWifi,
@@ -108,12 +109,12 @@ pub fn start_wifi(
                                 let ip_str = info.ip.to_string();
                                 if ip_str != "0.0.0.0" {
                                     info!("[WIFI] Station Mode active! IP: {}", ip_str);
-                                    // Keep modem sleep permanently OFF (WIFI_PS_NONE) since device is wall-powered.
-                                    // Prevents mesh APs (e.g. TP-Link Deco) from dropping unicast frames to sleeping stations.
+                                    // Re-enable modem sleep (WIFI_PS_MIN_MODEM) to allow the RF receiver to sleep
+                                    // between DTIM beacon intervals, dramatically reducing continuous power and heat dissipation.
                                     unsafe {
-                                        let _ = esp_wifi_set_ps(wifi_ps_type_t_WIFI_PS_NONE);
+                                        let _ = esp_wifi_set_ps(wifi_ps_type_t_WIFI_PS_MIN_MODEM);
                                     }
-                                    info!("[WIFI] Modem sleep disabled (WIFI_PS_NONE 24/7) for zero-latency mesh reachability");
+                                    info!("[WIFI] Modem sleep enabled (WIFI_PS_MIN_MODEM) to minimize thermal dissipation");
                                     return Ok(WifiState::StationConnected {
                                         ip_address: ip_str,
                                         wifi_handle: wifi,
