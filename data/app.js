@@ -462,10 +462,20 @@ function loadConfigToForm() {
     const tm = appConfig.timing || {};
     const s = appConfig.safety || {};
     const d = s.daily_watering_limit || {};
+    const w = appConfig.wifi || {};
 
     if (sys.hostname !== undefined) {
         document.getElementById('cfg-system-hostname').value = sys.hostname;
     }
+
+    const wifiSleepCheck = document.getElementById('cfg-wifi-modem-sleep');
+    if (wifiSleepCheck) wifiSleepCheck.checked = w.modem_sleep !== undefined ? w.modem_sleep : false;
+    if (w.tx_power !== undefined) {
+        const txSelect = document.getElementById('cfg-wifi-tx-power');
+        if (txSelect) txSelect.value = w.tx_power;
+    }
+    const wifi20Check = document.getElementById('cfg-wifi-force-20mhz');
+    if (wifi20Check) wifi20Check.checked = w.force_20mhz !== undefined ? w.force_20mhz : true;
 
     if (sm.trigger_threshold !== undefined) document.getElementById('cfg-soil-trigger').value = sm.trigger_threshold;
     if (sm.optimal_min !== undefined) document.getElementById('cfg-soil-opt-min').value = sm.optimal_min;
@@ -565,6 +575,11 @@ async function handleConfigSubmit(e) {
             sensor_read_interval_sec: parseInt(document.getElementById('cfg-timing-read-interval').value, 10),
             automated_water_duration_sec: parseInt(document.getElementById('cfg-timing-auto-water-duration').value, 10),
             pump_speed_pct: parseInt(document.getElementById('cfg-timing-pump-speed').value, 10)
+        },
+        wifi: {
+            modem_sleep: document.getElementById('cfg-wifi-modem-sleep') ? document.getElementById('cfg-wifi-modem-sleep').checked : false,
+            tx_power: parseInt(document.getElementById('cfg-wifi-tx-power').value, 10),
+            force_20mhz: document.getElementById('cfg-wifi-force-20mhz') ? document.getElementById('cfg-wifi-force-20mhz').checked : true
         }
     };
 
@@ -590,6 +605,8 @@ async function handleConfigSubmit(e) {
         Object.assign(appConfig.safety, patch.safety);
         if (!appConfig.timing) appConfig.timing = {};
         Object.assign(appConfig.timing, patch.timing);
+        if (!appConfig.wifi) appConfig.wifi = {};
+        Object.assign(appConfig.wifi, patch.wifi);
 
         // Immediately redraw dashboard dials with new zone thresholds
         renderAllDialZones();

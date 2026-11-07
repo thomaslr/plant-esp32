@@ -702,7 +702,8 @@ th {
     color: #cbd5e1;
 }
 
-.form-group input {
+.form-group input,
+.form-group select {
     background: #0f172a;
     border: 1px solid var(--card-border);
     color: white;
@@ -712,7 +713,8 @@ th {
     transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.form-group input:focus {
+.form-group input:focus,
+.form-group select:focus {
     border-color: #38bdf8;
     outline: none;
     box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);

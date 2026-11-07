@@ -12,15 +12,37 @@ use esp_idf_svc::hal::modem::Modem;
 use esp_idf_svc::nvs::EspDefaultNvsPartition;
 use esp_idf_svc::sys::{
     esp_netif_get_handle_from_ifkey, esp_netif_set_hostname, esp_wifi_get_max_tx_power,
-    esp_wifi_set_max_tx_power, esp_wifi_set_ps, wifi_ps_type_t_WIFI_PS_MIN_MODEM,
-    wifi_ps_type_t_WIFI_PS_NONE,
+    esp_wifi_set_bandwidth, esp_wifi_set_max_tx_power, esp_wifi_set_ps,
+    wifi_bandwidth_t_WIFI_BW_HT20, wifi_interface_t_WIFI_IF_STA,
+    wifi_ps_type_t_WIFI_PS_MIN_MODEM, wifi_ps_type_t_WIFI_PS_NONE,
 };
 use esp_idf_svc::wifi::{
     AccessPointConfiguration, AuthMethod, BlockingWifi, ClientConfiguration, Configuration, EspWifi,
 };
 use log::{info, warn};
+use plant_core::config::WifiConfig;
 
 use crate::storage::WifiCredentials;
+
+/// Configures runtime Wi-Fi radio parameters (TX power, bandwidth, modem sleep).
+pub fn apply_wifi_radio_config(cfg: &WifiConfig) {
+    unsafe {
+        let _ = esp_wifi_set_max_tx_power(cfg.tx_power);
+        if cfg.force_20mhz {
+            let _ = esp_wifi_set_bandwidth(wifi_interface_t_WIFI_IF_STA, wifi_bandwidth_t_WIFI_BW_HT20);
+        }
+        let ps = if cfg.modem_sleep {
+            wifi_ps_type_t_WIFI_PS_MIN_MODEM
+        } else {
+            wifi_ps_type_t_WIFI_PS_NONE
+        };
+        let _ = esp_wifi_set_ps(ps);
+    }
+    info!(
+        "[WIFI] Radio parameters updated: TX power {} (~{:.1} dBm), HT20: {}, Modem Sleep: {}",
+        cfg.tx_power, (cfg.tx_power as f32) / 4.0, cfg.force_20mhz, cfg.modem_sleep
+    );
+}
 
 /// Operational Wi-Fi state determined during boot.
 pub enum WifiState {
@@ -44,6 +66,7 @@ pub fn start_wifi(
     nvs: Option<EspDefaultNvsPartition>,
     saved_creds: Option<WifiCredentials>,
     hostname: &str,
+    wifi_cfg: &WifiConfig,
 ) -> Result<WifiState, esp_idf_svc::sys::EspError> {
     let esp_wifi = EspWifi::new(modem, sys_loop.clone(), nvs)?;
     let mut wifi = BlockingWifi::wrap(esp_wifi, sys_loop)?;
@@ -68,13 +91,15 @@ pub fn start_wifi(
                 // Boost Wi-Fi transmission power to maximum (78 = ~19.5-20 dBm, ~100mW)
                 // to optimize signal reach with wall-powered operation.
                 unsafe {
-                    let _ = esp_wifi_set_max_tx_power(78);
+                    let _ = esp_wifi_set_max_tx_power(wifi_cfg.tx_power);
+                    if wifi_cfg.force_20mhz {
+                        let _ = esp_wifi_set_bandwidth(wifi_interface_t_WIFI_IF_STA, wifi_bandwidth_t_WIFI_BW_HT20);
+                    }
                     let mut actual_pwr: i8 = 0;
                     if esp_wifi_get_max_tx_power(&mut actual_pwr) == 0 {
-                        info!("[WIFI] Maximum TX power configured: {} (quarter-dBm, ~{:.1} dBm)", actual_pwr, (actual_pwr as f32) / 4.0);
+                        info!("[WIFI] TX power configured: {} (quarter-dBm, ~{:.1} dBm)", actual_pwr, (actual_pwr as f32) / 4.0);
                     }
                     // Keep modem power save OFF during initial connection/DHCP handshake
-                    // to prevent packet drops and auth timeouts with mesh routers (e.g. Deco).
                     let _ = esp_wifi_set_ps(wifi_ps_type_t_WIFI_PS_NONE);
                 }
                 set_sta_hostname(hostname);
@@ -95,7 +120,10 @@ pub fn start_wifi(
                         std::thread::sleep(std::time::Duration::from_millis(500));
                         let _ = wifi.start();
                         unsafe {
-                            let _ = esp_wifi_set_max_tx_power(78);
+                            let _ = esp_wifi_set_max_tx_power(wifi_cfg.tx_power);
+                            if wifi_cfg.force_20mhz {
+                                let _ = esp_wifi_set_bandwidth(wifi_interface_t_WIFI_IF_STA, wifi_bandwidth_t_WIFI_BW_HT20);
+                            }
                             let _ = esp_wifi_set_ps(wifi_ps_type_t_WIFI_PS_NONE);
                         }
                         std::thread::sleep(std::time::Duration::from_secs(14));
@@ -109,12 +137,7 @@ pub fn start_wifi(
                                 let ip_str = info.ip.to_string();
                                 if ip_str != "0.0.0.0" {
                                     info!("[WIFI] Station Mode active! IP: {}", ip_str);
-                                    // Re-enable modem sleep (WIFI_PS_MIN_MODEM) to allow the RF receiver to sleep
-                                    // between DTIM beacon intervals, dramatically reducing continuous power and heat dissipation.
-                                    unsafe {
-                                        let _ = esp_wifi_set_ps(wifi_ps_type_t_WIFI_PS_MIN_MODEM);
-                                    }
-                                    info!("[WIFI] Modem sleep enabled (WIFI_PS_MIN_MODEM) to minimize thermal dissipation");
+                                    apply_wifi_radio_config(wifi_cfg);
                                     return Ok(WifiState::StationConnected {
                                         ip_address: ip_str,
                                         wifi_handle: wifi,

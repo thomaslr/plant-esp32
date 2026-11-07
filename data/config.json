@@ -57,5 +57,10 @@
       "start_hour": 22,
       "end_hour": 9
     }
+  },
+  "wifi": {
+    "modem_sleep": false,
+    "tx_power": 52,
+    "force_20mhz": true
   }
 }

@@ -218,6 +218,27 @@ impl Default for SystemConfig {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct WifiConfig {
+    /// Wi-Fi Modem Sleep (false = WIFI_PS_NONE for zero-latency, true = WIFI_PS_MIN_MODEM)
+    pub modem_sleep: bool,
+    /// Transmit power level in quarter-dBm: 44 (11 dBm), 52 (13 dBm), 60 (15 dBm), 78 (19.5 dBm max)
+    pub tx_power: i8,
+    /// Lock Wi-Fi station to 20 MHz bandwidth (HT20) to reduce RF baseband power
+    pub force_20mhz: bool,
+}
+
+impl Default for WifiConfig {
+    fn default() -> Self {
+        Self {
+            modem_sleep: false,
+            tx_power: 52,
+            force_20mhz: true,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct AppConfig {
@@ -225,6 +246,7 @@ pub struct AppConfig {
     pub gauges: GaugesConfig,
     pub timing: TimingConfig,
     pub safety: SafetyConfig,
+    pub wifi: WifiConfig,
 }
 
 impl AppConfig {
@@ -343,6 +365,13 @@ impl AppConfig {
                 }
             }
         }
+        if let Some(ref w) = patch.wifi {
+            if let Some(p) = w.tx_power {
+                if !(8..=78).contains(&p) {
+                    return Err(format!("tx_power must be between 8 (2 dBm) and 78 (19.5 dBm), got {p}"));
+                }
+            }
+        }
 
         // Application phase
         if let Some(ref sys) = patch.system {
@@ -396,6 +425,11 @@ impl AppConfig {
             if let Some(m) = t.manual_water_duration_sec { self.timing.manual_water_duration_sec = m; }
             if let Some(p) = t.pump_speed_pct { self.timing.pump_speed_pct = p; }
         }
+        if let Some(ref w) = patch.wifi {
+            if let Some(m) = w.modem_sleep { self.wifi.modem_sleep = m; }
+            if let Some(p) = w.tx_power { self.wifi.tx_power = p; }
+            if let Some(f) = w.force_20mhz { self.wifi.force_20mhz = f; }
+        }
         Ok(())
     }
 }
@@ -407,6 +441,14 @@ pub struct ConfigPatch {
     pub gauges: Option<GaugesPatch>,
     pub safety: Option<SafetyPatch>,
     pub timing: Option<TimingPatch>,
+    pub wifi: Option<WifiPatch>,
+}
+
+#[derive(Debug, Clone, Default, Deserialize)]
+pub struct WifiPatch {
+    pub modem_sleep: Option<bool>,
+    pub tx_power: Option<i8>,
+    pub force_20mhz: Option<bool>,
 }
 
 #[derive(Debug, Clone, Default, Deserialize)]
@@ -668,5 +710,32 @@ mod tests {
         .unwrap();
         assert!(c.apply_patch(&bad_neg).is_err());
         assert_eq!(c.safety.night_watering_protection.end_hour, 7);
+    }
+
+    #[test]
+    fn wifi_settings_patch_and_validation() {
+        let mut c = AppConfig::default();
+        assert!(!c.wifi.modem_sleep);
+        assert_eq!(c.wifi.tx_power, 52);
+        assert!(c.wifi.force_20mhz);
+
+        let patch: ConfigPatch = serde_json::from_str(
+            r#"{"wifi":{"modem_sleep":true,"tx_power":60,"force_20mhz":false}}"#,
+        )
+        .unwrap();
+        c.apply_patch(&patch).unwrap();
+        assert!(c.wifi.modem_sleep);
+        assert_eq!(c.wifi.tx_power, 60);
+        assert!(!c.wifi.force_20mhz);
+
+        // Invalid power (< 8) rejected
+        let bad_low: ConfigPatch = serde_json::from_str(r#"{"wifi":{"tx_power":5}}"#).unwrap();
+        assert!(c.apply_patch(&bad_low).is_err());
+        assert_eq!(c.wifi.tx_power, 60);
+
+        // Invalid power (> 78) rejected
+        let bad_high: ConfigPatch = serde_json::from_str(r#"{"wifi":{"tx_power":80}}"#).unwrap();
+        assert!(c.apply_patch(&bad_high).is_err());
+        assert_eq!(c.wifi.tx_power, 60);
     }
 }

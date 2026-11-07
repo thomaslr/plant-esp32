@@ -4,6 +4,18 @@ All notable changes to the Plant ESP32 firmware and web dashboard will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.17] - 2026-11-08
+
+### 📶 Wi-Fi Radio Power Controls & Web Server Keep-Alive Hardening
+- **Wi-Fi Radio Settings Card**: Added configurable Wi-Fi settings in the Web UI Settings tab, committed directly to NVS flash:
+  - **RF Transmit Power Selector**: Choose between +11 dBm (lowest heat / same room, ~13mW), +13 dBm (balanced / recommended, ~20mW), +15 dBm, +17 dBm, and +19.5 dBm (max power, ~100mW).
+  - **Modem Sleep Toggle**: Configurable DTIM power saving (`WIFI_PS_MIN_MODEM`) or zero-sleep (`WIFI_PS_NONE`) for rock-solid zero-latency mesh connectivity.
+  - **20 MHz Bandwidth Lock (HT20)**: Option to lock the 2.4 GHz station to 20 MHz bandwidth to halve baseband synthesis overhead and lower thermals without affecting any other devices on the network.
+- **Dynamic Radio Configuration**: Updates from the Settings page apply immediately to the Wi-Fi PHY without requiring a reboot.
+- **Web Server TCP Socket Exhaustion Fix**: Added explicit `Connection: close` and `Content-Length` headers to all static file and JSON responses. Prevents browser HTTP/1.1 keep-alive from exhausting the ESP32's limited socket pool (which previously caused UI timeouts and perceived disconnects).
+
+---
+
 ## [0.2.16] - 2026-11-07
 
 ### 📈 Dynamic Y-Axis Auto-Scale for Telemetry Chart

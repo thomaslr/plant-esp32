@@ -98,6 +98,7 @@ fn main() -> anyhow::Result<()> {
         Some(nvs),
         saved_wifi,
         &config.system.hostname,
+        &config.wifi,
     )?;
 
     match wifi_state {
