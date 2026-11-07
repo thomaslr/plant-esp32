@@ -455,6 +455,46 @@ header {
     display: flex;
     align-items: center;
     gap: 8px;
+    flex-wrap: wrap;
+}
+
+.autoscale-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: 14px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #94a3b8;
+    background: #1e293b;
+    border: 1px solid #334155;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.autoscale-btn:hover {
+    background: #273549;
+    color: #f8fafc;
+    border-color: #475569;
+}
+
+.autoscale-btn.active {
+    color: #38bdf8;
+    background: rgba(14, 165, 233, 0.15);
+    border-color: #38bdf8;
+    box-shadow: 0 0 8px rgba(56, 189, 248, 0.25);
+}
+
+.scale-badge {
+    font-size: 0.72rem;
+    color: #94a3b8;
+    background: rgba(30, 41, 59, 0.7);
+    border: 1px solid #334155;
+    border-radius: 4px;
+    padding: 2px 7px;
+    font-weight: 500;
 }
 
 .graph-series-toggles {

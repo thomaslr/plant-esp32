@@ -1043,6 +1043,14 @@ const SERIES_DEFS = {
     },
 };
 
+let chartAutoScale = false;
+try {
+    const savedScale = localStorage.getItem('plant_chart_autoscale');
+    if (savedScale !== null) chartAutoScale = savedScale === 'true';
+} catch (_) {}
+
+const CHART_PAD = { left: 65, right: 20, top: 20, bottom: 35 };
+
 function setupChartToggles() {
     const container = document.getElementById('graph-toggles');
     if (container) {
@@ -1058,6 +1066,23 @@ function setupChartToggles() {
                 } catch (_) {}
                 renderTelemetryChart(currentLogs);
             });
+        });
+    }
+
+    const autoScaleBtn = document.getElementById('chart-autoscale-btn');
+    if (autoScaleBtn) {
+        autoScaleBtn.classList.toggle('active', chartAutoScale);
+        const label = document.getElementById('autoscale-btn-text');
+        if (label) label.innerText = chartAutoScale ? 'Auto-Scale: On' : 'Auto-Scale: Off';
+
+        autoScaleBtn.addEventListener('click', () => {
+            chartAutoScale = !chartAutoScale;
+            autoScaleBtn.classList.toggle('active', chartAutoScale);
+            if (label) label.innerText = chartAutoScale ? 'Auto-Scale: On' : 'Auto-Scale: Off';
+            try {
+                localStorage.setItem('plant_chart_autoscale', chartAutoScale);
+            } catch (_) {}
+            renderTelemetryChart(currentLogs);
         });
     }
 
@@ -1081,7 +1106,7 @@ function handleChartMouseMove(e) {
     const canvas = document.getElementById('telemetry-chart');
     if (!canvas || !currentLogs || currentLogs.length === 0) return;
     const rect = canvas.getBoundingClientRect();
-    const pad = { left: 45, right: 20, top: 20, bottom: 35 };
+    const pad = CHART_PAD;
     const plotWidth = rect.width - pad.left - pad.right;
     const pts = [...currentLogs].reverse();
     if (pts.length < 2) return;
@@ -1111,7 +1136,7 @@ function showChartTooltip(pt, idx, total, canvasRect) {
     const tooltip = document.getElementById('chart-tooltip');
     if (!tooltip) return;
 
-    const pad = { left: 45, right: 20, top: 20, bottom: 35 };
+    const pad = CHART_PAD;
     const plotWidth = canvasRect.width - pad.left - pad.right;
     const xPos = pad.left + (idx / (total - 1 || 1)) * plotWidth;
 
@@ -1121,7 +1146,7 @@ function showChartTooltip(pt, idx, total, canvasRect) {
         const def = SERIES_DEFS[key];
         const val = def.get(pt);
         const formatted = (typeof val === 'number')
-            ? (def.unit === 'V' ? val.toFixed(2) : (def.unit === '°C' ? val.toFixed(1) : val.toFixed(0)))
+            ? (def.unit === 'V' ? val.toFixed(2) : (def.unit === '°C' ? val.toFixed(1) : (def.unit === ' cm' ? val.toFixed(1) : val.toFixed(0))))
             : val;
         rowsHtml += `
             <div class="chart-tooltip-row">
@@ -1150,6 +1175,127 @@ function showChartTooltip(pt, idx, total, canvasRect) {
     tooltip.style.top = `${targetY}px`;
 }
 
+function computeChartScales(pts, activeKeys, isAutoScale) {
+    if (!pts || pts.length === 0 || activeKeys.length === 0) {
+        return {
+            mode: 'empty',
+            yLabels: ['100%', '75%', '50%', '25%', '0%'],
+            seriesRanges: {},
+            badgeText: 'No Sensor Selected'
+        };
+    }
+
+    const activeUnits = new Set(activeKeys.map(k => SERIES_DEFS[k].unit.trim()));
+    const isSingleUnit = activeUnits.size === 1;
+    const unitStr = isSingleUnit ? [...activeUnits][0] : null;
+
+    // Gather min & max for each active series from current data
+    const seriesDataRanges = {};
+    activeKeys.forEach(k => {
+        const def = SERIES_DEFS[k];
+        const vals = pts.map(pt => def.get(pt)).filter(v => v !== null && !isNaN(v));
+        if (vals.length === 0) {
+            seriesDataRanges[k] = { min: def.min, max: def.max, span: def.max - def.min };
+        } else {
+            let minVal = Math.min(...vals);
+            let maxVal = Math.max(...vals);
+            if (minVal === maxVal) {
+                const defaultDelta = (k === 'temp') ? 2 : (k === 'supply' || k === 'battery') ? 0.2 : (k === 'water') ? 1 : 5;
+                minVal -= defaultDelta;
+                maxVal += defaultDelta;
+            }
+            seriesDataRanges[k] = { min: minVal, max: maxVal, span: maxVal - minVal };
+        }
+    });
+
+    const seriesRanges = {};
+
+    if (!isAutoScale) {
+        // --- FIXED SCALE MODE ---
+        if (isSingleUnit) {
+            let fixedMin = Math.min(...activeKeys.map(k => SERIES_DEFS[k].min));
+            let fixedMax = Math.max(...activeKeys.map(k => SERIES_DEFS[k].max));
+            if (activeKeys.length === 1 && activeKeys[0] === 'temp') {
+                fixedMin = 20;
+                fixedMax = 80;
+            }
+            const span = fixedMax - fixedMin || 1;
+            activeKeys.forEach(k => {
+                seriesRanges[k] = { min: fixedMin, max: fixedMax };
+            });
+
+            const yLabels = [];
+            const gridSteps = 4;
+            for (let i = 0; i <= gridSteps; i++) {
+                const val = fixedMax - (i / gridSteps) * span;
+                const formatted = (unitStr === 'V') ? val.toFixed(1) : (unitStr === ' cm') ? val.toFixed(0) : Math.round(val);
+                yLabels.push(`${formatted}${unitStr}`);
+            }
+            return {
+                mode: 'fixed-unit',
+                yLabels,
+                seriesRanges,
+                badgeText: `Fixed (${fixedMin}–${fixedMax}${unitStr})`
+            };
+        } else {
+            activeKeys.forEach(k => {
+                seriesRanges[k] = { min: SERIES_DEFS[k].min, max: SERIES_DEFS[k].max };
+            });
+            return {
+                mode: 'fixed-normalized',
+                yLabels: ['100%', '75%', '50%', '25%', '0%'],
+                seriesRanges,
+                badgeText: 'Fixed (0–100%)'
+            };
+        }
+    }
+
+    // --- AUTO-SCALE MODE ---
+    if (isSingleUnit) {
+        let dataMin = Math.min(...activeKeys.map(k => seriesDataRanges[k].min));
+        let dataMax = Math.max(...activeKeys.map(k => seriesDataRanges[k].max));
+        const rawSpan = dataMax - dataMin;
+        const pad = Math.max(rawSpan * 0.12, (unitStr === 'V') ? 0.04 : 0.4);
+        const autoMin = dataMin - pad;
+        const autoMax = dataMax + pad;
+        const span = autoMax - autoMin || 1;
+
+        activeKeys.forEach(k => {
+            seriesRanges[k] = { min: autoMin, max: autoMax };
+        });
+
+        const yLabels = [];
+        const gridSteps = 4;
+        for (let i = 0; i <= gridSteps; i++) {
+            const val = autoMax - (i / gridSteps) * span;
+            const decimals = (unitStr === 'V') ? 2 : (span < 5 && unitStr !== '%') ? 1 : 0;
+            yLabels.push(`${val.toFixed(decimals)}${unitStr}`);
+        }
+
+        return {
+            mode: 'auto-unit',
+            yLabels,
+            seriesRanges,
+            badgeText: `Auto (${dataMin.toFixed(1)}–${dataMax.toFixed(1)}${unitStr})`
+        };
+    } else {
+        // Mixed units: each active series is dynamically scaled to fit full vertical span
+        activeKeys.forEach(k => {
+            const r = seriesDataRanges[k];
+            const pad = Math.max(r.span * 0.12, 0.01);
+            seriesRanges[k] = { min: r.min - pad, max: r.max + pad };
+        });
+
+        const yLabels = ['Max (100%)', '75%', '50%', '25%', 'Min (0%)'];
+        return {
+            mode: 'auto-mixed',
+            yLabels,
+            seriesRanges,
+            badgeText: 'Auto (Per-Sensor Fit)'
+        };
+    }
+}
+
 function renderTelemetryChart(logs) {
     const canvas = document.getElementById('telemetry-chart');
     if (!canvas) return;
@@ -1164,7 +1310,7 @@ function renderTelemetryChart(logs) {
     ctx.resetTransform();
     ctx.scale(dpr, dpr);
 
-    const pad = { left: 45, right: 20, top: 20, bottom: 35 };
+    const pad = CHART_PAD;
     const plotWidth = rect.width - pad.left - pad.right;
     const plotHeight = rect.height - pad.top - pad.bottom;
 
@@ -1180,6 +1326,21 @@ function renderTelemetryChart(logs) {
     }
 
     const pts = [...logs].reverse();
+    const activeKeys = Object.keys(activeSeries).filter(k => activeSeries[k]);
+
+    const scaleInfo = computeChartScales(pts, activeKeys, chartAutoScale);
+
+    const scaleBadge = document.getElementById('chart-scale-badge');
+    if (scaleBadge) scaleBadge.innerText = scaleInfo.badgeText;
+
+    if (activeKeys.length === 0) {
+        ctx.fillStyle = '#64748b';
+        ctx.font = '14px system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('Select one or more sensors above to plot telemetry.', rect.width / 2, rect.height / 2);
+        return;
+    }
 
     // 1. Draw Grid Lines and Y-Axis Labels
     ctx.lineWidth = 1;
@@ -1189,10 +1350,10 @@ function renderTelemetryChart(logs) {
     ctx.textAlign = 'right';
     ctx.textBaseline = 'middle';
 
-    const gridSteps = 4;
+    const gridSteps = scaleInfo.yLabels.length - 1;
     for (let i = 0; i <= gridSteps; i++) {
         const y = pad.top + (i / gridSteps) * plotHeight;
-        const pct = Math.round(100 - (i / gridSteps) * 100);
+        const label = scaleInfo.yLabels[i];
 
         ctx.beginPath();
         ctx.setLineDash([4, 4]);
@@ -1201,7 +1362,7 @@ function renderTelemetryChart(logs) {
         ctx.stroke();
 
         ctx.setLineDash([]);
-        ctx.fillText(`${pct}%`, pad.left - 8, y);
+        ctx.fillText(label, pad.left - 8, y);
     }
 
     // 2. X-Axis Time Labels
@@ -1216,14 +1377,15 @@ function renderTelemetryChart(logs) {
     }
 
     // 3. Draw Active Series Curves
-    for (const [key, enabled] of Object.entries(activeSeries)) {
-        if (!enabled) continue;
+    for (const key of activeKeys) {
         const def = SERIES_DEFS[key];
+        const range = scaleInfo.seriesRanges[key] || { min: def.min, max: def.max };
+        const span = range.max - range.min || 1;
 
         const coords = pts.map((pt, i) => {
             const val = def.get(pt);
-            const clamped = Math.max(def.min, Math.min(def.max, val));
-            const norm = (clamped - def.min) / (def.max - def.min || 1);
+            const clamped = Math.max(range.min, Math.min(range.max, val));
+            const norm = (clamped - range.min) / span;
             const x = pad.left + (pts.length > 1 ? (i / (pts.length - 1)) * plotWidth : plotWidth / 2);
             const y = pad.top + (1 - norm) * plotHeight;
             return { x, y, val };
@@ -1271,12 +1433,13 @@ function renderTelemetryChart(logs) {
 
         // Highlight Active Series Dots at Hover Index
         const pt = pts[hIdx];
-        for (const [key, enabled] of Object.entries(activeSeries)) {
-            if (!enabled) continue;
+        for (const key of activeKeys) {
             const def = SERIES_DEFS[key];
+            const range = scaleInfo.seriesRanges[key] || { min: def.min, max: def.max };
+            const span = range.max - range.min || 1;
             const val = def.get(pt);
-            const clamped = Math.max(def.min, Math.min(def.max, val));
-            const norm = (clamped - def.min) / (def.max - def.min || 1);
+            const clamped = Math.max(range.min, Math.min(range.max, val));
+            const norm = (clamped - range.min) / span;
             const hy = pad.top + (1 - norm) * plotHeight;
 
             // Outer Glow Ring

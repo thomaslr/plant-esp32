@@ -4,6 +4,17 @@ All notable changes to the Plant ESP32 firmware and web dashboard will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.16] - 2026-11-07
+
+### 📈 Dynamic Y-Axis Auto-Scale for Telemetry Chart
+- **Dynamic Auto-Scale Toggle**: Added an interactive `📐 Auto-Scale` toggle button on the Telemetry Trends card header to toggle between Fixed and Dynamic Auto-Scale modes, persisted in `localStorage`.
+- **Intelligent Multi-Sensor Scaling**:
+  - **Single Sensor / Matching Units (e.g. Chip Temp °C, or Supply & Battery V)**: Auto-scales Y-axis ticks and grid lines directly to the actual min-max range with 12% padding, showing real unit labels (e.g., `45.8°C`, `46.5°C`, `47.2°C`) instead of flatlines on a generic 0–100% axis.
+  - **Mixed Sensor Combinations (e.g. Soil % + Temp °C + Water cm)**: Dynamically scales each active sensor curve independently to fill the vertical canvas space, allowing simultaneous visualization and correlation of micro-trends across all metrics, with an informative scale badge.
+  - **Fixed Mode Refinement**: Even in Fixed mode, when a single unit is selected, displays true physical unit ticks (`20–80°C`, `0–30 cm`, `0–6V`) rather than a percentage.
+
+---
+
 ## [0.2.15] - 2026-11-07
 
 ### ❄️ Power & Thermal Optimization
