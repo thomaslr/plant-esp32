@@ -4,6 +4,14 @@ All notable changes to the Plant ESP32 firmware and web dashboard will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.13] - 2026-11-07
+
+### 🏷️ UI & Title Branding Update
+- **Dashboard Title**: Renamed application header and browser title from `Plant Monitor P2` to `Plant Monitor & Waterer`.
+- **Wireless OTA Verification**: End-to-end testing of dual-partition OTA deployment.
+
+---
+
 ## [0.2.12] - 2026-11-07
 
 ### 🔄 Dual-OTA Hardware Partitioning & Validation
