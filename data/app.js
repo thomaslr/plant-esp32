@@ -288,10 +288,58 @@ function closeOtaModal() {
     if (modal) modal.style.display = 'none';
 }
 
+function renderMarkdownToHtml(md) {
+    if (!md) return '<p class="changelog-p">Bug fixes and performance improvements.</p>';
+    // Sanitize HTML special characters to prevent XSS
+    let escaped = md
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+    const lines = escaped.split(/\r?\n/);
+    let html = '';
+    let inList = false;
+
+    for (let i = 0; i < lines.length; i++) {
+        let line = lines[i].trim();
+        if (line.startsWith('- ') || line.startsWith('* ') || line.startsWith('• ')) {
+            if (!inList) {
+                html += '<ul class="changelog-list">';
+                inList = true;
+            }
+            let itemContent = line.replace(/^[-*•]\s+/, '');
+            itemContent = itemContent.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+            itemContent = itemContent.replace(/(^|[^*])\*([^*]+?)\*(?!\*)/g, '$1<em>$2</em>');
+            itemContent = itemContent.replace(/\[([^\]]+)\]\((https?:\/\/[^\s\)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1 ↗</a>');
+            itemContent = itemContent.replace(/(^|\s)(https?:\/\/[^\s<]+)/g, '$1<a href="$2" target="_blank" rel="noopener noreferrer">$2 ↗</a>');
+            html += `<li>${itemContent}</li>`;
+        } else {
+            if (inList) {
+                html += '</ul>';
+                inList = false;
+            }
+            if (line.startsWith('### ')) {
+                html += `<h4 class="changelog-heading">${line.substring(4)}</h4>`;
+            } else if (line.startsWith('## ')) {
+                html += `<h3 class="changelog-heading">${line.substring(3)}</h3>`;
+            } else if (line.length > 0) {
+                let formatted = line
+                    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/(^|[^*])\*([^*]+?)\*(?!\*)/g, '$1<em>$2</em>')
+                    .replace(/\[([^\]]+)\]\((https?:\/\/[^\s\)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1 ↗</a>')
+                    .replace(/(^|\s)(https?:\/\/[^\s<]+)/g, '$1<a href="$2" target="_blank" rel="noopener noreferrer">$2 ↗</a>');
+                html += `<p class="changelog-p">${formatted}</p>`;
+            }
+        }
+    }
+    if (inList) html += '</ul>';
+    return html || '<p class="changelog-p">Bug fixes and performance improvements.</p>';
+}
+
 function openOtaModal(currentVer, newVer, changelog) {
     document.getElementById('modal-ver-current').innerText = `Current: ${currentVer}`;
     document.getElementById('modal-ver-target').innerText = `New: ${newVer}`;
-    document.getElementById('modal-ota-changelog').innerText = changelog || "Bug fixes and stability improvements.";
+    document.getElementById('modal-ota-changelog').innerHTML = renderMarkdownToHtml(changelog);
     document.getElementById('modal-ota-update').style.display = 'flex';
 }
 

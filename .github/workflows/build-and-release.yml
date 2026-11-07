@@ -97,13 +97,39 @@ jobs:
           EOF
           cat version.json
 
+      - name: Extract Release Notes from CHANGELOG.md
+        if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+        run: |
+          TAG_RAW="${{ github.ref_name != 'main' && github.ref_name || github.event.inputs.release_tag || 'latest' }}"
+          VERSION="${TAG_RAW#v}"
+          python3 -c "
+          import re, os
+          version = '$VERSION'
+          notes = ''
+          if os.path.exists('CHANGELOG.md'):
+              with open('CHANGELOG.md', 'r') as f:
+                  content = f.read()
+              pattern = rf'## \[{re.escape(version)}\][^\n]*\n(.*?)(?=\n## \[|\Z)'
+              m = re.search(pattern, content, re.DOTALL)
+              if m:
+                  notes = m.group(1).strip()
+          if not notes:
+              notes = 'Bug fixes and performance improvements.'
+          repo = '${{ github.repository }}'
+          tag = '$TAG_RAW'
+          notes += f'\n\n### 🔗 Full Changelog\n- [View git commit comparison and diffs](https://github.com/{repo}/releases/tag/{tag})'
+          with open('release_notes.md', 'w') as out:
+              out.write(notes + '\n')
+          "
+          cat release_notes.md
+
       - name: Publish to GitHub Releases
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
         with:
           tag_name: ${{ github.ref_name != 'main' && github.ref_name || github.event.inputs.release_tag || 'latest' }}
           name: Plant Monitor Firmware ${{ github.ref_name != 'main' && github.ref_name || github.event.inputs.release_tag || 'latest' }}
-          generate_release_notes: true
+          body_path: release_notes.md
           files: |
             plant-firmware.bin
             version.json

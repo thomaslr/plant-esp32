@@ -30,10 +30,11 @@ Run this procedure whenever the user asks to:
 3. If no version was specified, automatically calculate the next semantic patch bump (e.g. `0.2.4` → `0.2.5`).
 
 ### 2. Update Files
-Update the version string across all required files:
+Update the version string and document release highlights across all required files:
 - **`firmware-rust/plant-firmware/Cargo.toml`**: `version = "X.Y.Z"`
 - **`firmware-rust/plant-core/Cargo.toml`**: `version = "X.Y.Z"`
 - **`data/index.html`**: `<span class="badge" id="version-badge" ...>vX.Y.Z 📈</span>`
+- **`CHANGELOG.md`**: Add `## [X.Y.Z] - YYYY-MM-DD` section with curated bulleted highlights (Safety & Bug Fixes, Features, Enhancements). The GitHub release workflow automatically extracts this section to populate the release notes.
 
 ### 3. Run Pre-Flight Tests
 Ensure no regressions exist in core sensor math or safety supervisors:

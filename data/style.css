@@ -839,13 +839,47 @@ footer a {
     background: #0f172a;
     border: 1px solid var(--card-border);
     border-radius: 8px;
-    padding: 12px;
-    max-height: 160px;
+    padding: 12px 14px;
+    max-height: 220px;
     overflow-y: auto;
     font-size: 0.85rem;
     line-height: 1.5;
     color: #e2e8f0;
-    white-space: pre-line;
+}
+
+.modal-changelog a {
+    color: #38bdf8;
+    text-decoration: underline;
+    font-weight: 500;
+}
+
+.modal-changelog a:hover {
+    color: #7dd3fc;
+    text-decoration: underline;
+}
+
+.modal-changelog .changelog-heading {
+    margin: 10px 0 4px 0;
+    color: #f8fafc;
+    font-size: 0.88rem;
+    font-weight: 600;
+}
+
+.modal-changelog .changelog-heading:first-child {
+    margin-top: 0;
+}
+
+.modal-changelog .changelog-list {
+    margin: 4px 0 8px 18px;
+    padding: 0;
+}
+
+.modal-changelog .changelog-list li {
+    margin-bottom: 4px;
+}
+
+.modal-changelog .changelog-p {
+    margin: 4px 0;
 }
 
 .modal-notice {
