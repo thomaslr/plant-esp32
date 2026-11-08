@@ -4,6 +4,15 @@ All notable changes to the Plant ESP32 firmware and web dashboard will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.26] - 2026-11-08
+
+### 📱 Android & WebAPK PWA Parity Fixes
+- **Manifest ID & Crossorigin Credentials**: Added `"id": "/"` to [`manifest.json`](file:///Users/robertlongbottom/dev/plant-esp32/data/manifest.json) and `crossorigin="use-credentials"` to the manifest link in [`index.html`](file:///Users/robertlongbottom/dev/plant-esp32/data/index.html) to support HTTP Basic Auth behind reverse proxies.
+- **Dedicated Maskable Icons**: Separated standard (`"any"`) and adaptive (`"maskable"`) icon declarations for both 192x192 and 512x512 icons matching the proven `plant-p2` configuration.
+- **Service Worker Stale-While-Revalidate App Shell**: Upgraded [`sw.js`](file:///Users/robertlongbottom/dev/plant-esp32/data/sw.js) with immediate static app shell pre-caching and stale-while-revalidate fetching, satisfying Chrome Android WebAPK offline installability requirements while strictly excluding `/api/` telemetry routes.
+
+---
+
 ## [0.2.20] - 2026-11-08
 
 ### 🩹 Web Server Socket Limit Tuning
