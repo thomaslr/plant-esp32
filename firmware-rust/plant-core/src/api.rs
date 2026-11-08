@@ -52,7 +52,7 @@ impl From<&SensorReading> for LogEntry {
 }
 
 /// `sensors` object inside `GET /api/status` (no timestamp / pump flag).
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize)]
 pub struct SensorsView {
     pub soil_percent: f32,
     pub soil_raw: i32,

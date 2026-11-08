@@ -5,9 +5,8 @@
 
 use esp_idf_svc::sys::{
     i2c_config_t, i2c_config_t__bindgen_ty_1, i2c_config_t__bindgen_ty_1__bindgen_ty_1,
-    i2c_driver_delete, i2c_driver_install, i2c_master_read_from_device,
-    i2c_master_write_read_device, i2c_master_write_to_device, i2c_mode_t_I2C_MODE_MASTER,
-    i2c_param_config, i2c_port_t_I2C_NUM_0, ESP_OK,
+    i2c_driver_install, i2c_master_read_from_device, i2c_master_write_to_device,
+    i2c_mode_t_I2C_MODE_MASTER, i2c_param_config, i2c_port_t_I2C_NUM_0, ESP_OK,
 };
 use log::{debug, warn};
 use std::sync::atomic::{AtomicBool, Ordering};

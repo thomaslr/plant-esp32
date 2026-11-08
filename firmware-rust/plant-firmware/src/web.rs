@@ -117,16 +117,7 @@ pub fn create_web_server(
 
             let sensors = match latest {
                 Some(ref r) => SensorsView::from(r),
-                None => SensorsView {
-                    soil_percent: 0.0,
-                    soil_raw: 0,
-                    water_level_cm: 0.0,
-                    water_percent: 0.0,
-                    distance_cm: 0.0,
-                    supply_voltage: 0.0,
-                    battery_voltage: 0.0,
-                    chip_temp: 0.0,
-                },
+                None => SensorsView::default(),
             };
 
             let last_watered_ago_sec = app.safety.last_watered_ago_sec(now_ms);
