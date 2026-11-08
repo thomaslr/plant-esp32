@@ -24,6 +24,14 @@ pub struct SensorReading {
     pub chip_temp: f32,
     /// True if the pump was running during the sample.
     pub pump_active: bool,
+    /// Ambient air temperature in °C from SHT30 (`None` if disabled or sensor missing).
+    pub air_temp_c: Option<f32>,
+    /// Relative humidity percentage from SHT30 (`None` if disabled or sensor missing).
+    pub humidity_pct: Option<f32>,
+    /// Ambient light level in Lux from BH1750 (`None` if disabled or sensor missing).
+    pub light_lux: Option<f32>,
+    /// Ambient light percentage (0-100%) from analog LDR (`None` if disabled).
+    pub ldr_percent: Option<f32>,
 }
 
 /// `roundf(x * 10) / 10` - one decimal place, half away from zero, in `f32`

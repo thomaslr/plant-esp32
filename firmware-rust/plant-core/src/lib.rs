@@ -24,3 +24,9 @@ pub mod ring_buffer;
 pub mod safety;
 pub mod sensors;
 pub mod timeutil;
+
+#[cfg(test)]
+mod environmental_tests;
+
+#[cfg(test)]
+mod i2c_tests;

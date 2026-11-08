@@ -183,6 +183,114 @@
                         <div class="card-sub" id="sub-temp">ESP32-C3 Silicon</div>
                     </div>
                 </div>
+
+                <!-- 6. Air Temperature (SHT30) -->
+                <div class="card dial-card" id="card-air-temp" style="display: none;">
+                    <div class="card-header">
+                        <h3>Air Temperature</h3>
+                        <span class="card-icon">🌤️</span>
+                    </div>
+                    <div class="dial-container">
+                        <svg class="dial-svg" viewBox="0 0 200 125" id="svg-air-temp">
+                            <path class="dial-bg-track" d="M 25 105 A 75 75 0 0 1 175 105" fill="none" stroke="#334155" stroke-width="12" stroke-linecap="round" />
+                            <g id="zones-air-temp" class="dial-zones"></g>
+                            <g id="needle-air-temp" class="dial-needle-group" style="transform: rotate(-90deg); transform-origin: 100px 105px;">
+                                <polygon points="97,105 100,32 103,105" fill="#f8fafc" class="dial-needle" />
+                                <circle cx="100" cy="105" r="7" fill="#38bdf8" stroke="#0f172a" stroke-width="2.5" class="dial-hub" />
+                            </g>
+                            <text x="25" y="122" class="dial-range-label" text-anchor="middle">0°C</text>
+                            <text x="175" y="122" class="dial-range-label" text-anchor="middle">50°C</text>
+                        </svg>
+                    </div>
+                    <div class="dial-readout">
+                        <div class="card-value" id="val-air-temp">-- °C</div>
+                        <div class="dial-badge-wrap">
+                            <span class="dial-badge badge-neutral" id="badge-air-temp">SHT30</span>
+                        </div>
+                        <div class="card-sub" id="sub-air-temp">Ambient Air</div>
+                    </div>
+                </div>
+
+                <!-- 7. Relative Humidity (SHT30) -->
+                <div class="card dial-card" id="card-humidity" style="display: none;">
+                    <div class="card-header">
+                        <h3>Relative Humidity</h3>
+                        <span class="card-icon">🌫️</span>
+                    </div>
+                    <div class="dial-container">
+                        <svg class="dial-svg" viewBox="0 0 200 125" id="svg-humidity">
+                            <path class="dial-bg-track" d="M 25 105 A 75 75 0 0 1 175 105" fill="none" stroke="#334155" stroke-width="12" stroke-linecap="round" />
+                            <g id="zones-humidity" class="dial-zones"></g>
+                            <g id="needle-humidity" class="dial-needle-group" style="transform: rotate(-90deg); transform-origin: 100px 105px;">
+                                <polygon points="97,105 100,32 103,105" fill="#f8fafc" class="dial-needle" />
+                                <circle cx="100" cy="105" r="7" fill="#38bdf8" stroke="#0f172a" stroke-width="2.5" class="dial-hub" />
+                            </g>
+                            <text x="25" y="122" class="dial-range-label" text-anchor="middle">0%</text>
+                            <text x="175" y="122" class="dial-range-label" text-anchor="middle">100%</text>
+                        </svg>
+                    </div>
+                    <div class="dial-readout">
+                        <div class="card-value" id="val-humidity">--%</div>
+                        <div class="dial-badge-wrap">
+                            <span class="dial-badge badge-neutral" id="badge-humidity">SHT30</span>
+                        </div>
+                        <div class="card-sub" id="sub-humidity">Air Moisture</div>
+                    </div>
+                </div>
+
+                <!-- 8. Ambient Light (BH1750) -->
+                <div class="card dial-card" id="card-light-lux" style="display: none;">
+                    <div class="card-header">
+                        <h3>Ambient Light</h3>
+                        <span class="card-icon">☀️</span>
+                    </div>
+                    <div class="dial-container">
+                        <svg class="dial-svg" viewBox="0 0 200 125" id="svg-light-lux">
+                            <path class="dial-bg-track" d="M 25 105 A 75 75 0 0 1 175 105" fill="none" stroke="#334155" stroke-width="12" stroke-linecap="round" />
+                            <g id="zones-light-lux" class="dial-zones"></g>
+                            <g id="needle-light-lux" class="dial-needle-group" style="transform: rotate(-90deg); transform-origin: 100px 105px;">
+                                <polygon points="97,105 100,32 103,105" fill="#f8fafc" class="dial-needle" />
+                                <circle cx="100" cy="105" r="7" fill="#38bdf8" stroke="#0f172a" stroke-width="2.5" class="dial-hub" />
+                            </g>
+                            <text x="25" y="122" class="dial-range-label" text-anchor="middle">0 lx</text>
+                            <text x="175" y="122" class="dial-range-label" text-anchor="middle">5k lx</text>
+                        </svg>
+                    </div>
+                    <div class="dial-readout">
+                        <div class="card-value" id="val-light-lux">-- lx</div>
+                        <div class="dial-badge-wrap">
+                            <span class="dial-badge badge-neutral" id="badge-light-lux">BH1750</span>
+                        </div>
+                        <div class="card-sub" id="sub-light-lux">Illuminance</div>
+                    </div>
+                </div>
+
+                <!-- 9. LDR Light Sensor -->
+                <div class="card dial-card" id="card-ldr" style="display: none;">
+                    <div class="card-header">
+                        <h3>LDR Brightness</h3>
+                        <span class="card-icon">💡</span>
+                    </div>
+                    <div class="dial-container">
+                        <svg class="dial-svg" viewBox="0 0 200 125" id="svg-ldr">
+                            <path class="dial-bg-track" d="M 25 105 A 75 75 0 0 1 175 105" fill="none" stroke="#334155" stroke-width="12" stroke-linecap="round" />
+                            <g id="zones-ldr" class="dial-zones"></g>
+                            <g id="needle-ldr" class="dial-needle-group" style="transform: rotate(-90deg); transform-origin: 100px 105px;">
+                                <polygon points="97,105 100,32 103,105" fill="#f8fafc" class="dial-needle" />
+                                <circle cx="100" cy="105" r="7" fill="#38bdf8" stroke="#0f172a" stroke-width="2.5" class="dial-hub" />
+                            </g>
+                            <text x="25" y="122" class="dial-range-label" text-anchor="middle">0%</text>
+                            <text x="175" y="122" class="dial-range-label" text-anchor="middle">100%</text>
+                        </svg>
+                    </div>
+                    <div class="dial-readout">
+                        <div class="card-value" id="val-ldr">--%</div>
+                        <div class="dial-badge-wrap">
+                            <span class="dial-badge badge-neutral" id="badge-ldr">GPIO 1 ADC</span>
+                        </div>
+                        <div class="card-sub" id="sub-ldr">Photoresistor</div>
+                    </div>
+                </div>
             </div>
 
             <!-- Pump Control & Safety Panel -->
@@ -247,6 +355,18 @@
                         </button>
                         <button type="button" class="series-pill" data-series="temp" style="--series-color: #f43f5e;">
                             <span class="series-dot"></span> Chip Temp (°C)
+                        </button>
+                        <button type="button" class="series-pill" id="pill-air-temp" data-series="air_temp" style="--series-color: #06b6d4; display: none;">
+                            <span class="series-dot"></span> Air Temp (°C)
+                        </button>
+                        <button type="button" class="series-pill" id="pill-humidity" data-series="humidity" style="--series-color: #3b82f6; display: none;">
+                            <span class="series-dot"></span> Humidity (%)
+                        </button>
+                        <button type="button" class="series-pill" id="pill-light-lux" data-series="light_lux" style="--series-color: #eab308; display: none;">
+                            <span class="series-dot"></span> Light (Lux)
+                        </button>
+                        <button type="button" class="series-pill" id="pill-ldr" data-series="ldr" style="--series-color: #f97316; display: none;">
+                            <span class="series-dot"></span> LDR Light (%)
                         </button>
                     </div>
                 </div>
@@ -542,6 +662,38 @@
                     </div>
                 </div>
 
+                <!-- Section 4B: Optional Environmental Sensors (SHT30, BH1750, LDR) -->
+                <div class="card settings-section">
+                    <div class="section-title">
+                        <span class="card-icon">🌿</span>
+                        <h3>Optional Environmental Sensors</h3>
+                    </div>
+                    <p class="section-desc">Toggle sampling, dashboard dials, and trend graphs for I2C and analog expansion sensors attached to the board.</p>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="checkbox-label" for="cfg-env-sht30" style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-top: 8px;">
+                                <input type="checkbox" id="cfg-env-sht30" style="width: auto; height: 18px; margin: 0; cursor: pointer;">
+                                <span><strong>Enable SHT30 Sensor</strong> (Air Temp & Relative Humidity)</span>
+                            </label>
+                            <span class="field-hint">I2C (SCL=GPIO5, SDA=GPIO6, Addr 0x44/0x45). Adds ambient air temperature & humidity dials and trend curves.</span>
+                        </div>
+                        <div class="form-group">
+                            <label class="checkbox-label" for="cfg-env-bh1750" style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-top: 8px;">
+                                <input type="checkbox" id="cfg-env-bh1750" style="width: auto; height: 18px; margin: 0; cursor: pointer;">
+                                <span><strong>Enable BH1750 Sensor</strong> (Ambient Light Lux)</span>
+                            </label>
+                            <span class="field-hint">I2C (SCL=GPIO5, SDA=GPIO6, Addr 0x23/0x5C). High-precision digital illuminance meter (0–65,535 lx).</span>
+                        </div>
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label class="checkbox-label" for="cfg-env-ldr" style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-top: 8px;">
+                                <input type="checkbox" id="cfg-env-ldr" style="width: auto; height: 18px; margin: 0; cursor: pointer;">
+                                <span><strong>Enable LDR Light Sensor</strong> (Analog Brightness %)</span>
+                            </label>
+                            <span class="field-hint">Analog ADC1 Channel 1 on GPIO 1 with 10k divider (0% Pitch Dark to 100% Bright Sunlight).</span>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Section 5: Watering Safety Supervisor -->
                 <div class="card settings-section">
                     <div class="section-title">
@@ -661,6 +813,6 @@
         </div>
     </div>
 
-    <script src="app.js?v=13"></script>
+    <script src="app.js?v=14"></script>
 </body>
 </html>

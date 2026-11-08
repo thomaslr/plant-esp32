@@ -35,6 +35,11 @@
     "temperature": {
       "optimal_max": 55.0,
       "high_warning": 70.0
+    },
+    "environmental": {
+      "sht30_enabled": false,
+      "bh1750_enabled": false,
+      "ldr_enabled": false
     }
   },
   "timing": {
