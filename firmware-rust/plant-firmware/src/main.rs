@@ -7,6 +7,7 @@
 //! 3. Network & Time Supervisor: Maintains Wi-Fi, synchronizes NTP time, and resets daily watering quota at midnight.
 //! 4. Visual Status LED Supervisor: Dedicated Round-Robin status signaling on GPIO 8.
 
+mod i2c_bus;
 mod led;
 mod ota;
 mod pins;

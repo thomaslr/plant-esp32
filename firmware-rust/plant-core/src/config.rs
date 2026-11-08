@@ -109,12 +109,24 @@ impl Default for TemperatureConfig {
 
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
+pub struct EnvironmentalConfig {
+    /// Enable SHT30 I2C temperature and relative humidity sensor (0x44/0x45)
+    pub sht30_enabled: bool,
+    /// Enable BH1750 I2C ambient light sensor (0x23/0x5C)
+    pub bh1750_enabled: bool,
+    /// Enable analog LDR ambient light sensor on GPIO 1
+    pub ldr_enabled: bool,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
 pub struct GaugesConfig {
     pub soil_moisture: SoilMoistureConfig,
     pub water_level: WaterLevelConfig,
     pub voltage: VoltageConfig,
     pub battery: BatteryConfig,
     pub temperature: TemperatureConfig,
+    pub environmental: EnvironmentalConfig,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -409,6 +421,11 @@ impl AppConfig {
                 if let Some(opt) = t.optimal_max { self.gauges.temperature.optimal_max = opt; }
                 if let Some(h) = t.high_warning { self.gauges.temperature.high_warning = h; }
             }
+            if let Some(ref e) = g.environmental {
+                if let Some(s) = e.sht30_enabled { self.gauges.environmental.sht30_enabled = s; }
+                if let Some(b) = e.bh1750_enabled { self.gauges.environmental.bh1750_enabled = b; }
+                if let Some(l) = e.ldr_enabled { self.gauges.environmental.ldr_enabled = l; }
+            }
         }
         if let Some(ref s) = patch.safety {
             if let Some(m) = s.max_continuous_pump_sec { self.safety.max_continuous_pump_sec = m; }
@@ -475,6 +492,14 @@ pub struct GaugesPatch {
     pub voltage: Option<VoltagePatch>,
     pub battery: Option<BatteryPatch>,
     pub temperature: Option<TemperaturePatch>,
+    pub environmental: Option<EnvironmentalPatch>,
+}
+
+#[derive(Debug, Clone, Default, Deserialize)]
+pub struct EnvironmentalPatch {
+    pub sht30_enabled: Option<bool>,
+    pub bh1750_enabled: Option<bool>,
+    pub ldr_enabled: Option<bool>,
 }
 
 #[derive(Debug, Clone, Default, Deserialize)]

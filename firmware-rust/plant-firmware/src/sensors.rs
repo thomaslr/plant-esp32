@@ -27,9 +27,10 @@ use plant_core::sensors::{
     water_metrics,
 };
 
+use crate::i2c_bus::{read_bh1750, read_sht30};
 use crate::pins::{
-    PIN_BATTERY_MONITOR_ADC, PIN_SOIL_MOISTURE_ADC, PIN_SOIL_POWER, PIN_SUPPLY_MONITOR_ADC,
-    PIN_ULTRASONIC_ECHO, PIN_ULTRASONIC_TRIG,
+    PIN_BATTERY_MONITOR_ADC, PIN_LDR_LIGHT_ADC, PIN_SOIL_MOISTURE_ADC, PIN_SOIL_POWER,
+    PIN_SUPPLY_MONITOR_ADC, PIN_ULTRASONIC_ECHO, PIN_ULTRASONIC_TRIG,
 };
 
 #[derive(Clone, Copy)]
@@ -252,6 +253,15 @@ impl HardwareSensorManager {
         0.0
     }
 
+    /// Reads ambient light percentage from LDR on GPIO 1 (0% = Pitch Dark, 100% = Full Bright Light).
+    pub fn read_ldr_percent(&self) -> f32 {
+        let mv = self.read_adc_mv(PIN_LDR_LIGHT_ADC);
+        // LDR in voltage divider with 10k resistor to GND:
+        // As light increases, LDR resistance drops, and voltage at GPIO 1 rises towards 3.3V (~3100mV max under 11dB attenuation).
+        let pct = (mv as f32 / 3100.0) * 100.0;
+        pct.clamp(0.0, 100.0)
+    }
+
     /// Returns the number of times the ultrasonic stuck-latch preventive reset fired.
     pub fn preventive_resets_count(&self) -> u32 {
         self.preventive_resets_count.load(Ordering::Relaxed)
@@ -288,9 +298,31 @@ impl HardwareSensorManager {
             config.gauges.water_level.sensor_offset_cm,
         );
 
+        // Optional Environmental Sensors (SHT30, BH1750, LDR)
+        let (air_temp_c, humidity_pct) = if config.gauges.environmental.sht30_enabled {
+            match read_sht30() {
+                Some((t, h)) => (Some(t), Some(h)),
+                None => (None, None),
+            }
+        } else {
+            (None, None)
+        };
+
+        let light_lux = if config.gauges.environmental.bh1750_enabled {
+            read_bh1750()
+        } else {
+            None
+        };
+
+        let ldr_percent = if config.gauges.environmental.ldr_enabled {
+            Some(self.read_ldr_percent())
+        } else {
+            None
+        };
+
         debug!(
-            "[SENSOR] Soil: {:.1}% ({}mV) | Water: {:.1}cm | 5V: {:.2}V | Bat: {:.2}V | Chip: {:.1}°C",
-            soil_percent, soil_raw_adc, metrics.level_cm, supply_voltage, battery_voltage, chip_temp
+            "[SENSOR] Soil: {:.1}% ({}mV) | Water: {:.1}cm | 5V: {:.2}V | Bat: {:.2}V | Chip: {:.1}°C | SHT30: {:?}/{:?} | BH1750: {:?} | LDR: {:?}",
+            soil_percent, soil_raw_adc, metrics.level_cm, supply_voltage, battery_voltage, chip_temp, air_temp_c, humidity_pct, light_lux, ldr_percent
         );
 
         SensorReading {
@@ -304,6 +336,10 @@ impl HardwareSensorManager {
             distance_cm,
             water_level_cm: metrics.level_cm,
             water_percent: metrics.percent,
+            air_temp_c,
+            humidity_pct,
+            light_lux,
+            ldr_percent,
         }
     }
 }

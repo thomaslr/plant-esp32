@@ -20,6 +20,14 @@ pub struct LogEntry {
     pub battery_voltage: f32,
     pub chip_temp: f32,
     pub pump_active: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub air_temp_c: Option<f32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub humidity_pct: Option<f32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub light_lux: Option<f32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ldr_percent: Option<f32>,
 }
 
 impl From<&SensorReading> for LogEntry {
@@ -35,6 +43,10 @@ impl From<&SensorReading> for LogEntry {
             battery_voltage: round2(r.battery_voltage),
             chip_temp: round1(r.chip_temp),
             pump_active: r.pump_active,
+            air_temp_c: r.air_temp_c.map(round1),
+            humidity_pct: r.humidity_pct.map(round1),
+            light_lux: r.light_lux.map(round1),
+            ldr_percent: r.ldr_percent.map(round1),
         }
     }
 }
@@ -50,6 +62,14 @@ pub struct SensorsView {
     pub supply_voltage: f32,
     pub battery_voltage: f32,
     pub chip_temp: f32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub air_temp_c: Option<f32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub humidity_pct: Option<f32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub light_lux: Option<f32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ldr_percent: Option<f32>,
 }
 
 impl From<&SensorReading> for SensorsView {
@@ -63,6 +83,10 @@ impl From<&SensorReading> for SensorsView {
             supply_voltage: round2(r.supply_voltage),
             battery_voltage: round2(r.battery_voltage),
             chip_temp: round1(r.chip_temp),
+            air_temp_c: r.air_temp_c.map(round1),
+            humidity_pct: r.humidity_pct.map(round1),
+            light_lux: r.light_lux.map(round1),
+            ldr_percent: r.ldr_percent.map(round1),
         }
     }
 }
@@ -106,6 +130,14 @@ pub struct Telemetry {
     pub battery_voltage: f32,
     pub chip_temp: f32,
     pub pump_active: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub air_temp_c: Option<f32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub humidity_pct: Option<f32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub light_lux: Option<f32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ldr_percent: Option<f32>,
 }
 
 impl From<&SensorReading> for Telemetry {
@@ -120,6 +152,10 @@ impl From<&SensorReading> for Telemetry {
             battery_voltage: round2(r.battery_voltage),
             chip_temp: round1(r.chip_temp),
             pump_active: r.pump_active,
+            air_temp_c: r.air_temp_c.map(round1),
+            humidity_pct: r.humidity_pct.map(round1),
+            light_lux: r.light_lux.map(round1),
+            ldr_percent: r.ldr_percent.map(round1),
         }
     }
 }
@@ -204,6 +240,10 @@ mod tests {
             battery_voltage: 3.7149,
             chip_temp: 38.26,
             pump_active: true,
+            air_temp_c: Some(24.52),
+            humidity_pct: Some(58.34),
+            light_lux: Some(450.6),
+            ldr_percent: Some(65.2),
         }
     }
 
@@ -226,7 +266,11 @@ mod tests {
         assert_eq!(v["water_percent"], 66.1);
         assert_eq!(v["distance_cm"], 12.2);
         assert_eq!(v["pump_active"], true);
-        assert_eq!(v.as_object().unwrap().len(), 10);
+        assert_eq!(v["air_temp_c"], 24.5);
+        assert_eq!(v["humidity_pct"], 58.3);
+        assert_eq!(v["light_lux"], 450.6);
+        assert_eq!(v["ldr_percent"], 65.2);
+        assert_eq!(v.as_object().unwrap().len(), 14);
     }
 
     #[test]
@@ -242,11 +286,15 @@ mod tests {
             "battery_voltage",
             "chip_temp",
             "pump_active",
+            "air_temp_c",
+            "humidity_pct",
+            "light_lux",
+            "ldr_percent",
         ] {
             assert!(v.get(key).is_some(), "telemetry missing {key}");
         }
         assert!(v.get("distance_cm").is_none(), "C++ telemetry omitted distance_cm");
-        assert_eq!(v.as_object().unwrap().len(), 9);
+        assert_eq!(v.as_object().unwrap().len(), 13);
     }
 
     #[test]

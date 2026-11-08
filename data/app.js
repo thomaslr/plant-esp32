@@ -11,7 +11,8 @@ const DEFAULT_CONFIG = {
         water_level: { tank_height_cm: 30.0, sensor_offset_cm: 3.0, min_safe_level_cm: 2.0, refill_warning_pct: 25.0 },
         voltage: { min_warning: 4.5, max_warning: 5.5 },
         battery: { min_warning: 3.3, optimal_min: 3.7 },
-        temperature: { optimal_max: 55.0, high_warning: 70.0 }
+        temperature: { optimal_max: 55.0, high_warning: 70.0 },
+        environmental: { sht30_enabled: false, bh1750_enabled: false, ldr_enabled: false }
     },
     timing: {
         sensor_read_interval_sec: 3600,
@@ -522,6 +523,14 @@ function loadConfigToForm() {
     if (t.optimal_max !== undefined) document.getElementById('cfg-temp-opt-max').value = t.optimal_max;
     if (t.high_warning !== undefined) document.getElementById('cfg-temp-high-warn').value = t.high_warning;
 
+    const env = g.environmental || {};
+    const sht30Check = document.getElementById('cfg-env-sht30');
+    if (sht30Check) sht30Check.checked = !!env.sht30_enabled;
+    const bh1750Check = document.getElementById('cfg-env-bh1750');
+    if (bh1750Check) bh1750Check.checked = !!env.bh1750_enabled;
+    const ldrCheck = document.getElementById('cfg-env-ldr');
+    if (ldrCheck) ldrCheck.checked = !!env.ldr_enabled;
+
     if (s.max_continuous_pump_sec !== undefined) document.getElementById('cfg-safe-max-pump').value = s.max_continuous_pump_sec;
     if (s.min_time_between_cycles_sec !== undefined) document.getElementById('cfg-safe-cooldown').value = s.min_time_between_cycles_sec;
     if (d.max_seconds_per_day !== undefined) document.getElementById('cfg-safe-daily-limit').value = d.max_seconds_per_day;
@@ -581,6 +590,11 @@ async function handleConfigSubmit(e) {
             temperature: {
                 optimal_max: parseFloat(document.getElementById('cfg-temp-opt-max').value),
                 high_warning: parseFloat(document.getElementById('cfg-temp-high-warn').value)
+            },
+            environmental: {
+                sht30_enabled: document.getElementById('cfg-env-sht30') ? document.getElementById('cfg-env-sht30').checked : false,
+                bh1750_enabled: document.getElementById('cfg-env-bh1750') ? document.getElementById('cfg-env-bh1750').checked : false,
+                ldr_enabled: document.getElementById('cfg-env-ldr') ? document.getElementById('cfg-env-ldr').checked : false
             }
         },
         safety: {
@@ -829,6 +843,34 @@ function renderAllDialZones() {
         { from: tHighWarn, to: 85, color: '#ef4444' }  // Red (Overheating)
     ];
     renderDialZones('zones-temp', 20, 85, tempZones);
+
+    // 6. Air Temperature (0°C - 50°C)
+    renderDialZones('zones-air-temp', 0, 50, [
+        { from: 0, to: 15, color: '#38bdf8' },  // Blue (Cool)
+        { from: 15, to: 30, color: '#10b981' }, // Green (Optimal Plant Air)
+        { from: 30, to: 50, color: '#f59e0b' }  // Amber (Hot)
+    ]);
+
+    // 7. Relative Humidity (0% - 100%)
+    renderDialZones('zones-humidity', 0, 100, [
+        { from: 0, to: 35, color: '#f59e0b' },  // Amber (Dry Air)
+        { from: 35, to: 75, color: '#10b981' }, // Green (Optimal Humidity)
+        { from: 75, to: 100, color: '#38bdf8' } // Blue (High Humidity)
+    ]);
+
+    // 8. Ambient Light Lux (0 - 5000 lx)
+    renderDialZones('zones-light-lux', 0, 5000, [
+        { from: 0, to: 200, color: '#64748b' },    // Dim/Dark
+        { from: 200, to: 2500, color: '#10b981' }, // Good Indoor/Filtered Light
+        { from: 2500, to: 5000, color: '#eab308' } // Bright Direct Sun
+    ]);
+
+    // 9. LDR Light % (0% - 100%)
+    renderDialZones('zones-ldr', 0, 100, [
+        { from: 0, to: 20, color: '#64748b' },   // Dark
+        { from: 20, to: 70, color: '#10b981' },  // Moderate Light
+        { from: 70, to: 100, color: '#f97316' }  // Bright Light
+    ]);
 }
 
 /**
@@ -943,6 +985,66 @@ function updateTelemetryUI(t) {
         tempBadge = { className: 'badge-warning', text: `Warm Silicon (>${tOptMax}°C)` };
     }
     setDialState('temp', tempVal, 20, 85, `${tempVal.toFixed(1)} °C`, tempBadge, 'ESP32-C3 Silicon');
+
+    // 6. Air Temperature (SHT30)
+    const cardAir = document.getElementById('card-air-temp');
+    const pillAir = document.getElementById('pill-air-temp');
+    if (t.air_temp_c !== undefined && t.air_temp_c !== null) {
+        if (cardAir) cardAir.style.display = 'block';
+        if (pillAir) pillAir.style.display = 'inline-flex';
+        let airBadge = { className: 'badge-success', text: 'Comfortable' };
+        if (t.air_temp_c < 15) airBadge = { className: 'badge-info', text: 'Cool Air' };
+        else if (t.air_temp_c > 32) airBadge = { className: 'badge-danger', text: 'Hot Air' };
+        setDialState('air-temp', t.air_temp_c, 0, 50, `${t.air_temp_c.toFixed(1)} °C`, airBadge, 'SHT30 I2C');
+    } else {
+        if (cardAir) cardAir.style.display = 'none';
+        if (pillAir) pillAir.style.display = 'none';
+    }
+
+    // 7. Relative Humidity (SHT30)
+    const cardHumi = document.getElementById('card-humidity');
+    const pillHumi = document.getElementById('pill-humidity');
+    if (t.humidity_pct !== undefined && t.humidity_pct !== null) {
+        if (cardHumi) cardHumi.style.display = 'block';
+        if (pillHumi) pillHumi.style.display = 'inline-flex';
+        let humiBadge = { className: 'badge-success', text: 'Optimal RH' };
+        if (t.humidity_pct < 35) humiBadge = { className: 'badge-warning', text: 'Dry Air' };
+        else if (t.humidity_pct > 80) humiBadge = { className: 'badge-info', text: 'Humid' };
+        setDialState('humidity', t.humidity_pct, 0, 100, `${Math.round(t.humidity_pct)}%`, humiBadge, 'SHT30 I2C');
+    } else {
+        if (cardHumi) cardHumi.style.display = 'none';
+        if (pillHumi) pillHumi.style.display = 'none';
+    }
+
+    // 8. Ambient Light Lux (BH1750)
+    const cardLux = document.getElementById('card-light-lux');
+    const pillLux = document.getElementById('pill-light-lux');
+    if (t.light_lux !== undefined && t.light_lux !== null) {
+        if (cardLux) cardLux.style.display = 'block';
+        if (pillLux) pillLux.style.display = 'inline-flex';
+        let luxBadge = { className: 'badge-success', text: 'Good Light' };
+        if (t.light_lux < 100) luxBadge = { className: 'badge-neutral', text: 'Dim / Shade' };
+        else if (t.light_lux > 3000) luxBadge = { className: 'badge-warning', text: 'Bright Sun' };
+        setDialState('light-lux', t.light_lux, 0, 5000, `${Math.round(t.light_lux)} lx`, luxBadge, 'BH1750 I2C');
+    } else {
+        if (cardLux) cardLux.style.display = 'none';
+        if (pillLux) pillLux.style.display = 'none';
+    }
+
+    // 9. LDR Light % (Analog)
+    const cardLdr = document.getElementById('card-ldr');
+    const pillLdr = document.getElementById('pill-ldr');
+    if (t.ldr_percent !== undefined && t.ldr_percent !== null) {
+        if (cardLdr) cardLdr.style.display = 'block';
+        if (pillLdr) pillLdr.style.display = 'inline-flex';
+        let ldrBadge = { className: 'badge-success', text: 'Moderate' };
+        if (t.ldr_percent < 20) ldrBadge = { className: 'badge-neutral', text: 'Dark' };
+        else if (t.ldr_percent > 75) ldrBadge = { className: 'badge-warning', text: 'Bright' };
+        setDialState('ldr', t.ldr_percent, 0, 100, `${Math.round(t.ldr_percent)}%`, ldrBadge, 'GPIO 1 ADC');
+    } else {
+        if (cardLdr) cardLdr.style.display = 'none';
+        if (pillLdr) pillLdr.style.display = 'none';
+    }
 
     // Pump state badge
     const badge = document.getElementById('pump-state-badge');
@@ -1061,6 +1163,18 @@ function renderLogTable(logs) {
     tbody.innerHTML = logs.map(r => {
         const timeDisplay = formatReadingTime(r.timestamp, true);
         const relDisplay = formatReadingRelative(r.timestamp);
+        let envInfo = '';
+        if (r.air_temp_c !== undefined && r.air_temp_c !== null) {
+            envInfo += ` • ${r.air_temp_c.toFixed(1)}°C Air`;
+        }
+        if (r.humidity_pct !== undefined && r.humidity_pct !== null) {
+            envInfo += ` • ${Math.round(r.humidity_pct)}% RH`;
+        }
+        if (r.light_lux !== undefined && r.light_lux !== null) {
+            envInfo += ` • ${Math.round(r.light_lux)} lx`;
+        } else if (r.ldr_percent !== undefined && r.ldr_percent !== null) {
+            envInfo += ` • ${Math.round(r.ldr_percent)}% Light`;
+        }
         return `
         <tr>
             <td title="Recorded: ${timeDisplay} (${relDisplay}, boot +${Math.round(r.timestamp)}s)">
@@ -1070,7 +1184,10 @@ function renderLogTable(logs) {
             <td>${r.soil_percent}%</td>
             <td>${r.water_level_cm} cm</td>
             <td>${r.supply_voltage.toFixed(2)}V${r.battery_voltage > 0.5 ? ' / ' + r.battery_voltage.toFixed(2) + 'V Bat' : ''}</td>
-            <td>${r.chip_temp.toFixed(1)}°C</td>
+            <td>
+                <div>${r.chip_temp.toFixed(1)}°C</div>
+                ${envInfo ? `<div style="font-size: 0.72rem; color: #38bdf8;">${envInfo}</div>` : ''}
+            </td>
         </tr>
     `}).join('');
 
@@ -1088,6 +1205,10 @@ let activeSeries = {
     supply: true,
     battery: false,
     temp: false,
+    air_temp: true,
+    humidity: true,
+    light_lux: true,
+    ldr: false,
 };
 
 try {
@@ -1140,6 +1261,42 @@ const SERIES_DEFS = {
         get: r => r.chip_temp,
         min: 20,
         max: 75,
+    },
+    air_temp: {
+        id: 'air_temp',
+        name: 'Air Temp',
+        unit: '°C',
+        color: '#06b6d4',
+        get: r => (r.air_temp_c !== undefined ? r.air_temp_c : null),
+        min: 0,
+        max: 50,
+    },
+    humidity: {
+        id: 'humidity',
+        name: 'Humidity',
+        unit: '%',
+        color: '#3b82f6',
+        get: r => (r.humidity_pct !== undefined ? r.humidity_pct : null),
+        min: 0,
+        max: 100,
+    },
+    light_lux: {
+        id: 'light_lux',
+        name: 'Ambient Light',
+        unit: ' lx',
+        color: '#eab308',
+        get: r => (r.light_lux !== undefined ? r.light_lux : null),
+        min: 0,
+        max: 5000,
+    },
+    ldr: {
+        id: 'ldr',
+        name: 'LDR Light',
+        unit: '%',
+        color: '#f97316',
+        get: r => (r.ldr_percent !== undefined ? r.ldr_percent : null),
+        min: 0,
+        max: 100,
     },
 };
 
@@ -1482,16 +1639,23 @@ function renderTelemetryChart(logs) {
         const range = scaleInfo.seriesRanges[key] || { min: def.min, max: def.max };
         const span = range.max - range.min || 1;
 
+        // Skip plotting if all data points are null/undefined for this series
+        const validValues = pts.map(pt => def.get(pt)).filter(v => v !== null && v !== undefined && !isNaN(v));
+        if (validValues.length === 0) continue;
+
         const coords = pts.map((pt, i) => {
-            const val = def.get(pt);
-            const clamped = Math.max(range.min, Math.min(range.max, val));
+            const rawVal = def.get(pt);
+            if (rawVal === null || rawVal === undefined || isNaN(rawVal)) {
+                return null;
+            }
+            const clamped = Math.max(range.min, Math.min(range.max, rawVal));
             const norm = (clamped - range.min) / span;
             const x = pad.left + (pts.length > 1 ? (i / (pts.length - 1)) * plotWidth : plotWidth / 2);
             const y = pad.top + (1 - norm) * plotHeight;
-            return { x, y, val };
+            return { x, y, val: rawVal };
         });
 
-        // Draw Line
+        // Draw Line with gap support for missing readings
         ctx.beginPath();
         ctx.setLineDash([]);
         ctx.lineWidth = 2.5;
@@ -1499,9 +1663,18 @@ function renderTelemetryChart(logs) {
         ctx.lineJoin = 'round';
         ctx.lineCap = 'round';
 
-        coords.forEach((c, idx) => {
-            if (idx === 0) ctx.moveTo(c.x, c.y);
-            else ctx.lineTo(c.x, c.y);
+        let inSegment = false;
+        coords.forEach(c => {
+            if (!c) {
+                inSegment = false;
+                return;
+            }
+            if (!inSegment) {
+                ctx.moveTo(c.x, c.y);
+                inSegment = true;
+            } else {
+                ctx.lineTo(c.x, c.y);
+            }
         });
         ctx.stroke();
 
@@ -1509,8 +1682,13 @@ function renderTelemetryChart(logs) {
         if (pts.length <= 40) {
             ctx.fillStyle = def.color;
             coords.forEach(c => {
+                if (!c) return;
                 ctx.beginPath();
                 ctx.arc(c.x, c.y, 3, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+    }
                 ctx.fill();
             });
         }
