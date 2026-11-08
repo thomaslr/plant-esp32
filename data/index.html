@@ -14,7 +14,7 @@
             <div class="header-title">
                 <h1>🌱 Plant Monitor & Waterer</h1>
                 <span class="badge" id="host-badge">plants.local</span>
-                <span class="badge" id="version-badge" style="background: #1e293b; color: #38bdf8; border: 1px solid #334155; font-size: 0.75rem;">v0.2.21 📈</span>
+                <span class="badge" id="version-badge" style="background: #1e293b; color: #38bdf8; border: 1px solid #334155; font-size: 0.75rem;">v0.2.22 📈</span>
             </div>
             <div class="header-status">
                 <span id="conn-status" class="dot dot-disconnected"></span>
@@ -286,14 +286,81 @@
         <div id="view-diagnostics" style="display: none;">
             <div class="settings-header">
                 <h2>⚙️ Settings & System Controls</h2>
-                <p>Real-time microcontroller metrics, network status, peripheral reset tools, and over-the-air firmware updates.</p>
+                <p>Network identity, Wi-Fi radio tuning, microcontroller telemetry, peripheral tools, and over-the-air firmware updates.</p>
             </div>
 
+            <form id="network-form" style="margin-bottom: 24px;">
+                <div class="grid diag-page-grid">
+                    <!-- Section 1: Network & Device Identity -->
+                    <div class="card settings-section" style="margin-bottom: 0;">
+                        <div class="section-title">
+                            <span class="card-icon">🌐</span>
+                            <h3>Network & Device Identity</h3>
+                        </div>
+                        <p class="section-desc">Local network hostname used for mDNS discovery and DHCP identification. Requires reboot to apply.</p>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="cfg-system-hostname">mDNS Hostname:</label>
+                                <div class="input-suffix-group">
+                                    <input type="text" id="cfg-system-hostname" pattern="[a-zA-Z0-9-]+" maxlength="32" placeholder="plants" required>
+                                    <span class="input-suffix">.local</span>
+                                </div>
+                                <span class="field-hint">e.g. entering <code>plants1</code> will become <code>plants1.local</code> on reboot. Letters, numbers, and hyphens only.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 2: Wi-Fi & RF Radio Power -->
+                    <div class="card settings-section" style="margin-bottom: 0;">
+                        <div class="section-title">
+                            <span class="card-icon">📶</span>
+                            <h3>Wi-Fi & RF Radio Power</h3>
+                        </div>
+                        <p class="section-desc">Tune Wi-Fi transmit power and radio sleep to balance chip heat, signal range, and network responsiveness. Radio updates apply immediately upon saving.</p>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="cfg-wifi-tx-power">RF Transmit Power:</label>
+                                <select id="cfg-wifi-tx-power">
+                                    <option value="44">+11.0 dBm (Lowest Heat / Same Room, ~13mW)</option>
+                                    <option value="52">+13.0 dBm (Low Power, ~20mW)</option>
+                                    <option value="60">+15.0 dBm (Medium Power, ~32mW)</option>
+                                    <option value="68">+17.0 dBm (High Power, ~50mW)</option>
+                                    <option value="78" selected>+19.5 dBm (Maximum Reliability / Recommended, ~100mW)</option>
+                                </select>
+                                <span class="field-hint">ESP32-C3 SuperMini's miniature ceramic antenna requires +19.5 dBm for fast, zero-retransmission web UI loading.</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="checkbox-label" for="cfg-wifi-modem-sleep" style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-top: 8px;">
+                                    <input type="checkbox" id="cfg-wifi-modem-sleep" style="width: auto; height: 18px; margin: 0; cursor: pointer;">
+                                    <span>Enable Modem Sleep (DTIM Power Saving)</span>
+                                </label>
+                                <span class="field-hint">Off (Recommended) keeps radio actively listening for instant web responses without mesh/router lag. On reduces idle power but increases latency.</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="checkbox-label" for="cfg-wifi-force-20mhz" style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-top: 8px;">
+                                    <input type="checkbox" id="cfg-wifi-force-20mhz" style="width: auto; height: 18px; margin: 0; cursor: pointer;">
+                                    <span>Lock to 20 MHz Bandwidth (HT20)</span>
+                                </label>
+                                <span class="field-hint">Halves baseband RF processing overhead to reduce heat and 2.4 GHz interference. Does not affect other devices on your network.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Network Settings Action Buttons -->
+                <div class="settings-actions" style="margin-top: 16px; margin-bottom: 24px;">
+                    <button type="submit" id="btn-save-net" class="btn btn-primary">💾 Save Network Settings</button>
+                    <button type="button" id="btn-reload-net" class="btn btn-secondary" style="width: auto; margin-top: 0;">🔄 Discard & Reload</button>
+                    <button type="button" id="btn-settings-reboot" class="btn btn-warning" style="width: auto; margin-top: 0;">🔄 Reboot Device</button>
+                    <div id="net-status-msg" class="cfg-status-msg"></div>
+                </div>
+            </form>
+
             <div class="grid diag-page-grid">
-                <!-- Card 1: Network & Hardware Health -->
+                <!-- Card 1: Hardware Diagnostics & System Status -->
                 <div class="card">
                     <div class="card-header">
-                        <h3>Settings</h3>
+                        <h3>Hardware Diagnostics</h3>
                         <span class="card-icon">🎛️</span>
                     </div>
                     <ul class="diag-list">
@@ -337,65 +404,11 @@
         <!-- =================================================================== -->
         <div id="view-settings" style="display: none;">
             <div class="settings-header">
-                <h2>⚙️ Gauge Thresholds & Safety Configuration</h2>
+                <h2>📐 Gauge Thresholds & Safety Configuration</h2>
                 <p>Adjust sensor trigger levels, dial colored ranges, and watering safety limits. Saved settings are committed directly to onboard non-volatile flash (NVS) and persist across power cycles.</p>
             </div>
 
             <form id="config-form">
-                <!-- Section 0: Network & Device Identity -->
-                <div class="card settings-section">
-                    <div class="section-title">
-                        <span class="card-icon">🌐</span>
-                        <h3>Network & Device Identity</h3>
-                    </div>
-                    <p class="section-desc">Local network hostname used for mDNS discovery and DHCP identification. Requires reboot to apply.</p>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="cfg-system-hostname">mDNS Hostname:</label>
-                            <div class="input-suffix-group">
-                                <input type="text" id="cfg-system-hostname" pattern="[a-zA-Z0-9-]+" maxlength="32" placeholder="plants" required>
-                                <span class="input-suffix">.local</span>
-                            </div>
-                            <span class="field-hint">e.g. entering <code>plants1</code> will become <code>plants1.local</code> on reboot. Letters, numbers, and hyphens only.</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Section 0B: Wi-Fi & RF Radio Power -->
-                <div class="card settings-section">
-                    <div class="section-title">
-                        <span class="card-icon">📶</span>
-                        <h3>Wi-Fi & RF Radio Power</h3>
-                    </div>
-                    <p class="section-desc">Tune Wi-Fi transmit power and radio sleep to balance chip heat, signal range, and network responsiveness. Radio updates apply immediately upon saving.</p>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="cfg-wifi-tx-power">RF Transmit Power:</label>
-                            <select id="cfg-wifi-tx-power">
-                                <option value="44">+11.0 dBm (Lowest Heat / Same Room, ~13mW)</option>
-                                <option value="52">+13.0 dBm (Low Power, ~20mW)</option>
-                                <option value="60">+15.0 dBm (Medium Power, ~32mW)</option>
-                                <option value="68">+17.0 dBm (High Power, ~50mW)</option>
-                                <option value="78" selected>+19.5 dBm (Maximum Reliability / Recommended, ~100mW)</option>
-                            </select>
-                            <span class="field-hint">ESP32-C3 SuperMini's miniature ceramic antenna requires +19.5 dBm for fast, zero-retransmission web UI loading.</span>
-                        </div>
-                        <div class="form-group">
-                            <label class="checkbox-label" for="cfg-wifi-modem-sleep" style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-top: 8px;">
-                                <input type="checkbox" id="cfg-wifi-modem-sleep" style="width: auto; height: 18px; margin: 0; cursor: pointer;">
-                                <span>Enable Modem Sleep (DTIM Power Saving)</span>
-                            </label>
-                            <span class="field-hint">Off (Recommended) keeps radio actively listening for instant web responses without mesh/router lag. On reduces idle power but increases latency.</span>
-                        </div>
-                        <div class="form-group">
-                            <label class="checkbox-label" for="cfg-wifi-force-20mhz" style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-top: 8px;">
-                                <input type="checkbox" id="cfg-wifi-force-20mhz" style="width: auto; height: 18px; margin: 0; cursor: pointer;">
-                                <span>Lock to 20 MHz Bandwidth (HT20)</span>
-                            </label>
-                            <span class="field-hint">Halves baseband RF processing overhead to reduce heat and 2.4 GHz interference. Does not affect other devices on your network.</span>
-                        </div>
-                    </div>
-                </div>
 
                 <!-- Section 1: Soil Moisture -->
                 <div class="card settings-section">
@@ -635,6 +648,6 @@
         </div>
     </div>
 
-    <script src="app.js?v=11"></script>
+    <script src="app.js?v=12"></script>
 </body>
 </html>

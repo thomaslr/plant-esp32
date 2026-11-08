@@ -51,9 +51,16 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-modal-ota-cancel').addEventListener('click', closeOtaModal);
     document.getElementById('btn-modal-ota-confirm').addEventListener('click', executeOtaUpdate);
 
-    // Settings Form
-    document.getElementById('config-form').addEventListener('submit', handleConfigSubmit);
-    document.getElementById('btn-reload-cfg').addEventListener('click', fetchConfig);
+    // Settings & Threshold Forms
+    const configForm = document.getElementById('config-form');
+    if (configForm) configForm.addEventListener('submit', handleConfigSubmit);
+    const reloadCfgBtn = document.getElementById('btn-reload-cfg');
+    if (reloadCfgBtn) reloadCfgBtn.addEventListener('click', fetchConfig);
+
+    const netForm = document.getElementById('network-form');
+    if (netForm) netForm.addEventListener('submit', handleNetworkSubmit);
+    const reloadNetBtn = document.getElementById('btn-reload-net');
+    if (reloadNetBtn) reloadNetBtn.addEventListener('click', fetchConfig);
     const pumpSpeedSlider = document.getElementById('cfg-timing-pump-speed');
     if (pumpSpeedSlider) {
         pumpSpeedSlider.addEventListener('input', (e) => {
@@ -109,6 +116,7 @@ function switchTab(tab) {
         setTimeout(() => renderTelemetryChart(currentLogs), 60);
     } else if (tab === 'diagnostics') {
         fetchOtaStatus();
+        loadConfigToForm();
         if (lastTelemetry) updateTelemetryUI(lastTelemetry);
     } else if (tab === 'settings') {
         loadConfigToForm();
@@ -637,6 +645,64 @@ async function handleConfigSubmit(e) {
     } finally {
         btn.disabled = false;
         btn.innerText = '💾 Save Settings to Flash';
+    }
+}
+
+async function handleNetworkSubmit(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btn-save-net');
+    const msg = document.getElementById('net-status-msg');
+
+    btn.disabled = true;
+    btn.innerText = 'Saving...';
+    msg.style.display = 'none';
+
+    const rawHostname = document.getElementById('cfg-system-hostname').value.trim();
+
+    const patch = {
+        system: {
+            hostname: rawHostname
+        },
+        wifi: {
+            modem_sleep: document.getElementById('cfg-wifi-modem-sleep') ? document.getElementById('cfg-wifi-modem-sleep').checked : false,
+            tx_power: parseInt(document.getElementById('cfg-wifi-tx-power').value, 10),
+            force_20mhz: document.getElementById('cfg-wifi-force-20mhz') ? document.getElementById('cfg-wifi-force-20mhz').checked : false
+        }
+    };
+
+    try {
+        const res = await fetch('/api/config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(patch)
+        });
+        const resJson = await res.json();
+        if (!res.ok) throw new Error(resJson.error || "Failed to commit network configuration");
+
+        if (!appConfig.system) appConfig.system = {};
+        const oldHostname = appConfig.system.hostname;
+        Object.assign(appConfig.system, patch.system);
+        if (!appConfig.wifi) appConfig.wifi = {};
+        Object.assign(appConfig.wifi, patch.wifi);
+
+        loadConfigToForm();
+
+        const hostnameChanged = oldHostname && patch.system && patch.system.hostname && (oldHostname !== patch.system.hostname);
+        msg.className = 'cfg-status-msg status-ok';
+        if (hostnameChanged) {
+            msg.innerText = `✅ Wi-Fi & Hostname saved! Click "Reboot Device" to activate ${patch.system.hostname}.local.`;
+        } else {
+            msg.innerText = '✅ Wi-Fi radio parameters saved and applied immediately!';
+        }
+        msg.style.display = 'inline-block';
+        setTimeout(() => { msg.style.display = 'none'; }, 8000);
+    } catch (err) {
+        msg.className = 'cfg-status-msg status-err';
+        msg.innerText = '❌ Save error: ' + err.message;
+        msg.style.display = 'inline-block';
+    } finally {
+        btn.disabled = false;
+        btn.innerText = '💾 Save Network Settings';
     }
 }
 
