@@ -28,6 +28,15 @@ const DEFAULT_CONFIG = {
 document.addEventListener('DOMContentLoaded', () => {
     appConfig = DEFAULT_CONFIG;
 
+    // Register Service Worker for PWA Standalone App support
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js').catch((err) => {
+                console.warn('[PWA] ServiceWorker registration failed:', err);
+            });
+        });
+    }
+
     // Tabs setup
     document.getElementById('tab-btn-dash').addEventListener('click', () => switchTab('dashboard'));
     document.getElementById('tab-btn-logs').addEventListener('click', () => switchTab('logs'));

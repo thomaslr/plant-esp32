@@ -35,6 +35,14 @@ static SETUP_HTML: &str = include_str!("../../../data/setup.html");
 static SETUP_HTML_GZ: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/setup.html.gz"));
 static FAVICON_SVG: &str = include_str!("../../../data/favicon.svg");
 static FAVICON_SVG_GZ: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/favicon.svg.gz"));
+static MANIFEST_JSON: &str = include_str!("../../../data/manifest.json");
+static MANIFEST_JSON_GZ: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/manifest.json.gz"));
+static SW_JS: &str = include_str!("../../../data/sw.js");
+static SW_JS_GZ: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/sw.js.gz"));
+static ICON_192_PNG: &[u8] = include_bytes!("../../../data/icon-192.png");
+static ICON_192_PNG_GZ: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/icon-192.png.gz"));
+static ICON_512_PNG: &[u8] = include_bytes!("../../../data/icon-512.png");
+static ICON_512_PNG_GZ: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/icon-512.png.gz"));
 
 pub struct AppState {
     pub config: AppConfig,
@@ -81,6 +89,20 @@ pub fn create_web_server(
     })?;
     server.fn_handler("/favicon.ico", Method::Get, |req| {
         send_file(req, "image/svg+xml", FAVICON_SVG, FAVICON_SVG_GZ)
+    })?;
+
+    // 4B. PWA Manifest, Service Worker, and App Icons
+    server.fn_handler("/manifest.json", Method::Get, |req| {
+        send_file(req, "application/manifest+json", MANIFEST_JSON, MANIFEST_JSON_GZ)
+    })?;
+    server.fn_handler("/sw.js", Method::Get, |req| {
+        send_file(req, "application/javascript", SW_JS, SW_JS_GZ)
+    })?;
+    server.fn_handler("/icon-192.png", Method::Get, |req| {
+        send_binary(req, "image/png", ICON_192_PNG, ICON_192_PNG_GZ)
+    })?;
+    server.fn_handler("/icon-512.png", Method::Get, |req| {
+        send_binary(req, "image/png", ICON_512_PNG, ICON_512_PNG_GZ)
     })?;
 
     // 5. GET /api/status
@@ -518,6 +540,15 @@ fn send_file(
     content: &str,
     content_gz: &[u8],
 ) -> Result<(), EspIOError> {
+    send_binary(req, content_type, content.as_bytes(), content_gz)
+}
+
+fn send_binary(
+    req: Request<&mut EspHttpConnection>,
+    content_type: &str,
+    content: &[u8],
+    content_gz: &[u8],
+) -> Result<(), EspIOError> {
     crate::led::notify_web_access();
     let accepts_gzip = req
         .header("Accept-Encoding")
@@ -540,7 +571,7 @@ fn send_file(
             ("Cache-Control", "no-cache"),
         ];
         let mut resp = req.into_response(200, Some("OK"), &headers)?;
-        for chunk in content.as_bytes().chunks(2048) {
+        for chunk in content.chunks(2048) {
             let _ = resp.write_all(chunk);
         }
     }
