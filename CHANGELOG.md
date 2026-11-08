@@ -4,6 +4,16 @@ All notable changes to the Plant ESP32 firmware and web dashboard will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.28] - 2026-11-08
+
+### 🌿 SHT30, BH1750, and LDR Environmental Sensors
+- **Hardware I2C Driver**: Configured master bus on GPIO 5 (SCL) and GPIO 6 (SDA) supporting SHT30 (Air Temperature °C & Humidity % with CRC-8 verification) and BH1750 (Ambient Light in Lux).
+- **LDR Light Sensor**: Analog light measurement on GPIO 1 ADC1 Channel 1 with 10k divider (0–100% illuminance).
+- **Settings Toggles**: Added toggles under **Settings -> Optional Environmental Sensors** for SHT30, BH1750, and LDR with persistence to NVS flash.
+- **Dynamic Dials & Telemetry Graph**: Added modular circular dials that automatically display when enabled, series toggle buttons on the interactive telemetry chart, and environmental columns in the recent log history.
+
+---
+
 ## [0.2.27] - 2026-11-08
 
 ### 🏷️ App Display Name Rename
