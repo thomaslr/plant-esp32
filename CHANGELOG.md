@@ -4,6 +4,15 @@ All notable changes to the Plant ESP32 firmware and web dashboard will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.29] - 2026-11-09
+
+### 🌿 Environmental Sensor Settings & Dashboard Stability
+- **Settings Tab Relocation**: Relocated the **Optional Environmental Sensors** card (SHT30, BH1750, and LDR) directly into the **⚙️ Settings** tab under System Controls with direct persistence to flash.
+- **Client Script Syntax Fix**: Resolved duplicate token block in `app.js` chart drawing routine that prevented JavaScript execution and UI initialization.
+- **Cache Invalidation**: Bumped service worker cache and asset bundle to ensure immediate browser pickup.
+
+---
+
 ## [0.2.28] - 2026-11-08
 
 ### 🌿 SHT30, BH1750, and LDR Environmental Sensors
