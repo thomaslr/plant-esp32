@@ -73,8 +73,8 @@ fn main() -> anyhow::Result<()> {
     // 3. Load persistent configuration from NVS flash
     let storage = NvsConfigStorage::new(nvs.clone())?;
     let mut config = storage.load();
-    if !config.wifi.radio_profile_v2 {
-        info!("[CONFIG] Upgrading legacy Wi-Fi radio profile to v2 high-reliability defaults (TX=78, HT40, PS=NONE)");
+    if !config.wifi.radio_profile_v3 {
+        info!("[CONFIG] Upgrading legacy Wi-Fi radio profile to v3 defaults (TX=78, HT20, Modem Sleep=true)");
         config.wifi = plant_core::config::WifiConfig::default();
         let _ = storage.save(&config);
     }

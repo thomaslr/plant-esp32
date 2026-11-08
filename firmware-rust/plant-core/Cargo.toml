@@ -1,6 +1,6 @@
 [package]
 name = "plant-core"
-version = "0.2.23"
+version = "0.2.24"
 edition = "2021"
 description = "Hardware-independent logic for the Plant ESP32 controller (config, safety supervisor, sensor maths, JSON API shapes)"
 publish = false

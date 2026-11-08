@@ -485,13 +485,13 @@ function loadConfigToForm() {
     }
 
     const wifiSleepCheck = document.getElementById('cfg-wifi-modem-sleep');
-    if (wifiSleepCheck) wifiSleepCheck.checked = w.modem_sleep !== undefined ? w.modem_sleep : false;
+    if (wifiSleepCheck) wifiSleepCheck.checked = w.modem_sleep !== undefined ? w.modem_sleep : true;
     if (w.tx_power !== undefined) {
         const txSelect = document.getElementById('cfg-wifi-tx-power');
         if (txSelect) txSelect.value = w.tx_power;
     }
     const wifi20Check = document.getElementById('cfg-wifi-force-20mhz');
-    if (wifi20Check) wifi20Check.checked = w.force_20mhz !== undefined ? w.force_20mhz : false;
+    if (wifi20Check) wifi20Check.checked = w.force_20mhz !== undefined ? w.force_20mhz : true;
 
     if (sm.trigger_threshold !== undefined) document.getElementById('cfg-soil-trigger').value = sm.trigger_threshold;
     if (sm.optimal_min !== undefined) document.getElementById('cfg-soil-opt-min').value = sm.optimal_min;
@@ -593,9 +593,9 @@ async function handleConfigSubmit(e) {
             pump_speed_pct: parseInt(document.getElementById('cfg-timing-pump-speed').value, 10)
         },
         wifi: {
-            modem_sleep: document.getElementById('cfg-wifi-modem-sleep') ? document.getElementById('cfg-wifi-modem-sleep').checked : false,
+            modem_sleep: document.getElementById('cfg-wifi-modem-sleep') ? document.getElementById('cfg-wifi-modem-sleep').checked : true,
             tx_power: parseInt(document.getElementById('cfg-wifi-tx-power').value, 10),
-            force_20mhz: document.getElementById('cfg-wifi-force-20mhz') ? document.getElementById('cfg-wifi-force-20mhz').checked : false
+            force_20mhz: document.getElementById('cfg-wifi-force-20mhz') ? document.getElementById('cfg-wifi-force-20mhz').checked : true
         }
     };
 
@@ -664,9 +664,9 @@ async function handleNetworkSubmit(e) {
             hostname: rawHostname
         },
         wifi: {
-            modem_sleep: document.getElementById('cfg-wifi-modem-sleep') ? document.getElementById('cfg-wifi-modem-sleep').checked : false,
+            modem_sleep: document.getElementById('cfg-wifi-modem-sleep') ? document.getElementById('cfg-wifi-modem-sleep').checked : true,
             tx_power: parseInt(document.getElementById('cfg-wifi-tx-power').value, 10),
-            force_20mhz: document.getElementById('cfg-wifi-force-20mhz') ? document.getElementById('cfg-wifi-force-20mhz').checked : false
+            force_20mhz: document.getElementById('cfg-wifi-force-20mhz') ? document.getElementById('cfg-wifi-force-20mhz').checked : true
         }
     };
 

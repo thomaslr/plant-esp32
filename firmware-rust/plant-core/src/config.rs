@@ -227,18 +227,18 @@ pub struct WifiConfig {
     pub tx_power: i8,
     /// Lock Wi-Fi station to 20 MHz bandwidth (HT20) to reduce RF baseband power
     pub force_20mhz: bool,
-    /// Migration flag so pre-v0.2.21 low-power NVS profiles upgrade once to full reliability defaults
+    /// Migration flag so pre-v0.2.24 NVS profiles upgrade once to user's desired defaults
     #[serde(default)]
-    pub radio_profile_v2: bool,
+    pub radio_profile_v3: bool,
 }
 
 impl Default for WifiConfig {
     fn default() -> Self {
         Self {
-            modem_sleep: false,
+            modem_sleep: true,
             tx_power: 78,
-            force_20mhz: false,
-            radio_profile_v2: true,
+            force_20mhz: true,
+            radio_profile_v3: true,
         }
     }
 }
@@ -719,17 +719,17 @@ mod tests {
     #[test]
     fn wifi_settings_patch_and_validation() {
         let mut c = AppConfig::default();
-        assert!(!c.wifi.modem_sleep);
+        assert!(c.wifi.modem_sleep);
         assert_eq!(c.wifi.tx_power, 78);
-        assert!(!c.wifi.force_20mhz);
-        assert!(c.wifi.radio_profile_v2);
+        assert!(c.wifi.force_20mhz);
+        assert!(c.wifi.radio_profile_v3);
 
         let patch: ConfigPatch = serde_json::from_str(
-            r#"{"wifi":{"modem_sleep":true,"tx_power":60,"force_20mhz":false}}"#,
+            r#"{"wifi":{"modem_sleep":false,"tx_power":60,"force_20mhz":false}}"#,
         )
         .unwrap();
         c.apply_patch(&patch).unwrap();
-        assert!(c.wifi.modem_sleep);
+        assert!(!c.wifi.modem_sleep);
         assert_eq!(c.wifi.tx_power, 60);
         assert!(!c.wifi.force_20mhz);
 
