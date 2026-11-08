@@ -4,6 +4,13 @@ All notable changes to the Plant ESP32 firmware and web dashboard will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.27] - 2026-11-08
+
+### 🏷️ App Display Name Rename
+- **Rename PWA App to "Plants"**: Changed web app manifest `name` and `short_name`, as well as Apple mobile web app title meta tag from `PlantESP32` / `Plant Monitor & Waterer` to simply `Plants`.
+
+---
+
 ## [0.2.26] - 2026-11-08
 
 ### 📱 Android & WebAPK PWA Parity Fixes

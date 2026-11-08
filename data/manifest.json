@@ -1,7 +1,7 @@
 {
   "id": "/",
-  "name": "Plant Monitor & Waterer",
-  "short_name": "PlantESP32",
+  "name": "Plants",
+  "short_name": "Plants",
   "description": "Smart Soil Moisture & Automated Watering Controller",
   "start_url": "/",
   "scope": "/",
