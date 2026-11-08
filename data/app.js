@@ -1689,10 +1689,6 @@ function renderTelemetryChart(logs) {
             });
         }
     }
-                ctx.fill();
-            });
-        }
-    }
 
     // 4. Draw Crosshair on Hover
     if (chartHoverIndex !== null && chartHoverIndex >= 0 && chartHoverIndex < pts.length) {
