@@ -686,6 +686,13 @@ async function handleNetworkSubmit(e) {
         system: {
             hostname: rawHostname
         },
+        gauges: {
+            environmental: {
+                sht30_enabled: document.getElementById('cfg-env-sht30') ? document.getElementById('cfg-env-sht30').checked : false,
+                bh1750_enabled: document.getElementById('cfg-env-bh1750') ? document.getElementById('cfg-env-bh1750').checked : false,
+                ldr_enabled: document.getElementById('cfg-env-ldr') ? document.getElementById('cfg-env-ldr').checked : false
+            }
+        },
         wifi: {
             modem_sleep: document.getElementById('cfg-wifi-modem-sleep') ? document.getElementById('cfg-wifi-modem-sleep').checked : true,
             tx_power: parseInt(document.getElementById('cfg-wifi-tx-power').value, 10),
@@ -700,22 +707,27 @@ async function handleNetworkSubmit(e) {
             body: JSON.stringify(patch)
         });
         const resJson = await res.json();
-        if (!res.ok) throw new Error(resJson.error || "Failed to commit network configuration");
+        if (!res.ok) throw new Error(resJson.error || "Failed to commit settings");
 
         if (!appConfig.system) appConfig.system = {};
         const oldHostname = appConfig.system.hostname;
         Object.assign(appConfig.system, patch.system);
+        if (!appConfig.gauges) appConfig.gauges = {};
+        if (!appConfig.gauges.environmental) appConfig.gauges.environmental = {};
+        Object.assign(appConfig.gauges.environmental, patch.gauges.environmental);
         if (!appConfig.wifi) appConfig.wifi = {};
         Object.assign(appConfig.wifi, patch.wifi);
 
         loadConfigToForm();
+        renderAllDialZones();
+        if (lastTelemetry) updateTelemetryUI(lastTelemetry);
 
         const hostnameChanged = oldHostname && patch.system && patch.system.hostname && (oldHostname !== patch.system.hostname);
         msg.className = 'cfg-status-msg status-ok';
         if (hostnameChanged) {
-            msg.innerText = `✅ Wi-Fi & Hostname saved! Click "Reboot Device" to activate ${patch.system.hostname}.local.`;
+            msg.innerText = `✅ Settings & Hostname saved! Click "Reboot Device" to activate ${patch.system.hostname}.local.`;
         } else {
-            msg.innerText = '✅ Wi-Fi radio parameters saved and applied immediately!';
+            msg.innerText = '✅ Settings saved and applied immediately!';
         }
         msg.style.display = 'inline-block';
         setTimeout(() => { msg.style.display = 'none'; }, 8000);
@@ -725,7 +737,7 @@ async function handleNetworkSubmit(e) {
         msg.style.display = 'inline-block';
     } finally {
         btn.disabled = false;
-        btn.innerText = '💾 Save Network Settings';
+        btn.innerText = '💾 Save Settings';
     }
 }
 

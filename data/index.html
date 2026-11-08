@@ -478,11 +478,43 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Section 3: Optional Environmental Sensors (SHT30, BH1750, LDR) -->
+                    <div class="card settings-section" style="margin-bottom: 0;">
+                        <div class="section-title">
+                            <span class="card-icon">🌿</span>
+                            <h3>Optional Environmental Sensors</h3>
+                        </div>
+                        <p class="section-desc">Toggle sampling, dashboard dials, and trend graphs for I2C and analog expansion sensors attached to the board.</p>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="checkbox-label" for="cfg-env-sht30" style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-top: 8px;">
+                                    <input type="checkbox" id="cfg-env-sht30" style="width: auto; height: 18px; margin: 0; cursor: pointer;">
+                                    <span><strong>Enable SHT30 Sensor</strong> (Air Temp & Relative Humidity)</span>
+                                </label>
+                                <span class="field-hint">I2C (SCL=GPIO5, SDA=GPIO6, Addr 0x44/0x45). Adds ambient air temperature & humidity dials and trend curves.</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="checkbox-label" for="cfg-env-bh1750" style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-top: 8px;">
+                                    <input type="checkbox" id="cfg-env-bh1750" style="width: auto; height: 18px; margin: 0; cursor: pointer;">
+                                    <span><strong>Enable BH1750 Sensor</strong> (Ambient Light Lux)</span>
+                                </label>
+                                <span class="field-hint">I2C (SCL=GPIO5, SDA=GPIO6, Addr 0x23/0x5C). High-precision digital illuminance meter (0–65,535 lx).</span>
+                            </div>
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label class="checkbox-label" for="cfg-env-ldr" style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-top: 8px;">
+                                    <input type="checkbox" id="cfg-env-ldr" style="width: auto; height: 18px; margin: 0; cursor: pointer;">
+                                    <span><strong>Enable LDR Light Sensor</strong> (Analog Brightness %)</span>
+                                </label>
+                                <span class="field-hint">Analog ADC1 Channel 1 on GPIO 1 with 10k divider (0% Pitch Dark to 100% Bright Sunlight).</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Network Settings Action Buttons -->
+                <!-- Network & Settings Action Buttons -->
                 <div class="settings-actions" style="margin-top: 16px; margin-bottom: 24px;">
-                    <button type="submit" id="btn-save-net" class="btn btn-primary">💾 Save Network Settings</button>
+                    <button type="submit" id="btn-save-net" class="btn btn-primary">💾 Save Settings</button>
                     <button type="button" id="btn-reload-net" class="btn btn-secondary" style="width: auto; margin-top: 0;">🔄 Discard & Reload</button>
                     <button type="button" id="btn-settings-reboot" class="btn btn-warning" style="width: auto; margin-top: 0;">🔄 Reboot Device</button>
                     <div id="net-status-msg" class="cfg-status-msg"></div>
@@ -662,38 +694,6 @@
                     </div>
                 </div>
 
-                <!-- Section 4B: Optional Environmental Sensors (SHT30, BH1750, LDR) -->
-                <div class="card settings-section">
-                    <div class="section-title">
-                        <span class="card-icon">🌿</span>
-                        <h3>Optional Environmental Sensors</h3>
-                    </div>
-                    <p class="section-desc">Toggle sampling, dashboard dials, and trend graphs for I2C and analog expansion sensors attached to the board.</p>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label class="checkbox-label" for="cfg-env-sht30" style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-top: 8px;">
-                                <input type="checkbox" id="cfg-env-sht30" style="width: auto; height: 18px; margin: 0; cursor: pointer;">
-                                <span><strong>Enable SHT30 Sensor</strong> (Air Temp & Relative Humidity)</span>
-                            </label>
-                            <span class="field-hint">I2C (SCL=GPIO5, SDA=GPIO6, Addr 0x44/0x45). Adds ambient air temperature & humidity dials and trend curves.</span>
-                        </div>
-                        <div class="form-group">
-                            <label class="checkbox-label" for="cfg-env-bh1750" style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-top: 8px;">
-                                <input type="checkbox" id="cfg-env-bh1750" style="width: auto; height: 18px; margin: 0; cursor: pointer;">
-                                <span><strong>Enable BH1750 Sensor</strong> (Ambient Light Lux)</span>
-                            </label>
-                            <span class="field-hint">I2C (SCL=GPIO5, SDA=GPIO6, Addr 0x23/0x5C). High-precision digital illuminance meter (0–65,535 lx).</span>
-                        </div>
-                        <div class="form-group" style="grid-column: 1 / -1;">
-                            <label class="checkbox-label" for="cfg-env-ldr" style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-top: 8px;">
-                                <input type="checkbox" id="cfg-env-ldr" style="width: auto; height: 18px; margin: 0; cursor: pointer;">
-                                <span><strong>Enable LDR Light Sensor</strong> (Analog Brightness %)</span>
-                            </label>
-                            <span class="field-hint">Analog ADC1 Channel 1 on GPIO 1 with 10k divider (0% Pitch Dark to 100% Bright Sunlight).</span>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Section 5: Watering Safety Supervisor -->
                 <div class="card settings-section">
                     <div class="section-title">
@@ -813,6 +813,6 @@
         </div>
     </div>
 
-    <script src="app.js?v=15"></script>
+    <script src="app.js?v=16"></script>
 </body>
 </html>
