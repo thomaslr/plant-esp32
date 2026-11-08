@@ -6,7 +6,7 @@
     <title>Plant Monitor & Waterer (ESP32-C3)</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="apple-touch-icon" href="favicon.svg">
-    <link rel="stylesheet" href="style.css?v=5">
+    <link rel="stylesheet" href="style.css?v=6">
 </head>
 <body>
     <div class="container">
@@ -14,7 +14,7 @@
             <div class="header-title">
                 <h1>🌱 Plant Monitor & Waterer</h1>
                 <span class="badge" id="host-badge">plants.local</span>
-                <span class="badge" id="version-badge" style="background: #1e293b; color: #38bdf8; border: 1px solid #334155; font-size: 0.75rem;">v0.2.22 📈</span>
+                <span class="badge" id="version-badge" style="background: #1e293b; color: #38bdf8; border: 1px solid #334155; font-size: 0.75rem;">v0.2.23 📈</span>
             </div>
             <div class="header-status">
                 <span id="conn-status" class="dot dot-disconnected"></span>
@@ -189,7 +189,7 @@
                     <div class="pump-actions">
                         <div class="action-inputs">
                             <label for="water-duration">Duration (s):</label>
-                            <input type="number" id="water-duration" min="1" max="60" value="5">
+                            <input type="number" id="water-duration" min="1" max="60" value="30">
                         </div>
                         <button id="btn-water" class="btn btn-primary">Water Now</button>
                     </div>
