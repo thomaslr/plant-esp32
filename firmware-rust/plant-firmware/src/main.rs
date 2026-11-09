@@ -154,9 +154,24 @@ fn main() -> anyhow::Result<()> {
             let history = storage.load_history(100);
 
             // 8. Start SNTP Time Synchronization
-            let _sntp = match EspSntp::new_default() {
+            let primary_ntp = config
+                .system
+                .ntp_servers
+                .first()
+                .map(|s| s.as_str())
+                .unwrap_or("pool.ntp.org");
+            let sntp_conf = esp_idf_svc::sntp::SntpConf {
+                servers: [primary_ntp],
+                operating_mode: esp_idf_svc::sntp::OperatingMode::Poll,
+                sync_mode: esp_idf_svc::sntp::SyncMode::Immediate,
+            };
+            let _sntp = match EspSntp::new(&sntp_conf) {
                 Ok(sntp) => {
-                    info!("[NTP] SNTP client initialized for time synchronization");
+                    info!("[NTP] SNTP client initialized with server: {}", primary_ntp);
+                    unsafe {
+                        // Resync hourly (3,600,000 ms = 24 times per day)
+                        esp_idf_svc::sys::sntp_set_sync_interval(3600 * 1000);
+                    }
                     core::mem::forget(sntp);
                     true
                 }
@@ -325,6 +340,8 @@ fn main() -> anyhow::Result<()> {
         .stack_size(4096)
         .spawn(move || {
             let mut tracker = MidnightTracker::new();
+            let mut ntp_synced_logged = false;
+            let mut unsynced_ticks = 0u32;
             loop {
                 thread::sleep(Duration::from_secs(60));
 
@@ -337,6 +354,25 @@ fn main() -> anyhow::Result<()> {
                     .duration_since(std::time::UNIX_EPOCH)
                     .map(|d| d.as_secs() as i64)
                     .unwrap_or(0);
+
+                if now_unix > 1_600_000_000 {
+                    if !ntp_synced_logged {
+                        info!("[NTP] Clock synchronized successfully with NTP (Unix: {})", now_unix);
+                        ntp_synced_logged = true;
+                    }
+                    unsynced_ticks = 0;
+                } else {
+                    unsynced_ticks += 1;
+                    if unsynced_ticks % 5 == 0 {
+                        warn!(
+                            "[NTP] Awaiting NTP time sync (minute {})... restarting SNTP probe",
+                            unsynced_ticks
+                        );
+                        unsafe {
+                            esp_idf_svc::sys::sntp_restart();
+                        }
+                    }
+                }
 
                 let day = local_day(now_unix, gmt_offset);
                 if tracker.update(day) {

@@ -113,6 +113,8 @@ pub struct StatusResponse {
     pub mdns: String,
     pub uptime_sec: u32,
     pub wifi_rssi: i32,
+    pub time_unix: i64,
+    pub ntp_synced: bool,
     pub sensors: SensorsView,
     pub pump: PumpView,
 }
@@ -306,6 +308,8 @@ mod tests {
             mdns: "plants.local".into(),
             uptime_sec: 3661,
             wifi_rssi: -61,
+            time_unix: 1794188583,
+            ntp_synced: true,
             sensors: SensorsView::from(&r),
             pump: PumpView {
                 active: false,
@@ -326,6 +330,8 @@ mod tests {
         assert_eq!(v["ip"], "192.168.1.50");
         assert_eq!(v["wifi_rssi"], -61);
         assert_eq!(v["uptime_sec"], 3661);
+        assert_eq!(v["time_unix"], 1794188583);
+        assert_eq!(v["ntp_synced"], true);
         assert_eq!(v["pump"]["status_message"], "Stopped: Target duration or safety runtime reached");
         assert_eq!(v["pump"]["cooldown_remaining_sec"], 120);
         assert_eq!(v["pump"]["daily_used_sec"], 20);

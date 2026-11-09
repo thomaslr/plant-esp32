@@ -4,6 +4,16 @@ All notable changes to the Plant ESP32 firmware and web dashboard will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.31] - 2026-11-09
+
+### 🕒 Real-Time Clock & Time Drift Tracking, Robust NTP Resync
+- **Live Clock in Web Header**: Added live date, time, and drift badge next to the version badge (`YYYY-MM-DD HH:MM:SS (±0.0s)`). Ticks every second on the client machine with zero server request polling.
+- **Time Drift Monitoring**: Automatically calculates and tracks drift between the ESP32 hardware RTC and browser device, updating on periodic status fetches.
+- **Hourly NTP Resync & Auto-Retry**: Configured lwIP SNTP with explicit hourly resync (`sntp_set_sync_interval(3600000)` = 24 times/day) and added automatic probe retry if un-synchronized at boot.
+- **Hardware Diagnostics Time Rows**: Added Device Time, NTP Status, and Time Drift to the Hardware Diagnostics panel.
+
+---
+
 ## [0.2.30] - 2026-11-09
 
 ### 💾 Persistent Flash Logging & Dedicated Environmental Table Columns

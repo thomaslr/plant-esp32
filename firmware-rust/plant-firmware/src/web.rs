@@ -158,6 +158,8 @@ pub fn create_web_server(
                 mdns,
                 uptime_sec,
                 wifi_rssi: app.wifi_rssi,
+                time_unix: unix_secs,
+                ntp_synced: unix_secs > 1_600_000_000,
                 sensors,
                 pump,
             };

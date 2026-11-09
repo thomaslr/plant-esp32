@@ -27,7 +27,8 @@
             <div class="header-title">
                 <h1>🌱 Plant Monitor & Waterer</h1>
                 <span class="badge" id="host-badge">plants.local</span>
-                <span class="badge" id="version-badge" style="background: #1e293b; color: #38bdf8; border: 1px solid #334155; font-size: 0.75rem;">v0.2.30 🌿</span>
+                <span class="badge" id="version-badge" style="background: #1e293b; color: #38bdf8; border: 1px solid #334155; font-size: 0.75rem;">v0.2.31 🌿</span>
+                <span class="badge" id="clock-badge" style="background: #1e293b; color: #94a3b8; border: 1px solid #334155; font-size: 0.75rem; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; display: inline-flex; align-items: center; gap: 4px;" title="ESP32 hardware time & drift relative to browser">🕒 Connecting...</span>
             </div>
             <div class="header-status">
                 <span id="conn-status" class="dot dot-disconnected"></span>
@@ -536,6 +537,9 @@
                         <li><span>mDNS Host:</span> <strong id="diag-mdns">plants.local</strong></li>
                         <li><span>Wi-Fi Signal:</span> <strong id="diag-rssi">-- dBm</strong></li>
                         <li><span>System Uptime:</span> <strong id="diag-uptime">--</strong></li>
+                        <li><span>Device Time:</span> <strong id="diag-time">--</strong></li>
+                        <li><span>NTP Status:</span> <strong id="diag-ntp">--</strong></li>
+                        <li><span>Time Drift:</span> <strong id="diag-drift">--</strong></li>
                         <li><span>Preventive Resets:</span> <strong id="diag-resets">0</strong></li>
                     </ul>
                     <button id="btn-sensor-reset" class="btn btn-secondary" style="width: 100%; margin-top: 14px;">Force Ultrasonic Reset</button>
@@ -816,6 +820,6 @@
         </div>
     </div>
 
-    <script src="app.js?v=17"></script>
+    <script src="app.js?v=18"></script>
 </body>
 </html>
