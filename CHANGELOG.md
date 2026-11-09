@@ -4,6 +4,15 @@ All notable changes to the Plant ESP32 firmware and web dashboard will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.32] - 2026-11-09
+
+### 🕒 Simplified Real-Time Clock & Background Resync
+- **Clean Clock Badge**: Streamlined the live header clock display (`YYYY-MM-DD HH:MM:SS`) by removing drift statistics from the UI.
+- **Background Periodic Resync**: Device time syncs from the ESP32 during standard 60-second status updates, with client-side 1-second ticking between polls.
+- **Hardware Diagnostics Streamlining**: Diagnostics panel displays clean Device Time and hourly NTP synchronization status without drift overhead.
+
+---
+
 ## [0.2.31] - 2026-11-09
 
 ### 🕒 Real-Time Clock & Time Drift Tracking, Robust NTP Resync

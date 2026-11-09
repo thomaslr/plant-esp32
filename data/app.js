@@ -1119,7 +1119,7 @@ function updateFullStatusUI(data) {
     const secs = uptime % 60;
     document.getElementById('diag-uptime').innerText = `${hrs}h ${mins}m ${secs}s`;
 
-    // Synchronize client-side clock with ESP32 reported time & drift
+    // Synchronize client-side clock with ESP32 reported time
     syncDeviceClock(data);
 }
 
@@ -1145,7 +1145,6 @@ function renderHeaderClock() {
     const clockBadge = document.getElementById('clock-badge');
     const diagTime = document.getElementById('diag-time');
     const diagNtp = document.getElementById('diag-ntp');
-    const diagDrift = document.getElementById('diag-drift');
 
     if (espClockOffsetMs === null) {
         if (clockBadge) clockBadge.innerText = '🕒 Connecting...';
@@ -1176,19 +1175,14 @@ function renderHeaderClock() {
     const dateStr = `${year}-${month}-${day}`;
     const timeStr = `${hours}:${minutes}:${seconds}`;
 
-    const driftSec = (espClockOffsetMs / 1000);
-    const driftSign = driftSec >= 0 ? '+' : '';
-    const driftDisplay = `${driftSign}${driftSec.toFixed(1)}s`;
-
     if (clockBadge) {
         clockBadge.style.color = '#cbd5e1';
-        clockBadge.innerHTML = `<span style="color: #38bdf8;">🕒</span> ${dateStr} ${timeStr} <span style="font-size: 0.7rem; color: #94a3b8; margin-left: 4px;" title="Clock drift vs browser: ${driftDisplay}">(${driftDisplay})</span>`;
-        clockBadge.title = `ESP32 Time: ${dateStr} ${timeStr}\nDrift vs Browser: ${driftDisplay}\nNTP Status: Synchronized (resyncs hourly)`;
+        clockBadge.innerHTML = `<span style="color: #38bdf8;">🕒</span> ${dateStr} ${timeStr}`;
+        clockBadge.title = `ESP32 Time: ${dateStr} ${timeStr} (NTP Synchronized)`;
     }
 
     if (diagTime) diagTime.innerText = `${dateStr} ${timeStr}`;
     if (diagNtp) diagNtp.innerHTML = '<span style="color: #10b981;">Synchronized (hourly)</span>';
-    if (diagDrift) diagDrift.innerText = `${driftDisplay} (${driftSec >= 0 ? 'ESP ahead' : 'ESP behind'})`;
 }
 
 let latestDeviceUptimeSec = null;
