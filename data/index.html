@@ -27,7 +27,8 @@
             <div class="header-title">
                 <h1>🌱 Plant Monitor & Waterer</h1>
                 <span class="badge" id="host-badge">plants.local</span>
-                <span class="badge" id="version-badge" style="background: #1e293b; color: #38bdf8; border: 1px solid #334155; font-size: 0.75rem;">v0.2.32 🌿</span>
+                <span class="badge" id="version-badge" style="background: #1e293b; color: #38bdf8; border: 1px solid #334155; font-size: 0.75rem;">v0.2.33 🌿</span>
+                <span class="badge" id="header-ota-badge" style="display: none; background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); font-size: 0.75rem; cursor: pointer;" title="New update available! Click to review.">✨ Update: --</span>
                 <span class="badge" id="clock-badge" style="background: #1e293b; color: #94a3b8; border: 1px solid #334155; font-size: 0.75rem; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; display: inline-flex; align-items: center; gap: 4px;" title="ESP32 Real-Time Clock (NTP Synchronized)">🕒 Connecting...</span>
             </div>
             <div class="header-status">
@@ -555,12 +556,14 @@
                         <span class="card-icon">🚀</span>
                     </div>
                     <ul class="diag-list" style="margin-bottom: 14px;">
-                        <li><span>Installed Firmware:</span> <strong id="diag-ota-ver">v0.2.0</strong></li>
+                        <li><span>Installed Firmware:</span> <strong id="diag-ota-ver">v0.2.33</strong></li>
                         <li><span>Active Boot Slot:</span> <strong id="diag-ota-slot">--</strong></li>
+                        <li><span>Daily Update Check:</span> <strong id="diag-ota-status">Checking...</strong></li>
                     </ul>
-                    <div style="display: flex; gap: 8px;">
-                        <button id="btn-ota-check" class="btn btn-primary" style="flex: 1;">Check GitHub Update</button>
-                        <label class="btn btn-secondary" style="flex: 1; text-align: center; cursor: pointer; margin: 0; display: flex; align-items: center; justify-content: center;">
+                    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                        <button id="btn-ota-check" class="btn btn-primary" style="flex: 1; min-width: 170px;">Check for Updates</button>
+                        <span id="ota-avail-field" style="display: none; padding: 7px 12px; border-radius: 6px; font-size: 0.82rem; font-weight: 600; white-space: nowrap; cursor: pointer; transition: all 0.2s ease;" title="Click to view update details"></span>
+                        <label class="btn btn-secondary" style="flex: 0 0 auto; text-align: center; cursor: pointer; margin: 0; display: flex; align-items: center; justify-content: center;">
                             Upload .bin
                             <input type="file" id="file-ota-upload" accept=".bin" style="display: none;">
                         </label>
@@ -792,18 +795,22 @@
     <div id="modal-ota-update" class="modal-backdrop" style="display: none;">
         <div class="modal-dialog">
             <div class="modal-header">
-                <h3>🚀 New Firmware Available</h3>
-                <button type="button" class="btn-close" id="btn-modal-ota-close">&times;</button>
+                <h3>🚀 Firmware Update Available</h3>
+                <button type="button" class="btn-close" id="btn-modal-ota-close" title="Close dialog">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="modal-version-row">
-                    <span class="ver-chip ver-current" id="modal-ver-current">Current: v0.1.1</span>
+                    <span class="ver-chip ver-current" id="modal-ver-current">Current: v0.2.32</span>
                     <span class="ver-arrow">➔</span>
-                    <span class="ver-chip ver-target" id="modal-ver-target">New: v0.1.2</span>
+                    <span class="ver-chip ver-target" id="modal-ver-target">New: v0.2.33</span>
                 </div>
+                <div id="modal-ota-date" style="font-size: 0.8rem; color: #94a3b8; margin-top: -6px;"></div>
                 <div class="modal-section-title">What's New in this Release:</div>
                 <div class="modal-changelog" id="modal-ota-changelog">
                     Loading release notes...
+                </div>
+                <div class="modal-prompt" style="font-size: 0.85rem; color: #f1f5f9; background: rgba(30, 41, 59, 0.7); padding: 10px 14px; border-radius: 6px; border: 1px solid #334155; line-height: 1.4;">
+                    Please review the updates above before applying. Would you like to download and install this firmware update now?
                 </div>
                 <div class="modal-notice">
                     <span class="notice-icon">🛡️</span>
@@ -819,6 +826,6 @@
         </div>
     </div>
 
-    <script src="app.js?v=19"></script>
+    <script src="app.js?v=20"></script>
 </body>
 </html>

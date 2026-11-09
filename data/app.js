@@ -56,10 +56,32 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-ota-check').addEventListener('click', handleOtaCheck);
     document.getElementById('file-ota-upload').addEventListener('change', handleOtaUpload);
 
+    const availField = document.getElementById('ota-avail-field');
+    if (availField) availField.addEventListener('click', handleOtaCheck);
+
+    const headerOtaBadge = document.getElementById('header-ota-badge');
+    if (headerOtaBadge) {
+        headerOtaBadge.addEventListener('click', () => {
+            const settingsTabBtn = document.querySelector('.nav-tab[data-tab="tab-settings"]');
+            if (settingsTabBtn) settingsTabBtn.click();
+            handleOtaCheck();
+        });
+    }
+
     // Modal Events
     document.getElementById('btn-modal-ota-close').addEventListener('click', closeOtaModal);
     document.getElementById('btn-modal-ota-cancel').addEventListener('click', closeOtaModal);
     document.getElementById('btn-modal-ota-confirm').addEventListener('click', executeOtaUpdate);
+
+    const otaModal = document.getElementById('modal-ota-update');
+    if (otaModal) {
+        otaModal.addEventListener('click', (e) => {
+            if (e.target === otaModal) closeOtaModal();
+        });
+    }
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeOtaModal();
+    });
 
     // Settings & Threshold Forms
     const configForm = document.getElementById('config-form');
@@ -289,6 +311,36 @@ async function handleReboot() {
     }
 }
 
+// =============================================================================
+// OTA & Firmware Version Management (Daily Checks & Pre-Install Review)
+// =============================================================================
+let currentInstalledVer = 'v0.2.33';
+let pendingOtaRelease = null;
+let dailyOtaCheckTimer = null;
+
+function compareSemver(v1, v2) {
+    const parse = v => (v || '').replace(/^v/, '').split('.').map(n => parseInt(n, 10) || 0);
+    const p1 = parse(v1);
+    const p2 = parse(v2);
+    for (let i = 0; i < Math.max(p1.length, p2.length, 3); i++) {
+        const num1 = p1[i] || 0;
+        const num2 = p2[i] || 0;
+        if (num1 > num2) return 1;
+        if (num1 < num2) return -1;
+    }
+    return 0;
+}
+
+function formatCheckTime(ts) {
+    if (!ts) return 'never';
+    const d = new Date(ts);
+    const now = new Date();
+    const isToday = d.toDateString() === now.toDateString();
+    const pad = n => String(n).padStart(2, '0');
+    const timeStr = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    return isToday ? `today at ${timeStr}` : `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
 async function fetchOtaStatus() {
     try {
         const res = await fetch('/api/ota/status');
@@ -296,21 +348,213 @@ async function fetchOtaStatus() {
         const data = await res.json();
         if (data.firmware_version) {
             const ver = `v${data.firmware_version.replace(/^v/, '')}`;
+            currentInstalledVer = ver;
             const diagVer = document.getElementById('diag-ota-ver');
             if (diagVer) diagVer.innerText = ver;
             const badge = document.getElementById('version-badge');
-            if (badge) badge.innerText = `${ver} 📈`;
+            if (badge) badge.innerText = `${ver} 🌿`;
         }
         if (data.running_slot) {
             const nextSlotText = (data.next_update_slot === 'none') 
                 ? 'No OTA slot (USB flash required)' 
                 : `Next: ${data.next_update_slot}`;
-            document.getElementById('diag-ota-slot').innerText = `${data.running_slot} (${nextSlotText})`;
+            const diagSlot = document.getElementById('diag-ota-slot');
+            if (diagSlot) diagSlot.innerText = `${data.running_slot} (${nextSlotText})`;
         }
+
+        // Initialize daily background OTA checks and restore cached state
+        initDailyOtaCheck();
     } catch (_) {}
 }
 
-let pendingOtaTag = null;
+function updateOtaUi(installedVer, releaseInfo, isChecking = false) {
+    const btn = document.getElementById('btn-ota-check');
+    const availField = document.getElementById('ota-avail-field');
+    const diagStatus = document.getElementById('diag-ota-status');
+    const headerBadge = document.getElementById('header-ota-badge');
+
+    if (isChecking) {
+        if (availField) {
+            availField.style.display = 'inline-flex';
+            availField.style.background = 'rgba(30, 41, 59, 0.6)';
+            availField.style.color = '#94a3b8';
+            availField.style.border = '1px solid #334155';
+            availField.innerHTML = '<span style="margin-right: 6px;">🔄</span> Checking for updates...';
+        }
+        if (diagStatus) diagStatus.innerHTML = '<span style="color: #94a3b8;">Checking GitHub...</span>';
+        return;
+    }
+
+    if (!releaseInfo || !releaseInfo.tag_name) {
+        if (availField) availField.style.display = 'none';
+        if (diagStatus) diagStatus.innerText = 'Unchecked';
+        if (headerBadge) headerBadge.style.display = 'none';
+        if (btn) btn.innerText = 'Check for Updates';
+        return;
+    }
+
+    const latestTag = releaseInfo.tag_name;
+    const isUpdateAvailable = compareSemver(latestTag, installedVer) > 0;
+    const checkTimeStr = formatCheckTime(releaseInfo.lastChecked);
+
+    if (isUpdateAvailable) {
+        pendingOtaRelease = releaseInfo;
+        if (availField) {
+            availField.style.display = 'inline-flex';
+            availField.style.background = 'rgba(16, 185, 129, 0.15)';
+            availField.style.color = '#34d399';
+            availField.style.border = '1px solid rgba(16, 185, 129, 0.4)';
+            availField.innerHTML = `✨ Update Available: <strong style="margin-left: 4px; color: #a7f3d0;">${latestTag}</strong>`;
+            availField.title = `Click to review what's new in ${latestTag}`;
+        }
+        if (btn) {
+            btn.innerText = 'Review & Apply Update';
+        }
+        if (diagStatus) {
+            diagStatus.innerHTML = `<span style="color: #34d399; font-weight: 600;">${latestTag} available</span> (${checkTimeStr})`;
+        }
+        if (headerBadge) {
+            headerBadge.style.display = 'inline-flex';
+            headerBadge.innerHTML = `✨ Update: ${latestTag}`;
+            headerBadge.title = `New firmware ${latestTag} available! Click to review and update.`;
+        }
+    } else {
+        pendingOtaRelease = null;
+        if (availField) {
+            availField.style.display = 'inline-flex';
+            availField.style.background = 'rgba(30, 41, 59, 0.6)';
+            availField.style.color = '#94a3b8';
+            availField.style.border = '1px solid #334155';
+            availField.innerHTML = `<span style="color: #10b981; margin-right: 6px;">✓</span> Up to date (${installedVer})`;
+            availField.title = `Device is running the latest firmware version`;
+        }
+        if (btn) {
+            btn.innerText = 'Check for Updates';
+        }
+        if (diagStatus) {
+            diagStatus.innerHTML = `<span style="color: #10b981;">Up to date</span> (${checkTimeStr})`;
+        }
+        if (headerBadge) {
+            headerBadge.style.display = 'none';
+        }
+    }
+}
+
+function initDailyOtaCheck() {
+    // 1. Immediately render cached release state if available
+    const cacheRaw = localStorage.getItem('plant_ota_cache');
+    if (cacheRaw) {
+        try {
+            const cached = JSON.parse(cacheRaw);
+            updateOtaUi(currentInstalledVer, cached, false);
+        } catch (_) {}
+    }
+
+    // 2. Perform daily check if 24 hours have elapsed since last check
+    const lastCheckMs = parseInt(localStorage.getItem('plant_ota_last_check_ms'), 10) || 0;
+    const elapsed = Date.now() - lastCheckMs;
+    const oneDayMs = 24 * 60 * 60 * 1000;
+
+    if (!lastCheckMs || elapsed >= oneDayMs) {
+        checkGitHubUpdate({ silent: true, force: true });
+    }
+
+    // 3. Hourly timer to ensure once-a-day check if browser session stays open
+    if (!dailyOtaCheckTimer) {
+        dailyOtaCheckTimer = setInterval(() => {
+            const lastMs = parseInt(localStorage.getItem('plant_ota_last_check_ms'), 10) || 0;
+            if (Date.now() - lastMs >= oneDayMs) {
+                checkGitHubUpdate({ silent: true, force: true });
+            }
+        }, 3600 * 1000);
+    }
+}
+
+async function checkGitHubUpdate(options = {}) {
+    const { silent = false, force = false, openModal = false } = options;
+    const btn = document.getElementById('btn-ota-check');
+    const msg = document.getElementById('ota-msg');
+
+    // Check if we can use cached info without re-fetching
+    const lastCheckMs = parseInt(localStorage.getItem('plant_ota_last_check_ms'), 10) || 0;
+    const cacheRaw = localStorage.getItem('plant_ota_cache');
+    const oneDayMs = 24 * 60 * 60 * 1000;
+
+    if (!force && (Date.now() - lastCheckMs) < oneDayMs && cacheRaw) {
+        try {
+            const cached = JSON.parse(cacheRaw);
+            updateOtaUi(currentInstalledVer, cached, false);
+            if (openModal && compareSemver(cached.tag_name, currentInstalledVer) > 0) {
+                openOtaModal(currentInstalledVer, cached.tag_name, cached.body, cached.published_at);
+            }
+            return;
+        } catch (_) {}
+    }
+
+    if (!silent) {
+        if (btn) {
+            btn.disabled = true;
+            btn.innerText = 'Checking...';
+        }
+        if (msg) {
+            msg.style.display = 'block';
+            msg.style.color = '#58a6ff';
+            msg.innerText = 'Checking GitHub Releases for new firmware...';
+        }
+        updateOtaUi(currentInstalledVer, null, true);
+    }
+
+    try {
+        const ghRes = await fetch('https://api.github.com/repos/thomaslr/plant-esp32/releases/latest');
+        if (!ghRes.ok) throw new Error(`Could not reach GitHub Releases API (HTTP ${ghRes.status})`);
+        const ghData = await ghRes.json();
+        const latestTag = ghData.tag_name || currentInstalledVer;
+
+        const releaseInfo = {
+            tag_name: latestTag,
+            name: ghData.name || latestTag,
+            body: ghData.body || 'Performance enhancements, bug fixes, and safety improvements.',
+            published_at: ghData.published_at,
+            lastChecked: Date.now()
+        };
+
+        localStorage.setItem('plant_ota_last_check_ms', String(Date.now()));
+        localStorage.setItem('plant_ota_cache', JSON.stringify(releaseInfo));
+
+        updateOtaUi(currentInstalledVer, releaseInfo, false);
+
+        const isUpdateAvailable = compareSemver(latestTag, currentInstalledVer) > 0;
+        if (isUpdateAvailable) {
+            if (msg) {
+                msg.style.color = '#34d399';
+                msg.innerText = `New firmware ${latestTag} is available. Click "Review & Apply Update" to review changelog and install.`;
+            }
+            if (!silent || openModal) {
+                if (msg) msg.style.display = 'none';
+                openOtaModal(currentInstalledVer, latestTag, releaseInfo.body, releaseInfo.published_at);
+            }
+        } else {
+            if (!silent && msg) {
+                msg.style.color = '#10b981';
+                msg.innerText = `You are on the latest firmware (${currentInstalledVer})!`;
+            }
+        }
+    } catch (err) {
+        console.warn('[OTA] Check failed:', err);
+        const cacheRaw = localStorage.getItem('plant_ota_cache');
+        if (cacheRaw) {
+            try { updateOtaUi(currentInstalledVer, JSON.parse(cacheRaw), false); } catch (_) {}
+        } else {
+            updateOtaUi(currentInstalledVer, null, false);
+        }
+        if (!silent && msg) {
+            msg.style.color = '#ef4444';
+            msg.innerText = 'Update check failed: ' + err.message;
+        }
+    } finally {
+        if (btn) btn.disabled = false;
+    }
+}
 
 function closeOtaModal() {
     const modal = document.getElementById('modal-ota-update');
@@ -319,7 +563,6 @@ function closeOtaModal() {
 
 function renderMarkdownToHtml(md) {
     if (!md) return '<p class="changelog-p">Bug fixes and performance improvements.</p>';
-    // Sanitize HTML special characters to prevent XSS
     let escaped = md
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
@@ -365,79 +608,69 @@ function renderMarkdownToHtml(md) {
     return html || '<p class="changelog-p">Bug fixes and performance improvements.</p>';
 }
 
-function openOtaModal(currentVer, newVer, changelog) {
-    document.getElementById('modal-ver-current').innerText = `Current: ${currentVer}`;
-    document.getElementById('modal-ver-target').innerText = `New: ${newVer}`;
-    document.getElementById('modal-ota-changelog').innerHTML = renderMarkdownToHtml(changelog);
-    document.getElementById('modal-ota-update').style.display = 'flex';
+function openOtaModal(currentVer, newVer, changelog, publishedAt) {
+    const curElem = document.getElementById('modal-ver-current');
+    const targetElem = document.getElementById('modal-ver-target');
+    const dateElem = document.getElementById('modal-ota-date');
+    const changelogElem = document.getElementById('modal-ota-changelog');
+    const modal = document.getElementById('modal-ota-update');
+
+    if (curElem) curElem.innerText = `Current: ${currentVer}`;
+    if (targetElem) targetElem.innerText = `New: ${newVer}`;
+    if (dateElem) {
+        if (publishedAt) {
+            const d = new Date(publishedAt);
+            dateElem.innerText = `Released: ${d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}`;
+            dateElem.style.display = 'block';
+        } else {
+            dateElem.style.display = 'none';
+        }
+    }
+    if (changelogElem) changelogElem.innerHTML = renderMarkdownToHtml(changelog);
+    if (modal) modal.style.display = 'flex';
 }
 
 async function handleOtaCheck() {
-    const btn = document.getElementById('btn-ota-check');
-    const msg = document.getElementById('ota-msg');
-    btn.disabled = true;
-    btn.innerText = 'Checking...';
-    msg.style.display = 'block';
-    msg.style.color = '#58a6ff';
-    msg.innerText = 'Checking GitHub Releases for new firmware...';
-
-    try {
-        const statusRes = await fetch('/api/ota/status');
-        const statusData = statusRes.ok ? await statusRes.json() : {};
-        const currentVer = statusData.firmware_version ? `v${statusData.firmware_version.replace(/^v/, '')}` : 'v0.1.0';
-
-        // Fetch latest release info from GitHub API
-        const ghRes = await fetch('https://api.github.com/repos/thomaslr/plant-esp32/releases/latest');
-        if (!ghRes.ok) throw new Error("Could not reach GitHub Releases API");
-        const ghData = await ghRes.json();
-        const latestTag = ghData.tag_name || 'v0.1.0';
-        const cleanLatest = latestTag.replace(/^v/, '');
-        const cleanCurrent = currentVer.replace(/^v/, '');
-
-        if (cleanLatest === cleanCurrent) {
-            msg.style.color = '#10b981';
-            msg.innerText = `You are on the latest firmware (${currentVer})!`;
-            btn.disabled = false;
-            btn.innerText = 'Check GitHub Update';
-            return;
-        }
-
-        // New firmware available: show modal popup with changelog!
-        msg.style.display = 'none';
-        pendingOtaTag = latestTag;
-        openOtaModal(currentVer, latestTag, ghData.body || "Performance enhancements, bug fixes, and safety improvements.");
-    } catch (err) {
-        msg.style.color = '#ef4444';
-        msg.innerText = 'Update check failed: ' + err.message;
-    } finally {
-        btn.disabled = false;
-        btn.innerText = 'Check GitHub Update';
+    // If an update is already identified and cached, report updates in modal before asking user to apply
+    if (pendingOtaRelease && compareSemver(pendingOtaRelease.tag_name, currentInstalledVer) > 0) {
+        openOtaModal(currentInstalledVer, pendingOtaRelease.tag_name, pendingOtaRelease.body, pendingOtaRelease.published_at);
+        return;
     }
+    // Otherwise force check GitHub now and open modal if an update is found
+    await checkGitHubUpdate({ silent: false, force: true, openModal: true });
 }
 
 async function executeOtaUpdate() {
     closeOtaModal();
     const btn = document.getElementById('btn-ota-check');
     const msg = document.getElementById('ota-msg');
-    btn.disabled = true;
-    btn.innerText = 'Updating...';
-    msg.style.display = 'block';
-    msg.style.color = '#58a6ff';
-    msg.innerText = 'Streaming new firmware binary from GitHub... Please do not unplug device.';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerText = 'Updating...';
+    }
+    if (msg) {
+        msg.style.display = 'block';
+        msg.style.color = '#58a6ff';
+        msg.innerText = 'Streaming new firmware binary from GitHub... Please do not unplug device.';
+    }
 
     try {
         const res = await fetch('/api/ota/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
         const result = await res.json();
-        msg.innerText = result.message || 'OTA update started! Device will reboot into new firmware in ~30s.';
+        if (msg) msg.innerText = result.message || 'OTA update started! Device will reboot into new firmware in ~30s.';
         setTimeout(() => {
-            msg.innerText = 'Device rebooting. Refreshing dashboard in 15s...';
+            if (msg) msg.innerText = 'Device rebooting. Refreshing dashboard in 15s...';
             setTimeout(() => window.location.reload(), 15000);
         }, 15000);
     } catch (err) {
-        msg.style.color = '#ef4444';
-        msg.innerText = 'OTA update error: ' + err.message;
-        btn.disabled = false;
-        btn.innerText = 'Check GitHub Update';
+        if (msg) {
+            msg.style.color = '#ef4444';
+            msg.innerText = 'OTA update error: ' + err.message;
+        }
+        if (btn) {
+            btn.disabled = false;
+            btn.innerText = pendingOtaRelease ? 'Review & Apply Update' : 'Check for Updates';
+        }
     }
 }
 

@@ -4,6 +4,16 @@ All notable changes to the Plant ESP32 firmware and web dashboard will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.33] - 2026-11-09
+
+### 🚀 Daily OTA Checks, Release Review & Update Status Field
+- **Pre-Install Release Review**: The update button now reports release notes and changelog details in an interactive modal for the user to review before asking to apply.
+- **Update Availability Field**: Added a dedicated field next to the update button that notifies the user when an update is available (`✨ Update Available: vX.Y.Z`) or confirms up-to-date status.
+- **Automated Daily Checks**: The system checks GitHub Releases automatically once per day (tracking last check timestamp in localStorage) with background polling and hourly verification.
+- **Header Update Pill**: Added an optional update indicator pill next to the version badge in the dashboard header when a new release is available.
+
+---
+
 ## [0.2.32] - 2026-11-09
 
 ### 🕒 Simplified Real-Time Clock & Background Resync
