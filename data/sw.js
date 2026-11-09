@@ -1,17 +1,17 @@
-// PlantESP32 Service Worker (v1.0.6)
-const CACHE_NAME = 'plant-esp32-v8';
+// PlantESP32 Service Worker (v1.0.7)
+const CACHE_NAME = 'plant-esp32-v9';
 
 const STATIC_ASSETS = [
     '/',
     '/style.css?v=6',
-    '/app.js?v=20',
+    '/app.js?v=21',
     '/favicon.svg',
     '/icon-192.png',
     '/icon-512.png',
     '/manifest.json'
 ];
 
-// Install: Cache critical App Shell assets immediately
+// Install: Cache critical App Shell assets immediately and activate
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
@@ -20,7 +20,7 @@ self.addEventListener('install', (event) => {
     );
 });
 
-// Activate: Clean up old cache versions and claim clients
+// Activate: Immediately purge all old cache versions and claim clients
 self.addEventListener('activate', (event) => {
     event.waitUntil(
         caches.keys().then((cacheNames) => {
@@ -33,37 +33,42 @@ self.addEventListener('activate', (event) => {
     );
 });
 
-// Fetch: Never cache non-GET or /api/ calls; network-first for telemetry
+// Fetch: Never cache non-GET or /api/; Network-First for navigation & scripts so updates appear immediately
 self.addEventListener('fetch', (event) => {
     const { request } = event;
     const url = new URL(request.url);
 
-    // 1. Never cache non-GET requests (pump triggers, config POSTs)
+    // 1. Never intercept non-GET requests (pump triggers, config POSTs, OTA uploads)
     if (request.method !== 'GET') {
         return;
     }
 
-    // 2. Real-time API telemetry: bypass cache completely
+    // 2. Real-time API telemetry & endpoints: bypass service worker cache completely
     if (url.pathname.startsWith('/api/')) {
         return;
     }
 
-    // 3. App Shell & assets: Stale-While-Revalidate with network fallback
+    // 3. Network-First for navigation (HTML) and scripts so firmware/UI updates load immediately
     event.respondWith(
-        caches.match(request).then((cachedResponse) => {
-            const fetchPromise = fetch(request).then((networkResponse) => {
+        fetch(request)
+            .then((networkResponse) => {
                 if (networkResponse && networkResponse.status === 200) {
-                    const responseToCache = networkResponse.clone();
+                    const responseClone = networkResponse.clone();
                     caches.open(CACHE_NAME).then((cache) => {
-                        cache.put(request, responseToCache);
+                        cache.put(request, responseClone);
                     });
                 }
                 return networkResponse;
-            }).catch(() => {
-                // If network fails, cachedResponse will be returned
-            });
-
-            return cachedResponse || fetchPromise;
-        })
+            })
+            .catch(() => {
+                // Network unavailable (offline) -> serve from cache
+                return caches.match(request).then((cachedResponse) => {
+                    if (cachedResponse) return cachedResponse;
+                    if (request.mode === 'navigate') {
+                        return caches.match('/');
+                    }
+                    return Promise.reject('Offline and asset not cached');
+                });
+            })
     );
 });

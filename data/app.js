@@ -32,9 +32,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // Register Service Worker for PWA Standalone App support
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/sw.js').catch((err) => {
+            navigator.serviceWorker.register('/sw.js').then((reg) => {
+                // Check for service worker updates on page load
+                reg.update();
+            }).catch((err) => {
                 console.warn('[PWA] ServiceWorker registration failed:', err);
             });
+        });
+        // When new service worker activates and claims the page, reload to display fresh assets
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+            window.location.reload();
         });
     }
 
@@ -314,7 +321,7 @@ async function handleReboot() {
 // =============================================================================
 // OTA & Firmware Version Management (Daily Checks & Pre-Install Review)
 // =============================================================================
-let currentInstalledVer = 'v0.2.33';
+let currentInstalledVer = 'v0.2.34';
 let pendingOtaRelease = null;
 let dailyOtaCheckTimer = null;
 

@@ -4,6 +4,15 @@ All notable changes to the Plant ESP32 firmware and web dashboard will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.34] - 2026-11-09
+
+### ⚡ Service Worker Cache Fix & Instant UI Updates
+- **Network-First PWA Strategy**: Replaced stale-while-revalidate caching in `sw.js` with network-first for navigation and script assets, ensuring browser immediately loads updated UI without serving stale cached versions.
+- **Auto-Controller Refresh**: Added `controllerchange` listener to automatically reload the page when a new service worker version is activated.
+- **Cache Invalidation**: Bumped service worker cache to `plant-esp32-v9` and asset query to `v=21`.
+
+---
+
 ## [0.2.33] - 2026-11-09
 
 ### 🚀 Daily OTA Checks, Release Review & Update Status Field
