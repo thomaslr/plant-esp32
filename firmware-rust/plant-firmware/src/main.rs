@@ -448,6 +448,16 @@ fn main() -> anyhow::Result<()> {
             }
         })?;
 
+    // 15. Task 6: Autonomous OTA Version Checker (Priority: LOW)
+    // - Checks shortly after boot (~60s after startup once Wi-Fi & NTP stabilize)
+    // - Checks once per day after midnight (~02:00 AM local time)
+    let s_ota_cfg = Arc::clone(&state);
+    if let Err(e) = crate::ota::start_periodic_ota_check(move || {
+        s_ota_cfg.lock().unwrap().config.system.gmt_offset
+    }) {
+        warn!("[SYS] Failed to launch autonomous OTA checker: {:?}", e);
+    }
+
     info!("[SYS] All background tasks successfully spawned. System running.");
 
     // 14. Confirm successful boot to bootloader to permanently cancel OTA rollback

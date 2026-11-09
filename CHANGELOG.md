@@ -4,6 +4,16 @@ All notable changes to the Plant ESP32 firmware and web dashboard will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.35] - 2026-11-09
+
+### 🤖 Autonomous Boot & Post-Midnight OTA Firmware Checking
+- **Autonomous Boot Check**: ESP32 firmware now checks GitHub Releases for new firmware ~60 seconds after boot once Wi-Fi and SNTP stabilize.
+- **Nightly Post-Midnight Check**: Internal background worker checks GitHub automatically once per day at 02:00 AM local time (using NTP and configured GMT offset).
+- **Firmware Status Reporting**: `/api/ota/status` exposes `update_available`, `latest_firmware_version`, and `last_check_unix` directly from the hardware, instantly informing connected browsers without requiring extra client-side queries.
+- **Safety**: Autonomous checks only query and flag available updates—they never flash or reboot without explicit user confirmation.
+
+---
+
 ## [0.2.34] - 2026-11-09
 
 ### ⚡ Service Worker Cache Fix & Instant UI Updates

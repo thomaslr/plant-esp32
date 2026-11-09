@@ -25,6 +25,37 @@ pub mod safety;
 pub mod sensors;
 pub mod timeutil;
 
+/// Compares two semver strings (e.g. "v0.2.35" vs "0.2.34", "v0.3.0" vs "v0.2.34").
+/// Returns true if `candidate` is strictly greater (newer) than `reference`.
+pub fn is_version_newer(candidate: &str, reference: &str) -> bool {
+    let parse = |s: &str| -> (u32, u32, u32) {
+        let clean = s.trim().trim_start_matches('v').trim_start_matches('V');
+        let mut parts = clean.split('.').filter_map(|p| p.parse::<u32>().ok());
+        let major = parts.next().unwrap_or(0);
+        let minor = parts.next().unwrap_or(0);
+        let patch = parts.next().unwrap_or(0);
+        (major, minor, patch)
+    };
+    parse(candidate) > parse(reference)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_version_comparison() {
+        assert!(is_version_newer("v0.2.35", "v0.2.34"));
+        assert!(is_version_newer("v0.2.35", "0.2.34"));
+        assert!(is_version_newer("0.3.0", "v0.2.34"));
+        assert!(is_version_newer("v1.0.0", "v0.9.9"));
+        assert!(!is_version_newer("v0.2.34", "v0.2.34"));
+        assert!(!is_version_newer("0.2.34", "0.2.34"));
+        assert!(!is_version_newer("v0.2.33", "v0.2.34"));
+        assert!(!is_version_newer("", "v0.2.34"));
+    }
+}
+
 #[cfg(test)]
 mod environmental_tests;
 

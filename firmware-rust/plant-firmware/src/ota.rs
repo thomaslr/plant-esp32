@@ -6,6 +6,7 @@
 //! 3. Automatic rollback cancellation (`mark_running_app_valid`).
 
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Mutex;
 use std::time::Duration;
 use embedded_svc::http::Method;
 use embedded_svc::io::Read;
@@ -15,6 +16,23 @@ use log::{info, warn};
 
 pub const DEFAULT_GITHUB_OTA_URL: &str =
     "https://github.com/thomaslr/plant-esp32/releases/latest/download/plant-firmware.bin";
+
+pub const DEFAULT_GITHUB_VERSION_URL: &str =
+    "https://github.com/thomaslr/plant-esp32/releases/latest/download/version.json";
+
+#[derive(Clone, Debug, serde::Serialize)]
+pub struct OtaCheckResult {
+    pub latest_version: String,
+    pub update_available: bool,
+    pub last_check_unix: i64,
+    pub url: String,
+}
+
+static LATEST_OTA_CHECK: Mutex<Option<OtaCheckResult>> = Mutex::new(None);
+
+pub fn get_latest_ota_check() -> Option<OtaCheckResult> {
+    LATEST_OTA_CHECK.lock().ok().and_then(|guard| guard.clone())
+}
 
 static OTA_IN_PROGRESS: AtomicBool = AtomicBool::new(false);
 
@@ -38,6 +56,9 @@ pub struct OtaStatus {
     pub firmware_version: &'static str,
     pub default_url: &'static str,
     pub rollback_enabled: bool,
+    pub update_available: bool,
+    pub latest_firmware_version: Option<String>,
+    pub last_check_unix: Option<i64>,
 }
 
 /// Marks the currently running slot as valid.
@@ -75,13 +96,158 @@ pub fn get_ota_status() -> OtaStatus {
         }
     }
 
+    let (update_available, latest_firmware_version, last_check_unix) = match get_latest_ota_check() {
+        Some(chk) => (chk.update_available, Some(chk.latest_version), Some(chk.last_check_unix)),
+        None => (false, None, None),
+    };
+
     OtaStatus {
         running_slot,
         next_update_slot,
         firmware_version: env!("CARGO_PKG_VERSION"),
         default_url: DEFAULT_GITHUB_OTA_URL,
         rollback_enabled: true,
+        update_available,
+        latest_firmware_version,
+        last_check_unix,
     }
+}
+
+/// Queries GitHub Releases for the lightweight version.json metadata file.
+pub fn check_latest_version() -> Result<OtaCheckResult, String> {
+    if is_ota_in_progress() {
+        return Err("OTA update currently in progress".to_string());
+    }
+
+    info!("[OTA] Autonomous check: querying {}", DEFAULT_GITHUB_VERSION_URL);
+
+    let config = HttpConfig {
+        follow_redirects_policy: FollowRedirectsPolicy::FollowGetHead,
+        crt_bundle_attach: Some(esp_idf_svc::sys::esp_crt_bundle_attach),
+        buffer_size: Some(4096),
+        buffer_size_tx: Some(2048),
+        timeout: Some(Duration::from_secs(15)),
+        ..Default::default()
+    };
+
+    let mut conn = EspHttpConnection::new(&config)
+        .map_err(|e| format!("Failed to initialize HTTP connection: {:?}", e))?;
+
+    conn.initiate_request(Method::Get, DEFAULT_GITHUB_VERSION_URL, &[("User-Agent", "plant-esp32-ota")])
+        .map_err(|e| format!("Failed to initiate request: {:?}", e))?;
+
+    conn.initiate_response()
+        .map_err(|e| format!("Failed to initiate response: {:?}", e))?;
+
+    let status = conn.status();
+    if !(200..300).contains(&status) {
+        return Err(format!("Server returned HTTP {}", status));
+    }
+
+    let mut buf = [0u8; 1024];
+    let mut total_read = 0;
+    loop {
+        match conn.read(&mut buf[total_read..]) {
+            Ok(0) => break,
+            Ok(n) => {
+                total_read += n;
+                if total_read >= buf.len() {
+                    break;
+                }
+            }
+            Err(e) => return Err(format!("Read error: {:?}", e)),
+        }
+    }
+
+    let v: serde_json::Value = serde_json::from_slice(&buf[..total_read])
+        .map_err(|e| format!("Failed to parse version.json: {:?}", e))?;
+
+    let latest_ver = v.get("version")
+        .and_then(|val| val.as_str())
+        .ok_or_else(|| "Missing 'version' key in version.json".to_string())?
+        .to_string();
+
+    let download_url = v.get("url")
+        .and_then(|val| val.as_str())
+        .unwrap_or(DEFAULT_GITHUB_OTA_URL)
+        .to_string();
+
+    let current_ver = env!("CARGO_PKG_VERSION");
+    let update_available = plant_core::is_version_newer(&latest_ver, current_ver);
+
+    let now_unix = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs() as i64)
+        .unwrap_or(0);
+
+    let result = OtaCheckResult {
+        latest_version: latest_ver.clone(),
+        update_available,
+        last_check_unix: now_unix,
+        url: download_url,
+    };
+
+    info!(
+        "[OTA] Autonomous check complete: installed='{}', latest='{}', update_available={}",
+        current_ver, latest_ver, update_available
+    );
+
+    if let Ok(mut lock) = LATEST_OTA_CHECK.lock() {
+        *lock = Some(result.clone());
+    }
+
+    Ok(result)
+}
+
+/// Spawns the autonomous background worker for OTA update checks.
+/// - Checks shortly after boot (~60 seconds after startup).
+/// - Checks once per day sometime after midnight (~02:00 AM local time).
+pub fn start_periodic_ota_check<F>(gmt_offset_fn: F) -> std::io::Result<()>
+where
+    F: Fn() -> i32 + Send + 'static,
+{
+    std::thread::Builder::new()
+        .name("OtaCheckWorker".to_string())
+        .stack_size(24 * 1024)
+        .spawn(move || {
+            // Initial delay after boot to let Wi-Fi and SNTP settle
+            info!("[OTA] Autonomous check worker initialized; will run initial check in 60s");
+            std::thread::sleep(Duration::from_secs(60));
+
+            // 1. Shortly after boot check:
+            if let Err(e) = check_latest_version() {
+                warn!("[OTA] Boot update check failed: {}", e);
+            }
+
+            let mut last_checked_day: Option<i64> = None;
+
+            loop {
+                std::thread::sleep(Duration::from_secs(60));
+
+                let now_unix = std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .map(|d| d.as_secs() as i64)
+                    .unwrap_or(0);
+
+                let gmt_offset = gmt_offset_fn();
+
+                if let (Some(hour), Some(day)) = (
+                    plant_core::timeutil::local_hour(now_unix, gmt_offset),
+                    plant_core::timeutil::local_day(now_unix, gmt_offset),
+                ) {
+                    // 2. Once per day sometime after midnight (at 02:00 local time):
+                    if hour == 2 && last_checked_day != Some(day) {
+                        last_checked_day = Some(day);
+                        info!("[OTA] Nightly post-midnight update check running (local hour: 2 AM)...");
+                        if let Err(e) = check_latest_version() {
+                            warn!("[OTA] Nightly update check failed: {}", e);
+                        }
+                    }
+                }
+            }
+        })?;
+
+    Ok(())
 }
 
 /// Streams a new firmware image from an HTTPS URL (e.g. GitHub Releases) into the next OTA slot.

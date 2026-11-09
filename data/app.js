@@ -321,7 +321,7 @@ async function handleReboot() {
 // =============================================================================
 // OTA & Firmware Version Management (Daily Checks & Pre-Install Review)
 // =============================================================================
-let currentInstalledVer = 'v0.2.34';
+let currentInstalledVer = 'v0.2.35';
 let pendingOtaRelease = null;
 let dailyOtaCheckTimer = null;
 
@@ -367,6 +367,17 @@ async function fetchOtaStatus() {
                 : `Next: ${data.next_update_slot}`;
             const diagSlot = document.getElementById('diag-ota-slot');
             if (diagSlot) diagSlot.innerText = `${data.running_slot} (${nextSlotText})`;
+        }
+
+        // If the ESP32 firmware ran its autonomous check, immediately reflect it in the UI!
+        if (data.latest_firmware_version) {
+            const releaseInfo = {
+                tag_name: data.latest_firmware_version,
+                lastChecked: (data.last_check_unix ? data.last_check_unix * 1000 : Date.now()),
+                body: "Release notes available on GitHub."
+            };
+            cachedReleaseInfo = releaseInfo;
+            updateOtaUi(currentInstalledVer, releaseInfo, false);
         }
 
         // Initialize daily background OTA checks and restore cached state
