@@ -225,6 +225,10 @@ async function fetchLogs() {
         if (!res.ok) throw new Error("HTTP " + res.status);
         const logs = await res.json();
         renderLogTable(logs);
+        const calcDli = calculateDliFromLogs(logs);
+        if (calcDli !== null && (!lastTelemetry || lastTelemetry.dli_yesterday === undefined)) {
+            updateDliDisplay(calcDli);
+        }
     } catch (err) {
         console.warn("Log fetch failed:", err);
     }
@@ -1121,11 +1125,13 @@ function renderAllDialZones() {
         { from: 75, to: 100, color: '#38bdf8' } // Blue (High Humidity)
     ]);
 
-    // 8. Ambient Light Lux (0 - 5000 lx)
-    renderDialZones('zones-light-lux', 0, 5000, [
-        { from: 0, to: 200, color: '#64748b' },    // Dim/Dark
-        { from: 200, to: 2500, color: '#10b981' }, // Good Indoor/Filtered Light
-        { from: 2500, to: 5000, color: '#eab308' } // Bright Direct Sun
+    // 8. Ambient Light Lux - Categorical Horticultural Bands (0 - 5 scale)
+    renderDialZones('zones-light-lux', 0, 5, [
+        { from: 0, to: 1, color: '#64748b' }, // 1. Deep Shade (<250 lx)
+        { from: 1, to: 2, color: '#38bdf8' }, // 2. Low Light (250 - 1,000 lx)
+        { from: 2, to: 3, color: '#10b981' }, // 3. Medium Light (1,000 - 2,500 lx)
+        { from: 3, to: 4, color: '#eab308' }, // 4. Bright Indirect (2,500 - 5,000 lx)
+        { from: 4, to: 5, color: '#f97316' }  // 5. Direct Sun (>5,000 lx)
     ]);
 
     // 9. LDR Light % (0% - 100%)
@@ -1160,6 +1166,132 @@ function setDialState(id, val, min, max, displayText, badgeInfo, subText) {
 
     const subEl = document.getElementById(`sub-${id}`);
     if (subEl && subText !== undefined) subEl.innerText = subText;
+}
+
+/**
+ * Maps illuminance in lux (0 - 20,000+ lx) into a 0 - 5 normalized dial scale
+ * across the 5 standard Categorical Horticultural Bands:
+ * 0 - 1: Deep Shade (0 - 250 lx)
+ * 1 - 2: Low Light (250 - 1,000 lx)
+ * 2 - 3: Medium Light (1,000 - 2,500 lx)
+ * 3 - 4: Bright Indirect (2,500 - 5,000 lx)
+ * 4 - 5: Direct Sun (>5,000 lx)
+ */
+function luxToHorticulturalScale(lux) {
+    if (lux === undefined || lux === null || isNaN(lux) || lux <= 0) return 0;
+    if (lux < 250) {
+        return lux / 250.0;
+    } else if (lux < 1000) {
+        return 1.0 + ((lux - 250.0) / 750.0);
+    } else if (lux < 2500) {
+        return 2.0 + ((lux - 1000.0) / 1500.0);
+    } else if (lux < 5000) {
+        return 3.0 + ((lux - 2500.0) / 2500.0);
+    } else {
+        return 4.0 + Math.min(1.0, (lux - 5000.0) / 15000.0);
+    }
+}
+
+function getHorticulturalBadge(lux) {
+    if (lux === undefined || lux === null || isNaN(lux) || lux < 250) {
+        return {
+            badge: { className: 'badge-neutral', text: 'Deep Shade' },
+            desc: 'Survival only (<250 lx)'
+        };
+    } else if (lux < 1000) {
+        return {
+            badge: { className: 'badge-info', text: 'Low Light' },
+            desc: 'Snake plant, ZZ (250–1k lx)'
+        };
+    } else if (lux < 2500) {
+        return {
+            badge: { className: 'badge-success', text: 'Medium Light' },
+            desc: 'Pothos, Monstera (1k–2.5k lx)'
+        };
+    } else if (lux < 5000) {
+        return {
+            badge: { className: 'badge-warning', text: 'Bright Indirect' },
+            desc: 'Ficus, Orchids (2.5k–5k lx)'
+        };
+    } else {
+        return {
+            badge: { className: 'badge-danger', text: 'Direct Sun' },
+            desc: 'Succulents, Cacti (>5k lx)'
+        };
+    }
+}
+
+function updateDliDisplay(dliValue) {
+    const valEl = document.getElementById('val-dli-yesterday');
+    const subEl = document.getElementById('sub-dli-yesterday');
+    if (!valEl) return;
+
+    if (dliValue !== undefined && dliValue !== null && !isNaN(dliValue) && dliValue >= 0) {
+        valEl.innerText = `${dliValue.toFixed(2)} mol/m²/d`;
+        if (subEl) {
+            if (dliValue < 2.0) {
+                subEl.innerText = 'Very Low (<2 mol) • Maintenance only';
+                subEl.style.color = '#94a3b8';
+            } else if (dliValue < 5.0) {
+                subEl.innerText = 'Low (2–5 mol) • Low-light foliage';
+                subEl.style.color = '#38bdf8';
+            } else if (dliValue < 10.0) {
+                subEl.innerText = 'Medium (5–10 mol) • Most tropicals';
+                subEl.style.color = '#10b981';
+            } else if (dliValue < 16.0) {
+                subEl.innerText = 'Bright (10–16 mol) • High-light plants';
+                subEl.style.color = '#eab308';
+            } else {
+                subEl.innerText = 'Full Sun (>16 mol) • Fruiting / Cacti';
+                subEl.style.color = '#f97316';
+            }
+        }
+    } else {
+        valEl.innerText = '-- mol/m²/d';
+        if (subEl) {
+            subEl.innerText = 'Accumulating day history';
+            subEl.style.color = '#94a3b8';
+        }
+    }
+}
+
+function calculateDliFromLogs(logs) {
+    if (!logs || !Array.isArray(logs) || logs.length < 2) return null;
+    const gmtOffsetHours = (appConfig && appConfig.system && typeof appConfig.system.gmt_offset === 'number')
+        ? appConfig.system.gmt_offset
+        : 8;
+
+    const nowSec = Math.floor(Date.now() / 1000);
+    const SECS_PER_DAY = 86400;
+    const currentDay = Math.floor((nowSec + gmtOffsetHours * 3600) / SECS_PER_DAY);
+    const targetDay = currentDay - 1; // Yesterday
+
+    // Filter samples for yesterday with valid light_lux
+    const daySamples = logs
+        .filter(r => {
+            if (!r.timestamp || r.timestamp < 1700000000 || r.light_lux === undefined || r.light_lux === null) return false;
+            const rDay = Math.floor((r.timestamp + gmtOffsetHours * 3600) / SECS_PER_DAY);
+            return rDay === targetDay;
+        })
+        .map(r => ({ ts: r.timestamp, lux: r.light_lux }))
+        .sort((a, b) => a.ts - b.ts);
+
+    if (daySamples.length === 0) return null;
+    if (daySamples.length === 1) {
+        return (daySamples[0].lux * 0.0185 * 3600) / 1000000.0;
+    }
+
+    let totalMicroMoles = 0;
+    for (let i = 0; i < daySamples.length - 1; i++) {
+        const t0 = daySamples[i].ts;
+        const t1 = daySamples[i + 1].ts;
+        if (t1 <= t0) continue;
+        const dt = Math.min(t1 - t0, 7200);
+        const avgLux = (daySamples[i].lux + daySamples[i + 1].lux) / 2.0;
+        totalMicroMoles += avgLux * 0.0185 * dt;
+    }
+
+    return totalMicroMoles / 1000000.0;
 }
 
 // =============================================================================
@@ -1279,19 +1411,23 @@ function updateTelemetryUI(t) {
         if (pillHumi) pillHumi.style.display = 'none';
     }
 
-    // 8. Ambient Light Lux (BH1750)
+    // 8. Ambient Light Lux (BH1750) - Categorical Horticultural Bands
     const cardLux = document.getElementById('card-light-lux');
     const pillLux = document.getElementById('pill-light-lux');
     if (t.light_lux !== undefined && t.light_lux !== null) {
         if (cardLux) cardLux.style.display = 'block';
         if (pillLux) pillLux.style.display = 'inline-flex';
-        let luxBadge = { className: 'badge-success', text: 'Good Light' };
-        if (t.light_lux < 100) luxBadge = { className: 'badge-neutral', text: 'Dim / Shade' };
-        else if (t.light_lux > 3000) luxBadge = { className: 'badge-warning', text: 'Bright Sun' };
-        setDialState('light-lux', t.light_lux, 0, 5000, `${Math.round(t.light_lux)} lx`, luxBadge, 'BH1750 I2C');
+        const band = getHorticulturalBadge(t.light_lux);
+        const dialPos = luxToHorticulturalScale(t.light_lux);
+        setDialState('light-lux', dialPos, 0, 5, `${Math.round(t.light_lux)} lx`, band.badge, band.desc);
     } else {
         if (cardLux) cardLux.style.display = 'none';
         if (pillLux) pillLux.style.display = 'none';
+    }
+
+    // Yesterday's DLI metric update
+    if (t.dli_yesterday !== undefined && t.dli_yesterday !== null) {
+        updateDliDisplay(t.dli_yesterday);
     }
 
     // 9. LDR Light % (Analog)

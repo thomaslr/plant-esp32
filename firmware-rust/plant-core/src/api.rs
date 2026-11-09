@@ -70,6 +70,8 @@ pub struct SensorsView {
     pub light_lux: Option<f32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ldr_percent: Option<f32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dli_yesterday: Option<f32>,
 }
 
 impl From<&SensorReading> for SensorsView {
@@ -87,6 +89,7 @@ impl From<&SensorReading> for SensorsView {
             humidity_pct: r.humidity_pct.map(round1),
             light_lux: r.light_lux.map(round1),
             ldr_percent: r.ldr_percent.map(round1),
+            dli_yesterday: None,
         }
     }
 }
@@ -140,6 +143,8 @@ pub struct Telemetry {
     pub light_lux: Option<f32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ldr_percent: Option<f32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dli_yesterday: Option<f32>,
 }
 
 impl From<&SensorReading> for Telemetry {
@@ -158,6 +163,7 @@ impl From<&SensorReading> for Telemetry {
             humidity_pct: r.humidity_pct.map(round1),
             light_lux: r.light_lux.map(round1),
             ldr_percent: r.ldr_percent.map(round1),
+            dli_yesterday: None,
         }
     }
 }

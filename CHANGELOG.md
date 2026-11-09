@@ -4,6 +4,16 @@ All notable changes to the Plant ESP32 firmware and web dashboard will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.36] - 2026-11-09
+
+### 🌿 Categorical Horticultural Light Bands & Daily Light Integral (DLI)
+- **Categorical Horticultural Light Bands**: Redesigned the ambient light meter to reflect standard horticultural plant lighting tiers: Deep Shade (<250 lx), Low Light (250–1,000 lx), Medium Light (1,000–2,500 lx), Bright Indirect (2,500–5,000 lx), and Direct Sun (>5,000 lx).
+- **Non-Linear Gauge Dial**: Replaced linear lux scaling with normalized piecewise band sectors so indoor light readings (such as 108 lx) accurately position within the Deep Shade arc rather than pegging against the zero stop.
+- **Daily Light Integral (DLI)**: Added persistent calculation and display of yesterday's total cumulative light in mol/m²/day (`LUX_TO_PPFD_SUNLIGHT` trapezoidal numerical integration) with horticultural quality ratings.
+- **Firmware Integration**: `/api/status` now reports `dli_yesterday` directly from historical telemetry readings in flash memory, updating every day at local midnight.
+
+---
+
 ## [0.2.35] - 2026-11-09
 
 ### 🤖 Autonomous Boot & Post-Midnight OTA Firmware Checking

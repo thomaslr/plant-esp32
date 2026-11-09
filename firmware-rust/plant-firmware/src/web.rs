@@ -115,10 +115,21 @@ pub fn create_web_server(
             let uptime_sec = now_ms / 1000;
             let mdns = format!("{}.local", app.config.system.hostname);
 
-            let sensors = match latest {
+            let unix_secs = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|d| d.as_secs() as i64)
+                .unwrap_or(0);
+
+            let mut sensors = match latest {
                 Some(ref r) => SensorsView::from(r),
                 None => SensorsView::default(),
             };
+
+            // Calculate yesterday's Daily Light Integral (DLI) from historical telemetry
+            if let Some(day) = plant_core::timeutil::local_day(unix_secs, app.config.system.gmt_offset) {
+                let all_readings = app.history.all();
+                sensors.dli_yesterday = plant_core::dli::calculate_daily_dli(&all_readings, day - 1, app.config.system.gmt_offset);
+            }
 
             let last_watered_ago_sec = app.safety.last_watered_ago_sec(now_ms);
             let last_watered_duration_sec = app.safety.last_watered_duration_sec();
@@ -126,11 +137,6 @@ pub fn create_web_server(
                 last_watered_ago_sec,
                 last_watered_duration_sec,
             );
-
-            let unix_secs = std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .map(|d| d.as_secs() as i64)
-                .unwrap_or(0);
             let current_hour = plant_core::timeutil::local_hour(unix_secs, app.config.system.gmt_offset);
             let (quiet_hours_active, quiet_hours_text) = plant_core::timeutil::format_night_protection(
                 app.config.safety.night_watering_protection.enabled,

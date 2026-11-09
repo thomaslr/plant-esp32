@@ -27,7 +27,7 @@
             <div class="header-title">
                 <h1>🌱 Plant Monitor & Waterer</h1>
                 <span class="badge" id="host-badge">plants.local</span>
-                <span class="badge" id="version-badge" style="background: #1e293b; color: #38bdf8; border: 1px solid #334155; font-size: 0.75rem;">v0.2.35 🌿</span>
+                <span class="badge" id="version-badge" style="background: #1e293b; color: #38bdf8; border: 1px solid #334155; font-size: 0.75rem;">v0.2.36 🌿</span>
                 <span class="badge" id="header-ota-badge" style="display: none; background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); font-size: 0.75rem; cursor: pointer;" title="New update available! Click to review.">✨ Update: --</span>
                 <span class="badge" id="clock-badge" style="background: #1e293b; color: #94a3b8; border: 1px solid #334155; font-size: 0.75rem; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; display: inline-flex; align-items: center; gap: 4px;" title="ESP32 Real-Time Clock (NTP Synchronized)">🕒 Connecting...</span>
             </div>
@@ -254,8 +254,9 @@
                                 <polygon points="97,105 100,32 103,105" fill="#f8fafc" class="dial-needle" />
                                 <circle cx="100" cy="105" r="7" fill="#38bdf8" stroke="#0f172a" stroke-width="2.5" class="dial-hub" />
                             </g>
-                            <text x="25" y="122" class="dial-range-label" text-anchor="middle">0 lx</text>
-                            <text x="175" y="122" class="dial-range-label" text-anchor="middle">5k lx</text>
+                            <text x="25" y="122" class="dial-range-label" text-anchor="middle">Shade</text>
+                            <text x="100" y="22" class="dial-range-label" text-anchor="middle" style="font-size: 9px; fill: #64748b;">Medium</text>
+                            <text x="175" y="122" class="dial-range-label" text-anchor="middle">Direct Sun</text>
                         </svg>
                     </div>
                     <div class="dial-readout">
@@ -263,7 +264,14 @@
                         <div class="dial-badge-wrap">
                             <span class="dial-badge badge-neutral" id="badge-light-lux">BH1750</span>
                         </div>
-                        <div class="card-sub" id="sub-light-lux">Illuminance</div>
+                        <div class="card-sub" id="sub-light-lux">Horticultural Band</div>
+                        <div class="dli-box" style="margin-top: 10px; padding: 6px 10px; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: var(--text-muted);">
+                                <span>☀️ Yesterday's DLI:</span>
+                                <strong id="val-dli-yesterday" style="color: #38bdf8; font-size: 0.88rem;">-- mol/m²/d</strong>
+                            </div>
+                            <div id="sub-dli-yesterday" style="font-size: 0.72rem; color: #94a3b8; margin-top: 2px; text-align: right;">Awaiting day history</div>
+                        </div>
                     </div>
                 </div>
 
@@ -556,7 +564,7 @@
                         <span class="card-icon">🚀</span>
                     </div>
                     <ul class="diag-list" style="margin-bottom: 14px;">
-                        <li><span>Installed Firmware:</span> <strong id="diag-ota-ver">v0.2.35</strong></li>
+                        <li><span>Installed Firmware:</span> <strong id="diag-ota-ver">v0.2.36</strong></li>
                         <li><span>Active Boot Slot:</span> <strong id="diag-ota-slot">--</strong></li>
                         <li><span>Daily Update Check:</span> <strong id="diag-ota-status">Checking...</strong></li>
                     </ul>
@@ -826,6 +834,6 @@
         </div>
     </div>
 
-    <script src="app.js?v=21"></script>
+    <script src="app.js?v=22"></script>
 </body>
 </html>
