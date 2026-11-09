@@ -31,7 +31,6 @@ use esp_idf_svc::nvs::EspDefaultNvsPartition;
 use esp_idf_svc::sntp::EspSntp;
 use esp_idf_svc::sys::{esp_timer_get_time, link_patches};
 use log::{error, info, warn};
-use plant_core::ring_buffer::RingBuffer;
 use plant_core::safety::SafetyManager;
 use plant_core::timeutil::{local_day, local_hour, MidnightTracker};
 
@@ -150,9 +149,9 @@ fn main() -> anyhow::Result<()> {
             let pump_gate = HardwarePumpGate::new(Arc::clone(&pump_speed));
             let safety = SafetyManager::new(&config, pump_gate);
 
-            // 7. Initialize Sensor Manager & 100-sample RAM Ring Buffer
+            // 7. Initialize Sensor Manager & 100-sample Persistent Flash Ring Buffer
             let sensors = HardwareSensorManager::new();
-            let history = RingBuffer::new(100);
+            let history = storage.load_history(100);
 
             // 8. Start SNTP Time Synchronization
             let _sntp = match EspSntp::new_default() {
@@ -263,10 +262,13 @@ fn main() -> anyhow::Result<()> {
                     app.sensors.read_all_sensors(pump_active, &config)
                 };
 
-                // Push reading into circular RAM ring buffer
+                // Push reading into circular RAM ring buffer and commit to flash
                 {
                     let mut app = s_sensors.lock().unwrap();
                     app.history.push(reading.clone());
+                    if let Err(e) = app.storage.save_history(&app.history) {
+                        warn!("[SENSOR] Failed to persist history to flash: {}", e);
+                    }
                 }
 
                 info!(

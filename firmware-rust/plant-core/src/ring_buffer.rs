@@ -50,6 +50,21 @@ impl<T: Clone> RingBuffer<T> {
     pub fn latest(&self) -> Option<T> {
         self.items.back().cloned()
     }
+
+    /// All items in FIFO order (oldest first).
+    pub fn all(&self) -> Vec<T> {
+        self.items.iter().cloned().collect()
+    }
+
+    /// Initializes ring buffer with existing items up to capacity.
+    pub fn from_items(items: Vec<T>, capacity: usize) -> Self {
+        assert!(capacity > 0, "RingBuffer capacity must be non-zero");
+        let mut rb = Self::new(capacity);
+        for item in items {
+            rb.push(item);
+        }
+        rb
+    }
 }
 
 #[cfg(test)]

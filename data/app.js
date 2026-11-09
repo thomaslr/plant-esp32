@@ -1162,31 +1162,35 @@ function renderLogTable(logs) {
     const tbody = document.getElementById('log-body');
     const badge = document.getElementById('log-count-badge');
     if (!logs || logs.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No log data recorded yet.</td></tr>';
-        if (badge) badge.innerText = '0 / 100 in RAM';
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">No log data recorded yet.</td></tr>';
+        if (badge) badge.innerText = '0 / 100 in Flash';
         renderTelemetryChart([]);
         return;
     }
 
     if (badge) {
-        badge.innerText = `${logs.length} / 100 in RAM`;
+        badge.innerText = `${logs.length} / 100 in Flash`;
     }
 
     tbody.innerHTML = logs.map(r => {
         const timeDisplay = formatReadingTime(r.timestamp, true);
         const relDisplay = formatReadingRelative(r.timestamp);
-        let envInfo = '';
-        if (r.air_temp_c !== undefined && r.air_temp_c !== null) {
-            envInfo += ` • ${r.air_temp_c.toFixed(1)}°C Air`;
-        }
-        if (r.humidity_pct !== undefined && r.humidity_pct !== null) {
-            envInfo += ` • ${Math.round(r.humidity_pct)}% RH`;
-        }
+
+        const airDisplay = (r.air_temp_c !== undefined && r.air_temp_c !== null)
+            ? `<span style="color: #06b6d4; font-weight: 500;">${r.air_temp_c.toFixed(1)}°C</span>`
+            : '<span style="color: #64748b;">--</span>';
+
+        const humDisplay = (r.humidity_pct !== undefined && r.humidity_pct !== null)
+            ? `<span style="color: #3b82f6; font-weight: 500;">${Math.round(r.humidity_pct)}%</span>`
+            : '<span style="color: #64748b;">--</span>';
+
+        let lightDisplay = '<span style="color: #64748b;">--</span>';
         if (r.light_lux !== undefined && r.light_lux !== null) {
-            envInfo += ` • ${Math.round(r.light_lux)} lx`;
+            lightDisplay = `<span style="color: #eab308; font-weight: 500;">${Math.round(r.light_lux)} lx</span>`;
         } else if (r.ldr_percent !== undefined && r.ldr_percent !== null) {
-            envInfo += ` • ${Math.round(r.ldr_percent)}% Light`;
+            lightDisplay = `<span style="color: #f97316; font-weight: 500;">${Math.round(r.ldr_percent)}%</span>`;
         }
+
         return `
         <tr>
             <td title="Recorded: ${timeDisplay} (${relDisplay}, boot +${Math.round(r.timestamp)}s)">
@@ -1196,10 +1200,10 @@ function renderLogTable(logs) {
             <td>${r.soil_percent}%</td>
             <td>${r.water_level_cm} cm</td>
             <td>${r.supply_voltage.toFixed(2)}V${r.battery_voltage > 0.5 ? ' / ' + r.battery_voltage.toFixed(2) + 'V Bat' : ''}</td>
-            <td>
-                <div>${r.chip_temp.toFixed(1)}°C</div>
-                ${envInfo ? `<div style="font-size: 0.72rem; color: #38bdf8;">${envInfo}</div>` : ''}
-            </td>
+            <td>${r.chip_temp.toFixed(1)}°C</td>
+            <td>${airDisplay}</td>
+            <td>${humDisplay}</td>
+            <td>${lightDisplay}</td>
         </tr>
     `}).join('');
 

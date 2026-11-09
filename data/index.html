@@ -27,7 +27,7 @@
             <div class="header-title">
                 <h1>🌱 Plant Monitor & Waterer</h1>
                 <span class="badge" id="host-badge">plants.local</span>
-                <span class="badge" id="version-badge" style="background: #1e293b; color: #38bdf8; border: 1px solid #334155; font-size: 0.75rem;">v0.2.29 🌿</span>
+                <span class="badge" id="version-badge" style="background: #1e293b; color: #38bdf8; border: 1px solid #334155; font-size: 0.75rem;">v0.2.30 🌿</span>
             </div>
             <div class="header-status">
                 <span id="conn-status" class="dot dot-disconnected"></span>
@@ -381,7 +381,7 @@
                 <div class="log-header">
                     <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
                         <h3 style="margin: 0;">Recent Telemetry Readings</h3>
-                        <span id="log-count-badge" class="badge" style="background: #1e293b; color: #38bdf8; border: 1px solid #334155; font-size: 0.75rem;">Capacity: 100 in RAM</span>
+                        <span id="log-count-badge" class="badge" style="background: #1e293b; color: #38bdf8; border: 1px solid #334155; font-size: 0.75rem;">Capacity: 100 in Flash</span>
                     </div>
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <label for="select-log-limit" style="font-size: 0.85rem; color: #94a3b8; margin: 0;">Show:</label>
@@ -402,11 +402,14 @@
                                 <th>Soil</th>
                                 <th>Water</th>
                                 <th>Supply</th>
-                                <th>Temp</th>
+                                <th>Chip Temp</th>
+                                <th id="th-air-temp">Air Temp</th>
+                                <th id="th-humidity">Humidity</th>
+                                <th id="th-light">Light</th>
                             </tr>
                         </thead>
                         <tbody id="log-body">
-                            <tr><td colspan="5" style="text-align:center;">Loading logs...</td></tr>
+                            <tr><td colspan="8" style="text-align:center;">Loading logs...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -813,6 +816,6 @@
         </div>
     </div>
 
-    <script src="app.js?v=16"></script>
+    <script src="app.js?v=17"></script>
 </body>
 </html>

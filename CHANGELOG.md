@@ -4,6 +4,15 @@ All notable changes to the Plant ESP32 firmware and web dashboard will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.30] - 2026-11-09
+
+### 💾 Persistent Flash Logging & Dedicated Environmental Table Columns
+- **Persistent Flash Telemetry**: Sensor readings now persist across reboots and firmware updates via NVS flash storage (`plant_log` partition blob). Historical readings are reloaded into the FIFO ring buffer on boot.
+- **Dedicated Log Table Columns**: Replaced cramped sub-labels with dedicated table columns for **Air Temp**, **Humidity**, and **Light** in the Sensor Log view.
+- **Updated Capacity Badge**: Log count badge now displays `X / 100 in Flash`.
+
+---
+
 ## [0.2.29] - 2026-11-09
 
 ### 🌿 Environmental Sensor Settings & Dashboard Stability

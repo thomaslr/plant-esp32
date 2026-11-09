@@ -4,8 +4,10 @@
 //! network credentials under the `plant_wifi` namespace.
 
 use esp_idf_svc::nvs::{EspDefaultNvsPartition, EspNvs, NvsDefault};
-use log::{error, info, warn};
+use log::{debug, error, info, warn};
 use plant_core::config::AppConfig;
+use plant_core::reading::SensorReading;
+use plant_core::ring_buffer::RingBuffer;
 
 const CFG_NAMESPACE: &str = "plant_cfg";
 const NVS_KEY_CONFIG: &str = "config_json";
@@ -13,6 +15,9 @@ const NVS_KEY_CONFIG: &str = "config_json";
 const WIFI_NAMESPACE: &str = "plant_wifi";
 const NVS_KEY_SSID: &str = "wifi_ssid";
 const NVS_KEY_PASS: &str = "wifi_pass";
+
+const LOG_NAMESPACE: &str = "plant_log";
+const NVS_KEY_HISTORY: &str = "hist_bin";
 
 const BUFFER_SIZE: usize = 2048;
 
@@ -26,14 +31,16 @@ pub struct WifiCredentials {
 pub struct NvsConfigStorage {
     nvs_cfg: EspNvs<NvsDefault>,
     nvs_wifi: EspNvs<NvsDefault>,
+    nvs_log: EspNvs<NvsDefault>,
 }
 
 impl NvsConfigStorage {
     /// Opens the NVS partitions for configuration and Wi-Fi credentials.
     pub fn new(partition: EspDefaultNvsPartition) -> Result<Self, esp_idf_svc::sys::EspError> {
         let nvs_cfg = EspNvs::new(partition.clone(), CFG_NAMESPACE, true)?;
-        let nvs_wifi = EspNvs::new(partition, WIFI_NAMESPACE, true)?;
-        Ok(Self { nvs_cfg, nvs_wifi })
+        let nvs_wifi = EspNvs::new(partition.clone(), WIFI_NAMESPACE, true)?;
+        let nvs_log = EspNvs::new(partition, LOG_NAMESPACE, true)?;
+        Ok(Self { nvs_cfg, nvs_wifi, nvs_log })
     }
 
     /// Loads the stored `AppConfig`. Falls back to default if not found or invalid.
@@ -117,6 +124,51 @@ impl NvsConfigStorage {
             .erase_all()
             .map_err(|e| format!("Failed to erase Wi-Fi credentials: {}", e))?;
         info!("[NVS] Cleared Wi-Fi credentials from NVS");
+        Ok(())
+    }
+
+    /// Loads persisted sensor history from NVS into a RingBuffer (up to capacity 100).
+    pub fn load_history(&self, capacity: usize) -> RingBuffer<SensorReading> {
+        let max_bytes = capacity * SensorReading::BINARY_SIZE;
+        let mut buf = vec![0u8; max_bytes];
+
+        match self.nvs_log.get_blob(NVS_KEY_HISTORY, &mut buf) {
+            Ok(Some(slice)) => {
+                let rec_size = SensorReading::BINARY_SIZE;
+                let count = slice.len() / rec_size;
+                let mut items = Vec::with_capacity(count);
+                for chunk in slice.chunks_exact(rec_size) {
+                    if let Some(r) = SensorReading::from_binary(chunk) {
+                        items.push(r);
+                    }
+                }
+                info!("[NVS] Loaded {} historical sensor readings from flash", items.len());
+                RingBuffer::from_items(items, capacity)
+            }
+            Ok(None) => {
+                info!("[NVS] No historical sensor readings found in flash. Starting fresh buffer.");
+                RingBuffer::new(capacity)
+            }
+            Err(e) => {
+                warn!("[NVS] Failed to read historical sensor readings: {}. Starting fresh.", e);
+                RingBuffer::new(capacity)
+            }
+        }
+    }
+
+    /// Saves the current RingBuffer history to NVS flash.
+    pub fn save_history(&self, history: &RingBuffer<SensorReading>) -> Result<(), String> {
+        let items = history.all();
+        let mut blob = Vec::with_capacity(items.len() * SensorReading::BINARY_SIZE);
+        for item in &items {
+            blob.extend_from_slice(&item.to_binary());
+        }
+
+        self.nvs_log
+            .set_blob(NVS_KEY_HISTORY, &blob)
+            .map_err(|e| format!("Failed to write history blob to NVS: {}", e))?;
+
+        debug!("[NVS] Committed {} telemetry samples to flash", items.len());
         Ok(())
     }
 }
