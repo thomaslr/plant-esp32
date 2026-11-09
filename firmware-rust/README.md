@@ -83,20 +83,53 @@ Canonical Pinout Reference: [LastMinuteEngineers ESP32-C3 SuperMini Pinout](http
 
 ## How to Build & Flash
 
+> [!TIP]
+> Looking for the complete beginner's flashing guide? See the standalone **[QUICKSTART.md](../QUICKSTART.md)** for 1-click browser flashing and first-time Wi-Fi provisioning instructions.
+
 > [!WARNING]
 > **CRITICAL: NEVER FLASH WITHOUT THE DUAL-OTA PARTITION TABLE**
 > The hardware MUST always be partitioned with `plant-firmware/partitions.csv` (`ota_0` and `ota_1`, 1984 KB each). 
 > If `espflash` is run without `--partition-table`, it defaults to flashing a single 4 MB `factory` partition table, which permanently disables Over-The-Air (OTA) updates with error 258 (`ESP_ERR_INVALID_ARG`).
 
-### 1. Run Host Unit Tests
+### Pre-Built Binaries (Zero Toolchain Installation)
+
+Every GitHub release provides two distinct binary formats on the [Releases Page](https://github.com/thomaslr/plant-esp32/releases):
+
+| Binary File | Flash Address | Purpose & Usage |
+| :--- | :---: | :--- |
+| **`plant-firmware-factory.bin`** | **`0x0`** | **Initial Setup / First-Time Flashing:** Merged factory binary containing the ESP32-C3 bootloader, Dual-OTA partition table (`ota_0` and `ota_1`, 1984 KB each), and application code. Flashes blank chips in one shot via Web Flasher or USB CLI. |
+| **`plant-firmware.bin`** | OTA Slot | **Wi-Fi Updates (OTA):** Standalone application payload uploaded via the web interface (`http://plants1.local`) or downloaded during remote updates. |
+
+#### 1. In-Browser Web Flasher (Recommended for Users)
+1. Connect ESP32-C3 SuperMini via USB.
+2. Put board in bootloader mode (Hold `BOOT` / GPIO 9 -> tap `RST` -> release `BOOT`).
+3. Open [Espressif Web Flasher](https://espressif.github.io/esptool-js/) or [Adafruit WebSerial ESPTool](https://adafruit.github.io/Adafruit_WebSerial_ESPTool/).
+4. Connect at `460800` baud.
+5. Add `plant-firmware-factory.bin` at address **`0x0`**.
+6. Click **Program / Flash**, then press `RST` to boot.
+
+#### 2. Single-Command CLI (Pre-Built Binary)
+```bash
+# Using esptool.py
+esptool.py --chip esp32c3 write_flash 0x0 plant-firmware-factory.bin
+
+# Using espflash
+espflash write-bin 0x0 plant-firmware-factory.bin
+```
+
+---
+
+### Developing & Flashing from Source
+
+#### 1. Run Host Unit Tests
 ```bash
 cargo test --manifest-path plant-core/Cargo.toml --target aarch64-apple-darwin
 ```
 
-### 2. Configure Wi-Fi
-Copy `plant-firmware/src/secrets.rs.example` to `plant-firmware/src/secrets.rs` and update your SSID and password (or use the web dashboard / captive portal).
+#### 2. Configure Wi-Fi (Optional - or use Captive Portal)
+Copy `plant-firmware/src/secrets.rs.example` to `plant-firmware/src/secrets.rs` and update your SSID and password (or leave blank to use the onboard SoftAP captive portal).
 
-### 3. Flash to ESP32-C3 SuperMini (USB-C)
+#### 3. Flash to ESP32-C3 SuperMini (USB-C)
 Plug your ESP32-C3 into USB, then run:
 ```bash
 # Recommended: Uses .cargo/config.toml runner which automatically includes the partition table
@@ -107,4 +140,19 @@ cargo run --release
 
 # If invoking espflash directly, ALWAYS pass the partition table:
 espflash flash --partition-table plant-firmware/partitions.csv target/riscv32imc-esp-espidf/release/plant-firmware --monitor
+```
+
+#### 4. Packaging Release Binaries Locally
+```bash
+# Generate OTA application payload
+espflash save-image --chip esp32c3 \
+  --partition-table plant-firmware/partitions.csv \
+  target/riscv32imc-esp-espidf/release/plant-firmware \
+  plant-firmware.bin
+
+# Generate 0x0 merged factory binary (Bootloader + Partitions + App)
+espflash save-image --merge --chip esp32c3 \
+  --partition-table plant-firmware/partitions.csv \
+  target/riscv32imc-esp-espidf/release/plant-firmware \
+  plant-firmware-factory.bin
 ```

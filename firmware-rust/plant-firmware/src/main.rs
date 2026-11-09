@@ -30,7 +30,7 @@ use esp_idf_svc::mdns::EspMdns;
 use esp_idf_svc::nvs::EspDefaultNvsPartition;
 use esp_idf_svc::sntp::EspSntp;
 use esp_idf_svc::sys::{esp_timer_get_time, link_patches};
-use log::{error, info, warn};
+use log::{debug, error, info, warn};
 use plant_core::safety::SafetyManager;
 use plant_core::timeutil::{local_day, local_hour, MidnightTracker};
 
@@ -457,6 +457,58 @@ fn main() -> anyhow::Result<()> {
     }) {
         warn!("[SYS] Failed to launch autonomous OTA checker: {:?}", e);
     }
+
+    // 16. Task 7: Hardware BOOT Button Monitor (Priority: LOW, 10 Hz)
+    // - Holding the onboard BOOT button (GPIO 9) for 5 seconds clears Wi-Fi credentials
+    //   from NVS and reboots into SoftAP Provisioning mode.
+    let s_btn = Arc::clone(&state);
+    thread::Builder::new()
+        .name("ButtonMonitor".to_string())
+        .stack_size(3072)
+        .spawn(move || {
+            use esp_idf_svc::sys::{
+                gpio_get_level, gpio_mode_t_GPIO_MODE_INPUT,
+                gpio_pull_mode_t_GPIO_PULLUP_ONLY, gpio_reset_pin, gpio_set_direction,
+                gpio_set_pull_mode,
+            };
+            use crate::pins::PIN_BOOT_BUTTON;
+
+            unsafe {
+                gpio_reset_pin(PIN_BOOT_BUTTON);
+                gpio_set_direction(PIN_BOOT_BUTTON, gpio_mode_t_GPIO_MODE_INPUT);
+                gpio_set_pull_mode(PIN_BOOT_BUTTON, gpio_pull_mode_t_GPIO_PULLUP_ONLY);
+            }
+
+            let mut hold_ticks = 0u32;
+            loop {
+                thread::sleep(Duration::from_millis(100));
+                let is_pressed = unsafe { gpio_get_level(PIN_BOOT_BUTTON) == 0 };
+                if is_pressed {
+                    hold_ticks += 1;
+                    if hold_ticks == 20 {
+                        info!("[BUTTON] BOOT button held for 2s... continue holding to factory reset");
+                    } else if hold_ticks >= 50 {
+                        log::error!("****************************************************************");
+                        log::error!("🔘 [BUTTON] HARDWARE FACTORY RESET TRIGGERED! (5s hold on BOOT)");
+                        log::error!("   Erasing Wi-Fi credentials and rebooting into setup portal...");
+                        log::error!("****************************************************************");
+                        {
+                            let app = s_btn.lock().unwrap();
+                            let _ = app.storage.clear_wifi();
+                        }
+                        thread::sleep(Duration::from_millis(500));
+                        unsafe {
+                            esp_idf_svc::sys::esp_restart();
+                        }
+                    }
+                } else {
+                    if hold_ticks > 0 && hold_ticks < 50 {
+                        debug!("[BUTTON] BOOT button released after {}ms", hold_ticks * 100);
+                    }
+                    hold_ticks = 0;
+                }
+            }
+        })?;
 
     info!("[SYS] All background tasks successfully spawned. System running.");
 

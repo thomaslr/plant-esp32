@@ -53,6 +53,10 @@ pub const PIN_PUMP_GATE: i32 = 10;
 /// GPIO 8: Onboard Blue LED on ESP32-C3 SuperMini (Active LOW).
 pub const PIN_STATUS_LED: i32 = 8;
 
+/// GPIO 9: Onboard BOOT Button on ESP32-C3 SuperMini (Active LOW).
+/// Long-pressing for 5 seconds clears Wi-Fi credentials and triggers factory recovery.
+pub const PIN_BOOT_BUTTON: i32 = 9;
+
 /// GPIO 7: HC-SR04 TRIG digital output (10µs pulse to TB1 Pin 2).
 pub const PIN_ULTRASONIC_TRIG: i32 = 7;
 

@@ -139,6 +139,15 @@ Rather than blindly downloading updates, the frontend provides an interactive wo
    * Safety warning advising against power disconnection.
 4. Upon user confirmation, `POST /api/ota/update` triggers background streaming, the LED switches to an active flashing strobe, and the frontend polls for device reboot.
 
+### 4.5 Zero-Toolchain Factory Installation (`plant-firmware-factory.bin`)
+To allow first-time users to set up a brand-new, unformatted ESP32-C3 SuperMini without installing Rust, Git, or ESP-IDF tools:
+* **Merged Binary Format:** GitHub Actions automatically builds and releases `plant-firmware-factory.bin` alongside `plant-firmware.bin`.
+* **Zero-Offset Layout (`0x0`):** Contains the 2nd-stage bootloader at `0x0000`, the Dual-OTA partition table at `0x9000`, `otadata` at `0xf000`, and the initial application in `ota_0` at `0x20000`.
+* **Browser Flashing (Web Serial):** Users can flash via Google Chrome or Microsoft Edge using the [Espressif Web Flasher](https://espressif.github.io/esptool-js/) or [Adafruit WebSerial ESPTool](https://adafruit.github.io/Adafruit_WebSerial_ESPTool/) by connecting at `460800` baud and programming `plant-firmware-factory.bin` at address `0x0`.
+* **Single-Command CLI:** Terminal users flash blank chips in one shot via `esptool.py --chip esp32c3 write_flash 0x0 plant-firmware-factory.bin` or `espflash write-bin 0x0 plant-firmware-factory.bin`.
+* **Subsequent Updates:** Once partitioned, all future updates are performed wirelessly over-the-air using `plant-firmware.bin` via the web dashboard.
+* **Detailed Guide:** See [QUICKSTART.md](QUICKSTART.md) for full step-by-step instructions.
+
 ---
 
 ## 5. Resilient Networking & Self-Healing Wi-Fi
@@ -154,6 +163,12 @@ Modern routers caching MAC addresses frequently reject immediate reconnection at
 ### 5.3 Network Services
 * **Zero-Configuration mDNS:** Resolves dynamically to `http://plants1.local` (or configured hostname).
 * **SNTP Clock Synchronization:** Periodically synchronizes against `time.google.com`, `pool.ntp.org`, and `time.nist.gov` to maintain precise calendar time for midnight daily watering resets.
+
+### 5.4 Hardware Factory Recovery (BOOT Button GPIO 9)
+To recover from network changes, forgotten router passwords, or device transfers without requiring a computer or serial console:
+* A dedicated `ButtonMonitor` thread samples the onboard `BOOT` switch (GPIO 9, pulled HIGH internally) at 10 Hz.
+* **5-Second Continuous Hold:** Triggers hardware reset, erases Wi-Fi credentials from NVS flash (`nvs_wifi.erase_all()`), and executes `esp_restart()`.
+* The system boots directly into `ProvisioningMode`, re-launching the captive portal hotspot `PlantMonitor-Setup-XXXX` (192.168.4.1).
 
 ---
 

@@ -4,6 +4,20 @@ All notable changes to the Plant ESP32 firmware and web dashboard will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.37] - 2026-11-09
+
+### 🚀 Zero-Fuss Factory Installation, Hardware Recovery & UX Suite
+- **Merged Factory Binary (`plant-firmware-factory.bin`)**: GitHub Actions CI now automatically packages and attaches a merged binary containing the ESP32-C3 bootloader, Dual-OTA partition table (`ota_0` and `ota_1`), and application code for zero-offset (`0x0`) first-time USB/browser flashing.
+- **Hardware Recovery (`BOOT` Button GPIO 9)**: Added a background button supervisor thread allowing users to hold the onboard `BOOT` button for 5 seconds to clear stored Wi-Fi credentials and reboot directly into captive portal provisioning mode without needing a USB cable or terminal.
+- **Standalone Quick Start Guide & Setup QR Codes**: Created a dedicated [`QUICKSTART.md`](QUICKSTART.md) featuring side-by-side pre-generated Wi-Fi and setup portal SVG QR codes to eliminate cellular data routing conflicts on modern iOS and Android smartphones.
+- **1-Click Soil Moisture Live Calibration**: Added `[📍 Use Current (XXXX mV)]` buttons in Settings that stream real-time raw probe ADC readings and populate Dry and Wet calibration baselines with a single tap.
+- **Configuration Backup & Restore**: Added one-click JSON export and import in the web dashboard, enabling users to download and restore complete gauge thresholds, tank dimensions, and safety configs.
+- **Status LED Diagnostic Reference**: Integrated an Onboard LED Signal Guide into the web interface and documentation explaining all visual supervisor telemetry and fault patterns.
+- **ESP Web Tools 1-Click Web Installer**: Added official [`esp-web-tools`](https://esphome.github.io/esp-web-tools/) manifest and browser installer in `installer/` for zero-install flashing via Chrome or Edge.
+- **Home Assistant Ready-to-Use Integration**: Documented native REST sensor and service configuration in `README.md` for seamless smart home telemetry and automated watering.
+
+---
+
 ## [0.2.36] - 2026-11-09
 
 ### 🌿 Categorical Horticultural Light Bands & Daily Light Integral (DLI)

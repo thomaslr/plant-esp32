@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Plant Monitor ESP32-C3 - 1-Click Web Installer</title>
+  <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #10b981;
+      --border: #334155;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+      max-width: 520px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3);
+    }
+    h1 { font-size: 24px; margin-bottom: 8px; color: var(--primary); }
+    p { font-size: 15px; color: var(--text-muted); line-height: 1.5; margin-bottom: 20px; }
+    .steps { text-align: left; background: #0f172a; border-radius: 8px; padding: 16px; margin-bottom: 24px; font-size: 14px; color: #cbd5e1; }
+    .steps ol { padding-left: 20px; }
+    .steps li { margin-bottom: 8px; }
+    esp-web-install-button { display: inline-block; }
+    footer { margin-top: 24px; font-size: 13px; color: var(--text-muted); }
+    a { color: var(--primary); text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🌿 Plant Monitor ESP32-C3</h1>
+    <p>Official 1-Click In-Browser Web Flasher. Installs bootloader, Dual-OTA partition table, and application firmware in one shot.</p>
+    
+    <div class="steps">
+      <ol>
+        <li>Connect your <strong>ESP32-C3 SuperMini</strong> via a USB-C data cable.</li>
+        <li>Put board in download mode (Hold <strong>BOOT</strong> &rarr; tap <strong>RST</strong> &rarr; release <strong>BOOT</strong>).</li>
+        <li>Click the button below and choose your ESP32-C3 serial port.</li>
+      </ol>
+    </div>
+
+    <esp-web-install-button manifest="manifest.json">
+      <button slot="activate" style="background:#10b981; color:#fff; border:none; padding:14px 28px; font-size:16px; font-weight:600; border-radius:8px; cursor:pointer;">
+        🚀 Install Plant Monitor Firmware
+      </button>
+      <span slot="unsupported">Your browser does not support Web Serial. Please use Google Chrome or Microsoft Edge.</span>
+    </esp-web-install-button>
+  </div>
+  <footer>
+    <a href="https://github.com/thomaslr/plant-esp32" target="_blank">&larr; Back to Plant ESP32 Repository</a>
+  </footer>
+</body>
+</html>

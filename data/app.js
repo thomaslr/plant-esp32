@@ -108,6 +108,99 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // 1-Click Soil Live Calibration Buttons
+    const calDryBtn = document.getElementById('btn-cal-dry');
+    if (calDryBtn) {
+        calDryBtn.addEventListener('click', () => {
+            if (lastTelemetry && lastTelemetry.soil_raw !== undefined && lastTelemetry.soil_raw > 0) {
+                const val = Math.round(lastTelemetry.soil_raw);
+                const dryInput = document.getElementById('cfg-soil-dry-adc');
+                if (dryInput) dryInput.value = val;
+                const msg = document.getElementById('cfg-status-msg');
+                if (msg) {
+                    msg.className = 'cfg-status-msg status-ok';
+                    msg.innerText = `📍 Captured Dry Calibration: ${val} mV (Click 'Save Settings' to commit)`;
+                    msg.style.display = 'inline-block';
+                    setTimeout(() => { msg.style.display = 'none'; }, 6000);
+                }
+            } else {
+                alert('No live soil probe reading available yet. Ensure monitor is powered on and connected.');
+            }
+        });
+    }
+
+    const calWetBtn = document.getElementById('btn-cal-wet');
+    if (calWetBtn) {
+        calWetBtn.addEventListener('click', () => {
+            if (lastTelemetry && lastTelemetry.soil_raw !== undefined && lastTelemetry.soil_raw > 0) {
+                const val = Math.round(lastTelemetry.soil_raw);
+                const wetInput = document.getElementById('cfg-soil-wet-adc');
+                if (wetInput) wetInput.value = val;
+                const msg = document.getElementById('cfg-status-msg');
+                if (msg) {
+                    msg.className = 'cfg-status-msg status-ok';
+                    msg.innerText = `📍 Captured Wet Calibration: ${val} mV (Click 'Save Settings' to commit)`;
+                    msg.style.display = 'inline-block';
+                    setTimeout(() => { msg.style.display = 'none'; }, 6000);
+                }
+            } else {
+                alert('No live soil probe reading available yet. Ensure monitor is powered on and connected.');
+            }
+        });
+    }
+
+    // Configuration Backup & Restore (JSON Export / Import)
+    const exportCfgBtn = document.getElementById('btn-export-cfg');
+    if (exportCfgBtn) {
+        exportCfgBtn.addEventListener('click', () => {
+            if (!appConfig) {
+                alert('Configuration is not loaded yet.');
+                return;
+            }
+            const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(appConfig, null, 2));
+            const dlAnchor = document.createElement('a');
+            const host = (appConfig.system && appConfig.system.hostname) ? appConfig.system.hostname : 'plant-monitor';
+            dlAnchor.setAttribute('href', dataStr);
+            dlAnchor.setAttribute('download', `plant-config-${host}.json`);
+            document.body.appendChild(dlAnchor);
+            dlAnchor.click();
+            dlAnchor.remove();
+        });
+    }
+
+    const importCfgFile = document.getElementById('file-cfg-import');
+    if (importCfgFile) {
+        importCfgFile.addEventListener('change', async (e) => {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+            try {
+                const text = await file.text();
+                const json = JSON.parse(text);
+                if (!json || typeof json !== 'object') throw new Error('Invalid JSON structure');
+                if (confirm(`Restore configuration from "${file.name}" and commit to flash?`)) {
+                    const res = await fetch('/api/config', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(json)
+                    });
+                    if (!res.ok) throw new Error('Server returned HTTP ' + res.status);
+                    await fetchConfig();
+                    const msg = document.getElementById('cfg-status-msg');
+                    if (msg) {
+                        msg.className = 'cfg-status-msg status-ok';
+                        msg.innerText = `✅ Configuration successfully restored from "${file.name}" and saved to flash!`;
+                        msg.style.display = 'inline-block';
+                        setTimeout(() => { msg.style.display = 'none'; }, 8000);
+                    }
+                }
+            } catch (err) {
+                alert('Failed to import configuration: ' + err.message);
+            } finally {
+                importCfgFile.value = '';
+            }
+        });
+    }
+
     // Initial Data Fetches — sequence status first so top-right badge flips to 'Online' immediately
     // without competing with 3 other requests on ESP-IDF's single-threaded HTTP server.
     setupChartToggles();
@@ -1313,6 +1406,11 @@ function updateTelemetryUI(t) {
         soilBadge = { className: 'badge-info', text: 'Wet / Saturated' };
     }
     setDialState('soil', soilVal, 0, 100, `${Math.round(soilVal)}%`, soilBadge, `Raw: ${t.soil_raw || 0} mV`);
+
+    const curDryLbl = document.getElementById('lbl-cur-soil-dry');
+    const curWetLbl = document.getElementById('lbl-cur-soil-wet');
+    if (curDryLbl && t.soil_raw !== undefined) curDryLbl.textContent = Math.round(t.soil_raw);
+    if (curWetLbl && t.soil_raw !== undefined) curWetLbl.textContent = Math.round(t.soil_raw);
 
     // 2. Reservoir Level
     const wl = g.water_level || DEFAULT_CONFIG.gauges.water_level;

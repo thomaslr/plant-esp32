@@ -1,0 +1,17 @@
+{
+  "name": "Plant Monitor ESP32-C3",
+  "version": "latest",
+  "home_assistant_domain": "plant-esp32",
+  "new_install_prompt_erase": false,
+  "builds": [
+    {
+      "chipFamily": "ESP32-C3",
+      "parts": [
+        {
+          "path": "https://github.com/thomaslr/plant-esp32/releases/latest/download/plant-firmware-factory.bin",
+          "offset": 0
+        }
+      ]
+    }
+  ]
+}

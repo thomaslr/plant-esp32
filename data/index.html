@@ -27,7 +27,7 @@
             <div class="header-title">
                 <h1>🌱 Plant Monitor & Waterer</h1>
                 <span class="badge" id="host-badge">plants.local</span>
-                <span class="badge" id="version-badge" style="background: #1e293b; color: #38bdf8; border: 1px solid #334155; font-size: 0.75rem;">v0.2.36 🌿</span>
+                <span class="badge" id="version-badge" style="background: #1e293b; color: #38bdf8; border: 1px solid #334155; font-size: 0.75rem;">v0.2.37 🌿</span>
                 <span class="badge" id="header-ota-badge" style="display: none; background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); font-size: 0.75rem; cursor: pointer;" title="New update available! Click to review.">✨ Update: --</span>
                 <span class="badge" id="clock-badge" style="background: #1e293b; color: #94a3b8; border: 1px solid #334155; font-size: 0.75rem; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; display: inline-flex; align-items: center; gap: 4px;" title="ESP32 Real-Time Clock (NTP Synchronized)">🕒 Connecting...</span>
             </div>
@@ -564,7 +564,7 @@
                         <span class="card-icon">🚀</span>
                     </div>
                     <ul class="diag-list" style="margin-bottom: 14px;">
-                        <li><span>Installed Firmware:</span> <strong id="diag-ota-ver">v0.2.36</strong></li>
+                        <li><span>Installed Firmware:</span> <strong id="diag-ota-ver">v0.2.37</strong></li>
                         <li><span>Active Boot Slot:</span> <strong id="diag-ota-slot">--</strong></li>
                         <li><span>Daily Update Check:</span> <strong id="diag-ota-status">Checking...</strong></li>
                     </ul>
@@ -577,6 +577,28 @@
                         </label>
                     </div>
                     <div id="ota-msg" style="font-size: 13px; margin-top: 10px; color: #8b949e; display: none;"></div>
+                </div>
+
+                <!-- Card 3: Onboard LED Signal Reference -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Status LED Signal Guide</h3>
+                        <span class="card-icon">💡</span>
+                    </div>
+                    <p style="margin-bottom: 12px; font-size: 0.82rem; color: #94a3b8; line-height: 1.4;">
+                        The onboard blue LED (GPIO 8) communicates operating state and active supervisor hardware faults:
+                    </p>
+                    <ul class="diag-list" style="font-size: 0.82rem;">
+                        <li><span>💙 100ms Pulse (every 10s):</span> <strong>Normal Healthy Idle</strong></li>
+                        <li><span>🌊 Solid ON:</span> <strong>Pump Active / Watering</strong></li>
+                        <li><span>⚡ 10 Hz Strobe (Continuous):</span> <strong>OTA Flash Writing Active</strong></li>
+                        <li><span>📶 200ms ON / 800ms OFF:</span> <strong>Connecting Wi-Fi / SoftAP</strong></li>
+                        <li><span>🌐 Rapid Double Blip:</span> <strong>HTTP Web Request Active</strong></li>
+                        <li><span>⚠️ 3 Pulses + Pause:</span> <strong>Soil Moisture Sensor Fault</strong></li>
+                        <li><span>⚠️ 4 Pulses + Pause:</span> <strong>Ultrasonic Sensor Fault</strong></li>
+                        <li><span>📉 Accelerando Sweep (3s):</span> <strong>Reservoir Empty / Cutoff</strong></li>
+                        <li><span>🔘 Rapid 10 Hz Strobe (5s):</span> <strong>Hardware Factory Reset (BOOT)</strong></li>
+                    </ul>
                 </div>
             </div>
         </div>
@@ -617,12 +639,18 @@
                         </div>
                         <div class="form-group">
                             <label for="cfg-soil-dry-adc">Dry Probe Calibration (mV):</label>
-                            <input type="number" id="cfg-soil-dry-adc" min="500" max="3200" step="10" required>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <input type="number" id="cfg-soil-dry-adc" min="500" max="3200" step="10" required style="flex: 1;">
+                                <button type="button" class="btn btn-secondary" id="btn-cal-dry" style="width: auto; padding: 7px 12px; margin: 0; font-size: 0.8rem; white-space: nowrap;" title="Capture current soil probe reading as dry baseline">📍 Use Current (<span id="lbl-cur-soil-dry">--</span> mV)</button>
+                            </div>
                             <span class="field-hint">ADC reading in bone dry air = 0% (your sensor: ~1950 mV).</span>
                         </div>
                         <div class="form-group">
                             <label for="cfg-soil-wet-adc">Wet Probe Calibration (mV):</label>
-                            <input type="number" id="cfg-soil-wet-adc" min="300" max="2500" step="10" required>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <input type="number" id="cfg-soil-wet-adc" min="300" max="2500" step="10" required style="flex: 1;">
+                                <button type="button" class="btn btn-secondary" id="btn-cal-wet" style="width: auto; padding: 7px 12px; margin: 0; font-size: 0.8rem; white-space: nowrap;" title="Capture current soil probe reading as wet baseline">📍 Use Current (<span id="lbl-cur-soil-wet">--</span> mV)</button>
+                            </div>
                             <span class="field-hint">ADC reading submerged in water = 100% (your sensor: ~670 mV).</span>
                         </div>
                     </div>
@@ -785,9 +813,14 @@
                 </div>
 
                 <!-- Form Action Buttons -->
-                <div class="settings-actions">
+                <div class="settings-actions" style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
                     <button type="submit" id="btn-save-cfg" class="btn btn-primary">💾 Save Settings to Flash</button>
                     <button type="button" id="btn-reload-cfg" class="btn btn-secondary" style="width: auto; margin-top: 0;">🔄 Discard & Reload</button>
+                    <button type="button" id="btn-export-cfg" class="btn btn-secondary" style="width: auto; margin-top: 0;" title="Download current settings as JSON backup file">📥 Backup JSON</button>
+                    <label class="btn btn-secondary" style="width: auto; margin: 0; cursor: pointer; display: inline-flex; align-items: center;" title="Restore settings from a saved JSON backup file">
+                        📤 Restore JSON
+                        <input type="file" id="file-cfg-import" accept=".json" style="display: none;">
+                    </label>
                     <button type="button" id="btn-settings-reboot" class="btn btn-warning" style="width: auto; margin-top: 0;">🔄 Reboot Device</button>
                     <div id="cfg-status-msg" class="cfg-status-msg"></div>
                 </div>

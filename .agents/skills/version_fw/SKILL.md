@@ -68,8 +68,9 @@ git push origin vX.Y.Z
    ```bash
    gh run watch <RUN_ID>
    ```
-3. Verify that the GitHub Release `vX.Y.Z` contains both assets:
-   - `plant-firmware.bin`
+3. Verify that the GitHub Release `vX.Y.Z` contains all assets:
+   - `plant-firmware.bin` (standalone OTA application payload)
+   - `plant-firmware-factory.bin` (merged factory binary with bootloader + Dual-OTA partition table at 0x0)
    - `version.json`
 
 ### 7. Notify User
