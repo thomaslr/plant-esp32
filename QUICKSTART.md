@@ -139,6 +139,6 @@ Once your board is running, you never need to connect a USB cable again:
 
 If you ever change your Wi-Fi router, enter the wrong password, or give the plant monitor to a friend:
 * **Press and hold the onboard `BOOT` button (GPIO 9) for 5 seconds.**
-* The onboard blue LED will strobe rapidly.
+* The onboard blue LED will illuminate solid while held, followed by 5 rapid confirmation blips at 5 seconds.
 * All saved Wi-Fi credentials will be cleared from NVS flash and the board will automatically reboot into the `PlantMonitor-Setup-XXXX` provisioning portal.
 * **No computer, terminal, or USB cable required!**

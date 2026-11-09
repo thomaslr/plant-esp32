@@ -105,7 +105,7 @@ The onboard blue LED (GPIO 8) on the ESP32-C3 SuperMini provides real-time visua
 | **⚠️ 3 Pulses + Pause** | **Soil Moisture Sensor Fault:** Disconnected or voltage out of bounds. |
 | **⚠️ 4 Pulses + Pause** | **Ultrasonic Sensor Fault:** Echo timeout, echo blocked, or disconnected. |
 | **📉 Accelerando Frequency Sweep** | **Reservoir Empty:** Water level below dry run safety threshold. |
-| **🔘 10 Hz Rapid Strobe (5s)** | **Hardware Factory Reset:** `BOOT` button (GPIO 9) held for 5 seconds. |
+| **🔘 Solid ON (held) + 5 Rapid Blips** | **Hardware Factory Reset:** Hold `BOOT` button (GPIO 9) for 5s until LED blinks 5 times to confirm wipe. |
 
 ---
 

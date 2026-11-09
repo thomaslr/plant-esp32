@@ -461,6 +461,7 @@ fn main() -> anyhow::Result<()> {
     // 16. Task 7: Hardware BOOT Button Monitor (Priority: LOW, 10 Hz)
     // - Holding the onboard BOOT button (GPIO 9) for 5 seconds clears Wi-Fi credentials
     //   from NVS and reboots into SoftAP Provisioning mode.
+    // - Option 1 Telemetry: Solid ON while held, followed by 5 rapid confirmation blips upon 5s reset.
     let s_btn = Arc::clone(&state);
     thread::Builder::new()
         .name("ButtonMonitor".to_string())
@@ -472,6 +473,10 @@ fn main() -> anyhow::Result<()> {
                 gpio_set_pull_mode,
             };
             use crate::pins::PIN_BOOT_BUTTON;
+            use crate::led::{
+                is_boot_button_held, led_off, play_factory_reset_confirmed,
+                set_boot_button_held, set_factory_reset_in_progress,
+            };
 
             unsafe {
                 gpio_reset_pin(PIN_BOOT_BUTTON);
@@ -484,7 +489,16 @@ fn main() -> anyhow::Result<()> {
                 thread::sleep(Duration::from_millis(100));
                 let is_pressed = unsafe { gpio_get_level(PIN_BOOT_BUTTON) == 0 };
                 if is_pressed {
+                    // Suppress factory reset during active OTA firmware flash writing
+                    if crate::ota::is_ota_in_progress() {
+                        continue;
+                    }
+
                     hold_ticks += 1;
+                    if !is_boot_button_held() {
+                        set_boot_button_held(true);
+                    }
+
                     if hold_ticks == 20 {
                         info!("[BUTTON] BOOT button held for 2s... continue holding to factory reset");
                     } else if hold_ticks >= 50 {
@@ -492,18 +506,29 @@ fn main() -> anyhow::Result<()> {
                         log::error!("🔘 [BUTTON] HARDWARE FACTORY RESET TRIGGERED! (5s hold on BOOT)");
                         log::error!("   Erasing Wi-Fi credentials and rebooting into setup portal...");
                         log::error!("****************************************************************");
+
+                        // 1. Take exclusive LED ownership and play 5 rapid confirmation blips
+                        set_factory_reset_in_progress(true);
+                        set_boot_button_held(false);
+                        play_factory_reset_confirmed();
+
+                        // 2. Erase Wi-Fi credentials from NVS flash
                         {
                             let app = s_btn.lock().unwrap();
                             let _ = app.storage.clear_wifi();
                         }
-                        thread::sleep(Duration::from_millis(500));
+                        thread::sleep(Duration::from_millis(200));
+
+                        // 3. Reboot into SoftAP Provisioning mode
                         unsafe {
                             esp_idf_svc::sys::esp_restart();
                         }
                     }
                 } else {
                     if hold_ticks > 0 && hold_ticks < 50 {
-                        debug!("[BUTTON] BOOT button released after {}ms", hold_ticks * 100);
+                        debug!("[BUTTON] BOOT button released after {}ms (reset aborted)", hold_ticks * 100);
+                        set_boot_button_held(false);
+                        led_off();
                     }
                     hold_ticks = 0;
                 }

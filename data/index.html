@@ -27,7 +27,7 @@
             <div class="header-title">
                 <h1>🌱 Plant Monitor & Waterer</h1>
                 <span class="badge" id="host-badge">plants.local</span>
-                <span class="badge" id="version-badge" style="background: #1e293b; color: #38bdf8; border: 1px solid #334155; font-size: 0.75rem;">v0.2.37 🌿</span>
+                <span class="badge" id="version-badge" style="background: #1e293b; color: #38bdf8; border: 1px solid #334155; font-size: 0.75rem;">v0.2.38 🌿</span>
                 <span class="badge" id="header-ota-badge" style="display: none; background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); font-size: 0.75rem; cursor: pointer;" title="New update available! Click to review.">✨ Update: --</span>
                 <span class="badge" id="clock-badge" style="background: #1e293b; color: #94a3b8; border: 1px solid #334155; font-size: 0.75rem; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; display: inline-flex; align-items: center; gap: 4px;" title="ESP32 Real-Time Clock (NTP Synchronized)">🕒 Connecting...</span>
             </div>
@@ -564,7 +564,7 @@
                         <span class="card-icon">🚀</span>
                     </div>
                     <ul class="diag-list" style="margin-bottom: 14px;">
-                        <li><span>Installed Firmware:</span> <strong id="diag-ota-ver">v0.2.37</strong></li>
+                        <li><span>Installed Firmware:</span> <strong id="diag-ota-ver">v0.2.38</strong></li>
                         <li><span>Active Boot Slot:</span> <strong id="diag-ota-slot">--</strong></li>
                         <li><span>Daily Update Check:</span> <strong id="diag-ota-status">Checking...</strong></li>
                     </ul>
@@ -597,7 +597,7 @@
                         <li><span>⚠️ 3 Pulses + Pause:</span> <strong>Soil Moisture Sensor Fault</strong></li>
                         <li><span>⚠️ 4 Pulses + Pause:</span> <strong>Ultrasonic Sensor Fault</strong></li>
                         <li><span>📉 Accelerando Sweep (3s):</span> <strong>Reservoir Empty / Cutoff</strong></li>
-                        <li><span>🔘 Rapid 10 Hz Strobe (5s):</span> <strong>Hardware Factory Reset (BOOT)</strong></li>
+                        <li><span>🔘 Solid ON (held) + 5 Blips:</span> <strong>Hardware Factory Reset (BOOT)</strong></li>
                     </ul>
                 </div>
             </div>

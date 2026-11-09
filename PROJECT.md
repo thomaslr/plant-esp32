@@ -168,6 +168,7 @@ Modern routers caching MAC addresses frequently reject immediate reconnection at
 To recover from network changes, forgotten router passwords, or device transfers without requiring a computer or serial console:
 * A dedicated `ButtonMonitor` thread samples the onboard `BOOT` switch (GPIO 9, pulled HIGH internally) at 10 Hz.
 * **5-Second Continuous Hold:** Triggers hardware reset, erases Wi-Fi credentials from NVS flash (`nvs_wifi.erase_all()`), and executes `esp_restart()`.
+* **Visual Telemetry:** Status LED illuminates solid ON while held, followed by 5 rapid confirmation blips upon reaching 5 seconds before rebooting.
 * The system boots directly into `ProvisioningMode`, re-launching the captive portal hotspot `PlantMonitor-Setup-XXXX` (192.168.4.1).
 
 ---
@@ -190,6 +191,7 @@ graph TD
 ```
 
 ### 6.1 Visual Patterns
+* **Hardware Factory Reset:** Solid ON while BOOT button held, followed by 5 rapid confirmation blips (60ms OFF / 60ms ON) upon reaching 5 seconds.
 * **OTA Flashing Active:** 10 Hz continuous strobe (50ms ON / 50ms OFF) with complete suppression of fault blips.
 * **Watering Active:** Solid ON while pump is energized.
 * **Wi-Fi Connecting / Provisioning:** Distinct beacon blink (200ms ON / 800ms OFF).

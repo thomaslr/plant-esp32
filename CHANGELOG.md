@@ -4,6 +4,16 @@ All notable changes to the Plant ESP32 firmware and web dashboard will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.38] - 2026-11-10
+
+### 💡 Hardware Recovery Feedback & LED Telemetry Disambiguation
+- **Hardware Recovery Visual Confirmation**: Refined onboard status LED signaling for hardware factory reset via the `BOOT` button (GPIO 9). Holding the button now illuminates the LED solid while held to give immediate tactile feedback, followed by 5 rapid confirmation blips upon reaching 5 seconds before clearing Wi-Fi credentials and rebooting.
+- **Pattern Disambiguation**: Resolved visual overlap between the remote OTA firmware flash strobe (continuous 10 Hz) and physical hardware recovery, ensuring every status LED signal is distinct to the naked eye.
+- **Sub-50ms Responsive Interruption**: Sliced LED supervisor pattern pauses into responsive 50ms intervals so button presses and priority state changes take effect instantaneously.
+- **Signal Guide Synchronization**: Updated the web UI Status LED Signal Guide card, `README.md`, `QUICKSTART.md`, and `PROJECT.md` to document the new hold-and-confirm recovery sequence.
+
+---
+
 ## [0.2.37] - 2026-11-09
 
 ### 🚀 Zero-Fuss Factory Installation, Hardware Recovery & UX Suite

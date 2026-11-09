@@ -8,6 +8,8 @@
 //!
 //! Visual Signaling Patterns:
 //! - Watering Active: Solid ON while pump is running.
+//! - Hardware Factory Reset: Solid ON while BOOT button held, followed by 5 rapid confirmation blips upon 5s reset.
+//! - Firmware OTA Flashing: Fast 10 Hz continuous strobe (50ms ON / 50ms OFF) while flash writing.
 //! - Remote Web Access: Quick double-pulse flicker (40ms ON, 60ms OFF, 40ms ON, 400ms pause) on HTTP activity.
 //! - Wi-Fi Connecting: Distinct beacon blink (200ms ON, 800ms OFF).
 //! - Reservoir Dry: Accelerando frequency sweep (low to high blink) over 3 seconds.
@@ -15,7 +17,7 @@
 //! - Soil Moisture Sensor Fault: Triple blip (3 pulses: 160ms ON, 240ms OFF, 2000ms pause).
 //! - Normal Healthy Idle: Single calm 100ms blip once every 10 seconds.
 
-use std::sync::atomic::{AtomicU32, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
@@ -31,6 +33,58 @@ use crate::web::AppState;
 
 /// Shared millisecond timestamp of the most recent HTTP webserver request.
 pub static LAST_HTTP_ACTIVITY_MS: AtomicU32 = AtomicU32::new(0);
+
+/// Indicates whether the onboard BOOT button is currently being held down.
+static BOOT_BUTTON_HELD: AtomicBool = AtomicBool::new(false);
+
+/// Indicates that the 5-second factory reset threshold was reached and the confirmation sequence is executing.
+static FACTORY_RESET_IN_PROGRESS: AtomicBool = AtomicBool::new(false);
+
+/// Signals to the visual supervisor whether the physical BOOT button is being held.
+pub fn set_boot_button_held(held: bool) {
+    BOOT_BUTTON_HELD.store(held, Ordering::SeqCst);
+}
+
+/// Returns true if the onboard BOOT button is currently pressed and held.
+pub fn is_boot_button_held() -> bool {
+    BOOT_BUTTON_HELD.load(Ordering::SeqCst)
+}
+
+/// Signals that factory reset was confirmed, handing exclusive LED control to the reset sequence.
+pub fn set_factory_reset_in_progress(active: bool) {
+    FACTORY_RESET_IN_PROGRESS.store(active, Ordering::SeqCst);
+}
+
+/// Returns true if factory reset confirmation sequence is currently executing.
+pub fn is_factory_reset_in_progress() -> bool {
+    FACTORY_RESET_IN_PROGRESS.load(Ordering::SeqCst)
+}
+
+/// Plays the factory reset confirmation pattern: 5 rapid blips (60ms OFF / 60ms ON)
+/// after a 5-second hold, right before restarting into provisioning mode.
+pub fn play_factory_reset_confirmed() {
+    for _ in 0..5 {
+        led_off();
+        thread::sleep(Duration::from_millis(60));
+        led_on();
+        thread::sleep(Duration::from_millis(60));
+    }
+    led_off();
+}
+
+/// Responsive sleep that yields promptly (within 50ms) if the BOOT button is pressed,
+/// factory reset triggers, or OTA update starts.
+fn sleep_responsive(ms: u64) {
+    let mut remaining = ms;
+    while remaining > 0 {
+        if is_boot_button_held() || is_factory_reset_in_progress() || crate::ota::is_ota_in_progress() {
+            break;
+        }
+        let step = remaining.min(50);
+        thread::sleep(Duration::from_millis(step));
+        remaining -= step;
+    }
+}
 
 /// Notifies the visual signaling system of an incoming web request.
 pub fn notify_web_access() {
@@ -59,24 +113,30 @@ pub struct SystemLedStatus {
 }
 
 #[inline]
-fn led_on() {
+pub fn led_on() {
     unsafe {
         gpio_set_level(PIN_STATUS_LED, 0); // Active LOW: 0 = ON
     }
 }
 
 #[inline]
-fn led_off() {
+pub fn led_off() {
     unsafe {
         gpio_set_level(PIN_STATUS_LED, 1); // Active LOW: 1 = OFF
     }
 }
 
 fn pulse(on_ms: u64, off_ms: u64) {
+    if is_boot_button_held() || is_factory_reset_in_progress() {
+        return;
+    }
     led_on();
-    thread::sleep(Duration::from_millis(on_ms));
+    sleep_responsive(on_ms);
+    if is_boot_button_held() || is_factory_reset_in_progress() {
+        return;
+    }
     led_off();
-    thread::sleep(Duration::from_millis(off_ms));
+    sleep_responsive(off_ms);
 }
 
 /// Takes a sub-microsecond snapshot of system state from `AppState`.
@@ -150,14 +210,20 @@ fn play_reservoir_dry_pattern() {
     ];
 
     for &(on_ms, off_ms) in ACCEL_TIMINGS {
+        if is_boot_button_held() || is_factory_reset_in_progress() {
+            return;
+        }
         pulse(on_ms, off_ms);
     }
-    thread::sleep(Duration::from_millis(870));
+    sleep_responsive(870);
 }
 
 /// 4-blip pattern for Ultrasonic Sensor Fault (4 pulses: 160ms ON / 240ms OFF).
 fn play_ultrasonic_fault_pattern() {
     for _ in 0..3 {
+        if is_boot_button_held() || is_factory_reset_in_progress() {
+            return;
+        }
         pulse(160, 240);
     }
     pulse(160, 2000);
@@ -166,30 +232,33 @@ fn play_ultrasonic_fault_pattern() {
 /// Triple blip pattern for Soil Moisture Sensor Fault (3 pulses: 160ms ON / 240ms OFF).
 fn play_soil_fault_pattern() {
     for _ in 0..2 {
+        if is_boot_button_held() || is_factory_reset_in_progress() {
+            return;
+        }
         pulse(160, 240);
     }
     pulse(160, 2000);
 }
 
 /// Normal healthy idle heartbeat: double-pulse heartbeat (thump-thump) every 10 seconds.
-/// Slices the ~9700ms sleep into 100ms intervals so state changes (pump active, faults, web traffic)
+/// Slices the ~9700ms sleep into 100ms intervals so state changes (pump active, faults, web traffic, button press)
 /// are reacted to promptly without lagging behind the 10-second timer.
 fn play_idle_heartbeat(state: &Arc<Mutex<AppState>>) {
     // Pulse 1: 80ms ON, 120ms OFF
     led_on();
-    thread::sleep(Duration::from_millis(80));
+    sleep_responsive(80);
     led_off();
-    thread::sleep(Duration::from_millis(120));
+    sleep_responsive(120);
 
     // Pulse 2: 80ms ON
     led_on();
-    thread::sleep(Duration::from_millis(80));
+    sleep_responsive(80);
     led_off();
 
     // 9720ms OFF with responsive exit
     for _ in 0..97 {
         thread::sleep(Duration::from_millis(100));
-        if crate::ota::is_ota_in_progress() {
+        if crate::ota::is_ota_in_progress() || is_boot_button_held() || is_factory_reset_in_progress() {
             break;
         }
         let status = query_status(state);
@@ -207,6 +276,19 @@ pub fn run_led_supervisor(state: Arc<Mutex<AppState>>) -> ! {
     info!("[LED] LED Supervisor started (Approach 2: Round-Robin multi-fault rotation)");
 
     loop {
+        // -1. Super-Priority: Factory reset confirmed / executing (yield exclusive LED control to reset routine)
+        if is_factory_reset_in_progress() {
+            thread::sleep(Duration::from_millis(100));
+            continue;
+        }
+
+        // 0. Super-Priority: Hardware BOOT Button Hold (Solid ON while held for factory reset)
+        if is_boot_button_held() {
+            led_on();
+            thread::sleep(Duration::from_millis(50));
+            continue;
+        }
+
         // 0. Super-Priority: Firmware OTA Flashing Active (Fast 10 Hz strobe: 50ms ON / 50ms OFF)
         if crate::ota::is_ota_in_progress() {
             pulse(50, 50);
@@ -222,10 +304,15 @@ pub fn run_led_supervisor(state: Arc<Mutex<AppState>>) -> ! {
                 let app = state.lock().unwrap();
                 app.safety.is_pump_active()
             } {
+                if is_boot_button_held() || is_factory_reset_in_progress() {
+                    break;
+                }
                 thread::sleep(Duration::from_millis(50));
             }
-            led_off();
-            thread::sleep(Duration::from_millis(100));
+            if !is_boot_button_held() && !is_factory_reset_in_progress() {
+                led_off();
+                thread::sleep(Duration::from_millis(100));
+            }
             continue;
         }
 
@@ -253,7 +340,7 @@ pub fn run_led_supervisor(state: Arc<Mutex<AppState>>) -> ! {
             }
 
             // Separator pause between alternating fault patterns
-            thread::sleep(Duration::from_millis(1600));
+            sleep_responsive(1600);
             continue;
         }
 
