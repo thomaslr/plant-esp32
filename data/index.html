@@ -19,7 +19,7 @@
     <!-- Standard Favicons -->
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-    <link rel="stylesheet" href="style.css?v=6">
+    <link rel="stylesheet" href="style.css?v=7">
 </head>
 <body>
     <div class="container">
@@ -27,7 +27,7 @@
             <div class="header-title">
                 <h1>🌱 Plant Monitor & Waterer</h1>
                 <span class="badge" id="host-badge">plants.local</span>
-                <span class="badge" id="version-badge" style="background: #1e293b; color: #38bdf8; border: 1px solid #334155; font-size: 0.75rem;">v0.2.38 🌿</span>
+                <span class="badge" id="version-badge" style="background: #1e293b; color: #38bdf8; border: 1px solid #334155; font-size: 0.75rem;">v0.2.39 🌿</span>
                 <span class="badge" id="header-ota-badge" style="display: none; background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); font-size: 0.75rem; cursor: pointer;" title="New update available! Click to review.">✨ Update: --</span>
                 <span class="badge" id="clock-badge" style="background: #1e293b; color: #94a3b8; border: 1px solid #334155; font-size: 0.75rem; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; display: inline-flex; align-items: center; gap: 4px;" title="ESP32 Real-Time Clock (NTP Synchronized)">🕒 Connecting...</span>
             </div>
@@ -564,7 +564,7 @@
                         <span class="card-icon">🚀</span>
                     </div>
                     <ul class="diag-list" style="margin-bottom: 14px;">
-                        <li><span>Installed Firmware:</span> <strong id="diag-ota-ver">v0.2.38</strong></li>
+                        <li><span>Installed Firmware:</span> <strong id="diag-ota-ver">v0.2.39</strong></li>
                         <li><span>Active Boot Slot:</span> <strong id="diag-ota-slot">--</strong></li>
                         <li><span>Daily Update Check:</span> <strong id="diag-ota-status">Checking...</strong></li>
                     </ul>
@@ -619,8 +619,51 @@
                     <div class="section-title">
                         <span class="card-icon">🪴</span>
                         <h3>Soil Moisture Ranges & Calibration</h3>
+                        <button type="button" class="info-circle-btn" id="btn-soil-cal-info" aria-label="Soil calibration guide" title="How to calibrate your soil probe">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="16" x2="12" y2="12"></line>
+                                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                            </svg>
+                        </button>
                     </div>
                     <p class="section-desc">Defines automatic watering trigger level, dial zones, and hardware probe ADC voltage calibration.</p>
+
+                    <!-- Calibration Info Guide Card (Toggled via info circle) -->
+                    <div id="soil-cal-info-panel" class="cal-info-card" style="display: none;">
+                        <div class="cal-info-header">
+                            <div class="cal-info-title">
+                                <span>🌱</span> <strong>Quick Guide: Setting Your Soil Moisture Range</strong>
+                            </div>
+                            <button type="button" class="cal-info-close" id="btn-close-cal-info" aria-label="Close guide">&times;</button>
+                        </div>
+                        <div class="cal-info-body">
+                            <p class="cal-info-intro">
+                                Every plant and potting mix holds water differently. Calibrating sets the <strong>0% (Dry)</strong> and <strong>100% (Wet)</strong> range so your moisture gauge and auto-watering triggers are 100% accurate:
+                            </p>
+                            <div class="cal-info-steps">
+                                <div class="cal-step-card">
+                                    <span class="cal-step-num">1</span>
+                                    <div>
+                                        <strong>Dry Soil Baseline (0%):</strong> Insert the probe into your soil when it is dry and ready for watering. Wait ~10 seconds for the probe to settle in the soil, then click <strong>"📍 Sample Now"</strong> under Dry Calibration. The monitor takes 15 live readings to find the clean median voltage.
+                                    </div>
+                                </div>
+                                <div class="cal-step-card">
+                                    <span class="cal-step-num">2</span>
+                                    <div>
+                                        <strong>Wet Soil Baseline (100%):</strong> Water your pot thoroughly until water drains from the bottom and the soil is fully saturated. Wait ~10 seconds for moisture to equalize around the probe, then click <strong>"📍 Sample Now"</strong> under Wet Calibration.
+                                    </div>
+                                </div>
+                                <div class="cal-step-card">
+                                    <span class="cal-step-num">3</span>
+                                    <div>
+                                        <strong>Save:</strong> Click <strong>"Save Settings"</strong> at the bottom. Your moisture gauge dial will now scale accurately from 0% to 100% for your actual soil!
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="form-grid">
                         <div class="form-group">
                             <label for="cfg-soil-trigger">Trigger Threshold (%):</label>
@@ -638,20 +681,22 @@
                             <span class="field-hint">Upper boundary of GREEN zone (above this is BLUE saturated).</span>
                         </div>
                         <div class="form-group">
-                            <label for="cfg-soil-dry-adc">Dry Probe Calibration (mV):</label>
-                            <div style="display: flex; gap: 8px; align-items: center;">
-                                <input type="number" id="cfg-soil-dry-adc" min="500" max="3200" step="10" required style="flex: 1;">
-                                <button type="button" class="btn btn-secondary" id="btn-cal-dry" style="width: auto; padding: 7px 12px; margin: 0; font-size: 0.8rem; white-space: nowrap;" title="Capture current soil probe reading as dry baseline">📍 Use Current (<span id="lbl-cur-soil-dry">--</span> mV)</button>
-                            </div>
-                            <span class="field-hint">ADC reading in bone dry air = 0% (your sensor: ~1950 mV).</span>
+                            <label for="cfg-soil-dry-adc">
+                                Dry Probe Calibration (mV):
+                                <button type="button" class="info-circle-btn-sm btn-trigger-cal-info" title="How to calibrate dry baseline" aria-label="Dry calibration guide">i</button>
+                            </label>
+                            <input type="number" id="cfg-soil-dry-adc" min="500" max="3200" step="10" required>
+                            <button type="button" class="btn btn-secondary btn-cal-action" id="btn-cal-dry" title="Take 15 live readings to calibrate dry baseline">📍 Sample Now (<span id="lbl-cur-soil-dry">--</span> mV)</button>
+                            <span class="field-hint">Reading in dry soil = 0% moisture baseline.</span>
                         </div>
                         <div class="form-group">
-                            <label for="cfg-soil-wet-adc">Wet Probe Calibration (mV):</label>
-                            <div style="display: flex; gap: 8px; align-items: center;">
-                                <input type="number" id="cfg-soil-wet-adc" min="300" max="2500" step="10" required style="flex: 1;">
-                                <button type="button" class="btn btn-secondary" id="btn-cal-wet" style="width: auto; padding: 7px 12px; margin: 0; font-size: 0.8rem; white-space: nowrap;" title="Capture current soil probe reading as wet baseline">📍 Use Current (<span id="lbl-cur-soil-wet">--</span> mV)</button>
-                            </div>
-                            <span class="field-hint">ADC reading submerged in water = 100% (your sensor: ~670 mV).</span>
+                            <label for="cfg-soil-wet-adc">
+                                Wet Probe Calibration (mV):
+                                <button type="button" class="info-circle-btn-sm btn-trigger-cal-info" title="How to calibrate wet baseline" aria-label="Wet calibration guide">i</button>
+                            </label>
+                            <input type="number" id="cfg-soil-wet-adc" min="300" max="2500" step="10" required>
+                            <button type="button" class="btn btn-secondary btn-cal-action" id="btn-cal-wet" title="Take 15 live readings to calibrate wet baseline">📍 Sample Now (<span id="lbl-cur-soil-wet">--</span> mV)</button>
+                            <span class="field-hint">Reading in thoroughly saturated soil = 100% moisture baseline.</span>
                         </div>
                     </div>
                 </div>
@@ -867,6 +912,6 @@
         </div>
     </div>
 
-    <script src="app.js?v=22"></script>
+    <script src="app.js?v=24"></script>
 </body>
 </html>

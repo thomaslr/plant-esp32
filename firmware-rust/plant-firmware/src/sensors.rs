@@ -225,6 +225,33 @@ impl HardwareSensorManager {
         raw_mv
     }
 
+    /// High-precision multi-sample calibration measurement over ~600ms.
+    ///
+    /// Powers the probe, allows 60ms for analog stabilization, then captures 15
+    /// consecutive ADC readings spaced 35ms apart. Uses median outlier rejection
+    /// to ensure an ultra-stable baseline voltage unaffected by 50Hz/60Hz AC noise
+    /// or electrical ripples.
+    pub fn sample_soil_moisture_calibration(&self) -> i32 {
+        unsafe {
+            gpio_set_level(PIN_SOIL_POWER, 1);
+        }
+
+        // Allow 60ms for 555 timer oscillator and bypass capacitors to fully charge
+        sleep(Duration::from_millis(60));
+
+        let mut samples = [0i32; 15];
+        for i in 0..15 {
+            samples[i] = read_raw_channel_mv(PIN_SOIL_MOISTURE_ADC);
+            sleep(Duration::from_millis(35));
+        }
+
+        unsafe {
+            gpio_set_level(PIN_SOIL_POWER, 0);
+        }
+
+        median_i32(&mut samples).unwrap_or(0)
+    }
+
     /// Reads supply voltage (5V rail) via 100k/100k divider.
     pub fn read_supply_voltage(&self) -> f32 {
         divider_volts(self.read_adc_mv(PIN_SUPPLY_MONITOR_ADC))

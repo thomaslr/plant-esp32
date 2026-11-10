@@ -4,6 +4,16 @@ All notable changes to the Plant ESP32 firmware and web dashboard will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.39] - 2026-11-10
+
+### 🪴 Live Multi-Sample Calibration & Gardener's Field Calibration Guide
+- **Live 15-Reading Hardware Sampling (`/api/sensor/soil/sample`)**: Added dedicated on-demand multi-sample calibration endpoint and firmware engine (`sample_soil_moisture_calibration()`). Rather than using stale historical readings, clicking "Sample Now" powers the probe, settles the analog rail for 60ms, captures 15 ADC readings spaced 35ms apart (spanning ~525ms to reject 50Hz/60Hz AC noise), and applies a median filter to record a rock-solid baseline.
+- **"Sample Now" Calibration Action**: Renamed calibration buttons from "Use Current" to "Sample Now" with interactive `⏳ Sampling (15 readings)...` loading state and direct vertical placement below input fields for clean mobile and desktop alignment.
+- **Gardener's Quick Guide Info Circle**: Added interactive `ⓘ` info circle and popover in the Soil Moisture header and field labels with a concise 3-step guide (Dry, Wet, Save) specifically tailored for potted plants and field capacity.
+- **Saturated Soil Baseline Recommendation**: Updated calibration documentation and field hints to guide users toward thoroughly saturated potting soil (rather than pure water) to ensure the 100% dial mark accurately matches the potting mix's true physical water holding capacity.
+
+---
+
 ## [0.2.38] - 2026-11-10
 
 ### 💡 Hardware Recovery Feedback & LED Telemetry Disambiguation

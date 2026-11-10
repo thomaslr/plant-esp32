@@ -315,6 +315,41 @@ pub fn create_web_server(
         send_json(req, 200, &json)
     })?;
 
+    // 10b. POST & GET /api/sensor/soil/sample (Live high-precision 15-reading calibration sample)
+    let s_soil_cal_post = Arc::clone(&state);
+    server.fn_handler("/api/sensor/soil/sample", Method::Post, move |req| {
+        let (raw_mv, soil_pct) = {
+            let app = s_soil_cal_post.lock().unwrap();
+            let raw = app.sensors.sample_soil_moisture_calibration();
+            let dry = app.config.gauges.soil_moisture.dry_adc;
+            let wet = app.config.gauges.soil_moisture.wet_adc;
+            let pct = plant_core::sensors::soil_percent(raw, dry, wet);
+            (raw, pct)
+        };
+        let body = format!(
+            r#"{{"success":true,"soil_raw":{},"soil_percent":{:.1}}}"#,
+            raw_mv, soil_pct
+        );
+        send_json(req, 200, &body)
+    })?;
+
+    let s_soil_cal_get = Arc::clone(&state);
+    server.fn_handler("/api/sensor/soil/sample", Method::Get, move |req| {
+        let (raw_mv, soil_pct) = {
+            let app = s_soil_cal_get.lock().unwrap();
+            let raw = app.sensors.sample_soil_moisture_calibration();
+            let dry = app.config.gauges.soil_moisture.dry_adc;
+            let wet = app.config.gauges.soil_moisture.wet_adc;
+            let pct = plant_core::sensors::soil_percent(raw, dry, wet);
+            (raw, pct)
+        };
+        let body = format!(
+            r#"{{"success":true,"soil_raw":{},"soil_percent":{:.1}}}"#,
+            raw_mv, soil_pct
+        );
+        send_json(req, 200, &body)
+    })?;
+
     // 11. POST /api/wifi/reset
     let s_wifi_reset = Arc::clone(&state);
     server.fn_handler("/api/wifi/reset", Method::Post, move |req| {

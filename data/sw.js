@@ -1,10 +1,10 @@
-// PlantESP32 Service Worker (v1.0.8)
-const CACHE_NAME = 'plant-esp32-v10';
+// PlantESP32 Service Worker (v1.0.10)
+const CACHE_NAME = 'plant-esp32-v12';
 
 const STATIC_ASSETS = [
     '/',
-    '/style.css?v=6',
-    '/app.js?v=22',
+    '/style.css?v=7',
+    '/app.js?v=24',
     '/favicon.svg',
     '/icon-192.png',
     '/icon-512.png',

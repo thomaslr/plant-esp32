@@ -108,44 +108,109 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 1-Click Soil Live Calibration Buttons
-    const calDryBtn = document.getElementById('btn-cal-dry');
-    if (calDryBtn) {
-        calDryBtn.addEventListener('click', () => {
+    // 1-Click Soil Live Multi-Sample Calibration (15 hardware readings over ~600ms)
+    async function sampleSoilProbe(targetInputId, typeName) {
+        const btnDry = document.getElementById('btn-cal-dry');
+        const btnWet = document.getElementById('btn-cal-wet');
+        const targetBtn = typeName === 'Dry' ? btnDry : btnWet;
+        const targetInput = document.getElementById(targetInputId);
+        const msg = document.getElementById('cfg-status-msg');
+
+        if (btnDry) btnDry.disabled = true;
+        if (btnWet) btnWet.disabled = true;
+        if (targetBtn) {
+            targetBtn.innerHTML = '⏳ Sampling (15 readings)...';
+        }
+
+        try {
+            const res = await fetch('/api/sensor/soil/sample', { method: 'POST' });
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const data = await res.json();
+            const rawMv = Math.round(data.soil_raw);
+
+            if (targetInput) targetInput.value = rawMv;
+
+            // Update live labels in both buttons
+            const curDryLbl = document.getElementById('lbl-cur-soil-dry');
+            const curWetLbl = document.getElementById('lbl-cur-soil-wet');
+            if (curDryLbl) curDryLbl.textContent = rawMv;
+            if (curWetLbl) curWetLbl.textContent = rawMv;
+
+            if (msg) {
+                msg.className = 'cfg-status-msg status-ok';
+                msg.innerText = `📍 Sampled ${typeName} Calibration: ${rawMv} mV (Click 'Save Settings' to commit)`;
+                msg.style.display = 'inline-block';
+                setTimeout(() => { msg.style.display = 'none'; }, 6000);
+            }
+        } catch (err) {
+            console.warn('Live soil sampling failed, falling back to telemetry:', err);
             if (lastTelemetry && lastTelemetry.soil_raw !== undefined && lastTelemetry.soil_raw > 0) {
                 const val = Math.round(lastTelemetry.soil_raw);
-                const dryInput = document.getElementById('cfg-soil-dry-adc');
-                if (dryInput) dryInput.value = val;
-                const msg = document.getElementById('cfg-status-msg');
+                if (targetInput) targetInput.value = val;
                 if (msg) {
                     msg.className = 'cfg-status-msg status-ok';
-                    msg.innerText = `📍 Captured Dry Calibration: ${val} mV (Click 'Save Settings' to commit)`;
+                    msg.innerText = `📍 Captured ${typeName} Calibration (telemetry): ${val} mV (Click 'Save Settings' to commit)`;
                     msg.style.display = 'inline-block';
                     setTimeout(() => { msg.style.display = 'none'; }, 6000);
                 }
             } else {
-                alert('No live soil probe reading available yet. Ensure monitor is powered on and connected.');
+                alert('No live soil probe reading available. Ensure plant monitor is online.');
             }
-        });
+        } finally {
+            const curDry = document.getElementById('lbl-cur-soil-dry')?.textContent || '--';
+            const curWet = document.getElementById('lbl-cur-soil-wet')?.textContent || '--';
+            if (btnDry) {
+                btnDry.disabled = false;
+                btnDry.innerHTML = `📍 Sample Now (<span id="lbl-cur-soil-dry">${curDry}</span> mV)`;
+            }
+            if (btnWet) {
+                btnWet.disabled = false;
+                btnWet.innerHTML = `📍 Sample Now (<span id="lbl-cur-soil-wet">${curWet}</span> mV)`;
+            }
+        }
+    }
+
+    const calDryBtn = document.getElementById('btn-cal-dry');
+    if (calDryBtn) {
+        calDryBtn.addEventListener('click', () => sampleSoilProbe('cfg-soil-dry-adc', 'Dry'));
     }
 
     const calWetBtn = document.getElementById('btn-cal-wet');
     if (calWetBtn) {
-        calWetBtn.addEventListener('click', () => {
-            if (lastTelemetry && lastTelemetry.soil_raw !== undefined && lastTelemetry.soil_raw > 0) {
-                const val = Math.round(lastTelemetry.soil_raw);
-                const wetInput = document.getElementById('cfg-soil-wet-adc');
-                if (wetInput) wetInput.value = val;
-                const msg = document.getElementById('cfg-status-msg');
-                if (msg) {
-                    msg.className = 'cfg-status-msg status-ok';
-                    msg.innerText = `📍 Captured Wet Calibration: ${val} mV (Click 'Save Settings' to commit)`;
-                    msg.style.display = 'inline-block';
-                    setTimeout(() => { msg.style.display = 'none'; }, 6000);
-                }
-            } else {
-                alert('No live soil probe reading available yet. Ensure monitor is powered on and connected.');
+        calWetBtn.addEventListener('click', () => sampleSoilProbe('cfg-soil-wet-adc', 'Wet'));
+    }
+
+    // Soil Moisture Calibration Guide Info Panel Toggle
+    const calInfoPanel = document.getElementById('soil-cal-info-panel');
+    const toggleCalInfo = (e) => {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        if (calInfoPanel) {
+            const isShown = calInfoPanel.style.display !== 'none';
+            calInfoPanel.style.display = isShown ? 'none' : 'block';
+            if (!isShown) {
+                calInfoPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
+        }
+    };
+
+    const soilInfoBtn = document.getElementById('btn-soil-cal-info');
+    if (soilInfoBtn) soilInfoBtn.addEventListener('click', toggleCalInfo);
+
+    document.querySelectorAll('.btn-trigger-cal-info').forEach(btn => {
+        btn.addEventListener('click', toggleCalInfo);
+    });
+
+    const closeCalInfoBtn = document.getElementById('btn-close-cal-info');
+    if (closeCalInfoBtn) {
+        closeCalInfoBtn.addEventListener('click', (e) => {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            if (calInfoPanel) calInfoPanel.style.display = 'none';
         });
     }
 
@@ -252,6 +317,7 @@ function switchTab(tab) {
         if (lastTelemetry) updateTelemetryUI(lastTelemetry);
     } else if (tab === 'settings') {
         loadConfigToForm();
+        fetchStatus();
     }
 }
 
