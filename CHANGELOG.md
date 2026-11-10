@@ -4,6 +4,15 @@ All notable changes to the Plant ESP32 firmware and web dashboard will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.44] - 2026-11-10
+
+### 🎯 Clear & Unambiguous Calibration Action Buttons
+- **Eliminated Confusing Parenthetical Live Voltage**: Removed dynamic live telemetry millivolts `(xxx mV)` from inside the "Sample Now" buttons. Buttons now display a clean, unambiguous `[ 📍 Sample Now ]` action label.
+- **Removed Misleading Telemetry Overwrite**: Decoupled background sensor telemetry updates from calibration button DOM elements, preventing live soil moisture fluctuations from creating the illusion that calibrated baseline voltages were lost or modified.
+- **PWA Asset Refresh**: Bumped web script asset to `app.js?v=29` and Service Worker cache to `plant-esp32-v17`.
+
+---
+
 ## [0.2.43] - 2026-11-10
 
 ### 🛡️ Enhanced Settings Flash Persistence & Calibration Precision

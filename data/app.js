@@ -207,7 +207,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 btnDry.classList.remove('is-sampling');
                 const txtDry = btnDry.querySelector('.cal-btn-text');
                 if (txtDry) {
-                    txtDry.innerHTML = `Sample Now (<span id="lbl-cur-soil-dry">${curVal}</span> mV)`;
+                    txtDry.textContent = 'Sample Now';
                 }
             }
             if (btnWet) {
@@ -215,7 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 btnWet.classList.remove('is-sampling');
                 const txtWet = btnWet.querySelector('.cal-btn-text');
                 if (txtWet) {
-                    txtWet.innerHTML = `Sample Now (<span id="lbl-cur-soil-wet">${curVal}</span> mV)`;
+                    txtWet.textContent = 'Sample Now';
                 }
             }
         }
@@ -1523,11 +1523,6 @@ function updateTelemetryUI(t) {
         soilBadge = { className: 'badge-info', text: 'Wet / Saturated' };
     }
     setDialState('soil', soilVal, 0, 100, `${Math.round(soilVal)}%`, soilBadge, `Raw: ${t.soil_raw || 0} mV`);
-
-    const curDryLbl = document.getElementById('lbl-cur-soil-dry');
-    const curWetLbl = document.getElementById('lbl-cur-soil-wet');
-    if (curDryLbl && t.soil_raw !== undefined) curDryLbl.textContent = Math.round(t.soil_raw);
-    if (curWetLbl && t.soil_raw !== undefined) curWetLbl.textContent = Math.round(t.soil_raw);
 
     // 2. Reservoir Level
     const wl = g.water_level || DEFAULT_CONFIG.gauges.water_level;
