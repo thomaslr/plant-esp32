@@ -4,6 +4,16 @@ All notable changes to the Plant ESP32 firmware and web dashboard will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.43] - 2026-11-10
+
+### 🛡️ Enhanced Settings Flash Persistence & Calibration Precision
+- **Direct NVS Calibration Auto-Save**: "Sample Now" calibration takes a 15-reading median sample and commits directly to hardware NVS flash (`soil_dry` / `soil_wet`) with zero dependency on full settings form submission.
+- **Native 1-mV ADC Resolution (`step="1"`)**: Input elements accept full-precision ADC millivolts without triggering browser validation step mismatches.
+- **Live Animated Pin Indicator**: Dynamic active sampling animation transitioning between glowing emerald green and golden yellow during sampling.
+- **OTA Modal Alignment**: Synchronized target version placeholders and bumped PWA assets to `app.js?v=28` and `plant-esp32-v16`.
+
+---
+
 ## [0.2.42] - 2026-11-10
 
 ### 💾 Bulletproof NVS Flash Persistence for Calibration & Settings
