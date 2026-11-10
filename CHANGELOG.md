@@ -4,6 +4,16 @@ All notable changes to the Plant ESP32 firmware and web dashboard will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.45] - 2026-11-10
+
+### 🧪 Canonical Analog Settling Time & Dynamic Dial Calibration
+- **Unified Hardware Sampling & 150ms Settling Warm-Up**: Replaced the disparate 30ms fast read with a canonical 150ms analog settling period and 10-sample median filter (`read_soil_moisture_raw`). Calibration sampling and periodic background monitoring now use the identical physical sampling routine, completely eliminating voltage divergence between calibration and monitoring.
+- **Dynamic Frontend Dial Calibration**: Updated dashboard telemetry pipeline to compute moisture percentage dynamically from `soil_raw` using currently active `dry_adc` and `wet_adc` calibration baselines, ensuring manual calibration adjustments immediately update the gauge dial without delay.
+- **Instant Backend History Recalculation**: Updated `POST /api/config` and `/api/sensor/soil/sample` to immediately recompute `soil_percent` on the latest telemetry history entry, ensuring `/api/status` instantly reflects new calibration thresholds.
+- **PWA Asset Refresh**: Bumped web script asset to `app.js?v=30` and Service Worker cache to `plant-esp32-v18`.
+
+---
+
 ## [0.2.44] - 2026-11-10
 
 ### 🎯 Clear & Unambiguous Calibration Action Buttons

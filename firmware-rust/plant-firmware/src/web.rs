@@ -219,6 +219,17 @@ pub fn create_web_server(
                         app.pump_speed.store(cfg.timing.pump_speed_pct, Ordering::Relaxed);
                         info!("[CONFIG] Updated pump PWM speed to {}%", cfg.timing.pump_speed_pct);
                         crate::wifi::apply_wifi_radio_config(&cfg.wifi);
+
+                        // Recalculate latest cached reading in history with new calibration thresholds
+                        if let Some(mut latest) = app.history.latest() {
+                            latest.soil_percent = plant_core::sensors::soil_percent(
+                                latest.soil_raw_adc,
+                                app.config.gauges.soil_moisture.dry_adc,
+                                app.config.gauges.soil_moisture.wet_adc,
+                            );
+                            app.history.push(latest);
+                        }
+
                         (200, r#"{"status":"success"}"#)
                     }
                     Err(_) => (400, r#"{"error":"Validation failed"}"#),
@@ -349,6 +360,17 @@ pub fn create_web_server(
                     let _ = app.storage.save_soil_calibration(None, Some(raw));
                     was_saved = true;
                     info!("[CALIBRATION] Auto-saved wet_adc = {} mV to NVS flash", raw);
+                }
+
+                // Immediately update latest reading in history so /api/status matches the calibration instantly
+                if let Some(mut latest) = app.history.latest() {
+                    latest.soil_raw_adc = raw;
+                    latest.soil_percent = plant_core::sensors::soil_percent(
+                        raw,
+                        app.config.gauges.soil_moisture.dry_adc,
+                        app.config.gauges.soil_moisture.wet_adc,
+                    );
+                    app.history.push(latest);
                 }
             }
 

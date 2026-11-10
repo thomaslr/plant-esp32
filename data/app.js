@@ -154,6 +154,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (typeName === 'Dry') appConfig.gauges.soil_moisture.dry_adc = rawMv;
                 if (typeName === 'Wet') appConfig.gauges.soil_moisture.wet_adc = rawMv;
                 renderAllDialZones();
+                if (lastTelemetry) {
+                    lastTelemetry.soil_raw = rawMv;
+                    updateTelemetryUI(lastTelemetry);
+                }
             }
 
             if (msg) {
@@ -1513,7 +1517,14 @@ function updateTelemetryUI(t) {
 
     // 1. Soil Moisture
     const sm = g.soil_moisture || DEFAULT_CONFIG.gauges.soil_moisture;
-    const soilVal = t.soil_percent !== undefined ? t.soil_percent : 0;
+    let soilVal = t.soil_percent !== undefined ? t.soil_percent : 0;
+    if (t.soil_raw !== undefined && sm.dry_adc && sm.wet_adc && sm.dry_adc !== sm.wet_adc) {
+        const rawMv = t.soil_raw;
+        const dryMv = sm.dry_adc;
+        const wetMv = sm.wet_adc;
+        const calculated = 100.0 * (1.0 - (rawMv - wetMv) / (dryMv - wetMv));
+        soilVal = Math.max(0.0, Math.min(100.0, calculated));
+    }
     let soilBadge = { className: 'badge-success', text: 'Optimal Moisture' };
     if (soilVal < sm.trigger_threshold) {
         soilBadge = { className: 'badge-danger', text: 'Dry - Water Needed' };

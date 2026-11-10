@@ -205,51 +205,42 @@ impl HardwareSensorManager {
         median_i32(&mut samples).unwrap_or(0)
     }
 
-    /// Powers on the capacitive soil sensor probe for 30ms, samples ADC, and powers it OFF.
+    /// Powers on the capacitive soil sensor probe, allows 150ms for the 555 oscillator
+    /// and bypass/filter capacitors to stabilize into steady state, captures 10 readings
+    /// spaced 20ms apart with median filtering, and powers it OFF.
+    ///
+    /// This canonical measurement routine is shared identically by the periodic background
+    /// monitoring loop and the live calibration tool so that calibration voltages and
+    /// dashboard readings are 100% physically consistent.
     pub fn read_soil_moisture_raw(&self) -> i32 {
         unsafe {
-            // 1. Power ON probe
+            // 1. Power ON probe (GPIO 21)
             gpio_set_level(PIN_SOIL_POWER, 1);
         }
 
-        // 2. Allow 30ms for 555 oscillator and bypass filter capacitor to stabilize
-        sleep(Duration::from_millis(30));
+        // 2. Allow 150ms for 555 timer oscillator and decoupling capacitors to reach steady state
+        sleep(Duration::from_millis(150));
 
-        let raw_mv = self.read_adc_mv(PIN_SOIL_MOISTURE_ADC);
-
-        unsafe {
-            // 3. Power OFF immediately to eliminate idle draw and galvanic corrosion
-            gpio_set_level(PIN_SOIL_POWER, 0);
-        }
-
-        raw_mv
-    }
-
-    /// High-precision multi-sample calibration measurement over ~600ms.
-    ///
-    /// Powers the probe, allows 60ms for analog stabilization, then captures 15
-    /// consecutive ADC readings spaced 35ms apart. Uses median outlier rejection
-    /// to ensure an ultra-stable baseline voltage unaffected by 50Hz/60Hz AC noise
-    /// or electrical ripples.
-    pub fn sample_soil_moisture_calibration(&self) -> i32 {
-        unsafe {
-            gpio_set_level(PIN_SOIL_POWER, 1);
-        }
-
-        // Allow 60ms for 555 timer oscillator and bypass capacitors to fully charge
-        sleep(Duration::from_millis(60));
-
-        let mut samples = [0i32; 15];
-        for i in 0..15 {
+        // 3. Multi-sample 10 readings spaced 20ms apart (spanning 180ms)
+        let mut samples = [0i32; 10];
+        for i in 0..10 {
             samples[i] = read_raw_channel_mv(PIN_SOIL_MOISTURE_ADC);
-            sleep(Duration::from_millis(35));
+            sleep(Duration::from_millis(20));
         }
 
         unsafe {
+            // 4. Power OFF immediately to eliminate idle current and galvanic corrosion
             gpio_set_level(PIN_SOIL_POWER, 0);
         }
 
         median_i32(&mut samples).unwrap_or(0)
+    }
+
+    /// High-precision multi-sample calibration measurement.
+    /// Delegates directly to canonical `read_soil_moisture_raw()` to guarantee
+    /// identical physical settling time and ADC conversion semantics.
+    pub fn sample_soil_moisture_calibration(&self) -> i32 {
+        self.read_soil_moisture_raw()
     }
 
     /// Reads supply voltage (5V rail) via 100k/100k divider.
