@@ -4,6 +4,16 @@ All notable changes to the Plant ESP32 firmware and web dashboard will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.42] - 2026-11-10
+
+### 💾 Bulletproof NVS Flash Persistence for Calibration & Settings
+- **Immediate NVS Auto-Save on "Sample Now"**: Calibrating dry or wet baseline via `/api/sensor/soil/sample` now accepts `{ "target": "dry" | "wet" }` and commits the calibrated ADC baseline immediately to ESP32 Flash NVS upon hardware sampling completion. Users no longer need to click a separate "Save Settings" button to persist calibration baselines.
+- **Dedicated Dual-Layer NVS Hardware Calibration Keys**: Added dedicated integer NVS keys (`soil_dry` and `soil_wet`) in the `plant_cfg` partition alongside `config_json`, ensuring calibration baselines are completely immune to JSON syntax variations or schema migrations across reboots and firmware updates.
+- **Non-Destructive Read Recovery**: Upgraded `NvsConfigStorage::load()` with partial `ConfigPatch` recovery and removed destructive default overwriting on transient read warnings. Flash memory is only modified when valid configuration is explicitly committed.
+- **PWA Asset Refresh**: Bumped web script asset to `app.js?v=27` and Service Worker cache to `plant-esp32-v15`.
+
+---
+
 ## [0.2.41] - 2026-11-10
 
 ### 🛠️ Calibration Input Precision & Form Validation Fix

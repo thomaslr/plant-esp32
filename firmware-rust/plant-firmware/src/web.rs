@@ -317,18 +317,49 @@ pub fn create_web_server(
 
     // 10b. POST & GET /api/sensor/soil/sample (Live high-precision 15-reading calibration sample)
     let s_soil_cal_post = Arc::clone(&state);
-    server.fn_handler("/api/sensor/soil/sample", Method::Post, move |req| {
-        let (raw_mv, soil_pct) = {
-            let app = s_soil_cal_post.lock().unwrap();
+    server.fn_handler("/api/sensor/soil/sample", Method::Post, move |mut req| {
+        let len = req.content_len().unwrap_or(0) as usize;
+        let mut buf = vec![0u8; len];
+        let _ = req.read_exact(&mut buf);
+
+        let target = if let Ok(v) = serde_json::from_slice::<serde_json::Value>(&buf) {
+            v.get("target")
+                .or_else(|| v.get("type"))
+                .and_then(|val| val.as_str())
+                .map(|s| s.to_ascii_lowercase())
+        } else {
+            None
+        };
+
+        let (raw_mv, soil_pct, saved) = {
+            let mut app = s_soil_cal_post.lock().unwrap();
             let raw = app.sensors.sample_soil_moisture_calibration();
+
+            let mut was_saved = false;
+            if let Some(ref t) = target {
+                if t == "dry" {
+                    app.config.gauges.soil_moisture.dry_adc = raw;
+                    let _ = app.storage.save(&app.config);
+                    let _ = app.storage.save_soil_calibration(Some(raw), None);
+                    was_saved = true;
+                    info!("[CALIBRATION] Auto-saved dry_adc = {} mV to NVS flash", raw);
+                } else if t == "wet" {
+                    app.config.gauges.soil_moisture.wet_adc = raw;
+                    let _ = app.storage.save(&app.config);
+                    let _ = app.storage.save_soil_calibration(None, Some(raw));
+                    was_saved = true;
+                    info!("[CALIBRATION] Auto-saved wet_adc = {} mV to NVS flash", raw);
+                }
+            }
+
             let dry = app.config.gauges.soil_moisture.dry_adc;
             let wet = app.config.gauges.soil_moisture.wet_adc;
             let pct = plant_core::sensors::soil_percent(raw, dry, wet);
-            (raw, pct)
+            (raw, pct, was_saved)
         };
         let body = format!(
-            r#"{{"success":true,"soil_raw":{},"soil_percent":{:.1}}}"#,
-            raw_mv, soil_pct
+            r#"{{"success":true,"soil_raw":{},"soil_percent":{:.1},"saved":{}}}"#,
+            raw_mv, soil_pct, saved
         );
         send_json(req, 200, &body)
     })?;

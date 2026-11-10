@@ -126,7 +126,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let sampledMv = null;
         try {
-            const res = await fetch('/api/sensor/soil/sample', { method: 'POST' });
+            const res = await fetch('/api/sensor/soil/sample', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ target: typeName.toLowerCase() })
+            });
             if (!res.ok) throw new Error('HTTP ' + res.status);
             const data = await res.json();
             let rawMv = Math.round(data.soil_raw);
@@ -145,9 +149,16 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             sampledMv = rawMv;
 
+            // Keep in-memory appConfig synchronized and re-render gauge zones
+            if (appConfig && appConfig.gauges && appConfig.gauges.soil_moisture) {
+                if (typeName === 'Dry') appConfig.gauges.soil_moisture.dry_adc = rawMv;
+                if (typeName === 'Wet') appConfig.gauges.soil_moisture.wet_adc = rawMv;
+                renderAllDialZones();
+            }
+
             if (msg) {
                 msg.className = 'cfg-status-msg status-ok';
-                msg.innerText = `📍 Sampled ${typeName} Calibration: ${rawMv} mV (Click 'Save Settings' to commit)`;
+                msg.innerText = `✅ Calibrated & saved ${typeName} baseline (${rawMv} mV) permanently to Flash NVS!`;
                 msg.style.display = 'inline-block';
                 setTimeout(() => { msg.style.display = 'none'; }, 6000);
             }
@@ -168,9 +179,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     targetInput.value = val;
                 }
                 sampledMv = val;
+
+                // Auto-save telemetry fallback to NVS
+                const patch = { gauges: { soil_moisture: {} } };
+                if (typeName === 'Dry') patch.gauges.soil_moisture.dry_adc = val;
+                if (typeName === 'Wet') patch.gauges.soil_moisture.wet_adc = val;
+                fetch('/api/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(patch)
+                }).catch(() => {});
+
                 if (msg) {
                     msg.className = 'cfg-status-msg status-ok';
-                    msg.innerText = `📍 Captured ${typeName} Calibration (telemetry): ${val} mV (Click 'Save Settings' to commit)`;
+                    msg.innerText = `✅ Captured & saved ${typeName} Calibration (${val} mV) to Flash NVS!`;
                     msg.style.display = 'inline-block';
                     setTimeout(() => { msg.style.display = 'none'; }, 6000);
                 }

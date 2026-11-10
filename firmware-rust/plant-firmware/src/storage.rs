@@ -19,7 +19,10 @@ const NVS_KEY_PASS: &str = "wifi_pass";
 const LOG_NAMESPACE: &str = "plant_log";
 const NVS_KEY_HISTORY: &str = "hist_bin";
 
-const BUFFER_SIZE: usize = 2048;
+const NVS_KEY_SOIL_DRY: &str = "soil_dry";
+const NVS_KEY_SOIL_WET: &str = "soil_wet";
+
+const BUFFER_SIZE: usize = 4096;
 
 /// Stored network credentials for Station mode.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -46,17 +49,27 @@ impl NvsConfigStorage {
     /// Loads the stored `AppConfig`. Falls back to default if not found or invalid.
     pub fn load(&self) -> AppConfig {
         let mut buf = vec![0u8; BUFFER_SIZE];
-        match self.nvs_cfg.get_str(NVS_KEY_CONFIG, &mut buf) {
+        let mut config = match self.nvs_cfg.get_str(NVS_KEY_CONFIG, &mut buf) {
             Ok(Some(json_str)) => match serde_json::from_str::<AppConfig>(json_str) {
                 Ok(cfg) => {
                     info!("[NVS] Loaded existing configuration from flash");
                     cfg
                 }
                 Err(e) => {
-                    warn!("[NVS] Corrupt config JSON in NVS ({}). Falling back to defaults.", e);
-                    let def = AppConfig::default();
-                    let _ = self.save(&def);
-                    def
+                    warn!("[NVS] Config JSON parse warning ({}). Attempting patch recovery...", e);
+                    if let Ok(patch) = serde_json::from_str::<plant_core::config::ConfigPatch>(json_str) {
+                        let mut recovered = AppConfig::default();
+                        if let Ok(()) = recovered.apply_patch(&patch) {
+                            info!("[NVS] Successfully recovered configuration from stored patch");
+                            recovered
+                        } else {
+                            warn!("[NVS] Patch validation failed; using in-memory defaults without overwriting flash.");
+                            AppConfig::default()
+                        }
+                    } else {
+                        warn!("[NVS] Corrupt config JSON in NVS; using in-memory defaults without overwriting flash.");
+                        AppConfig::default()
+                    }
                 }
             },
             Ok(None) => {
@@ -69,7 +82,25 @@ impl NvsConfigStorage {
                 error!("[NVS] Failed to read from NVS ({}). Using defaults.", e);
                 AppConfig::default()
             }
+        };
+
+        // Cross-check direct NVS hardware calibration keys
+        match self.nvs_cfg.get_i32(NVS_KEY_SOIL_DRY) {
+            Ok(Some(dry)) if dry > 0 => {
+                info!("[NVS] Overriding soil dry_adc from dedicated NVS key: {} mV", dry);
+                config.gauges.soil_moisture.dry_adc = dry;
+            }
+            _ => {}
         }
+        match self.nvs_cfg.get_i32(NVS_KEY_SOIL_WET) {
+            Ok(Some(wet)) if wet > 0 => {
+                info!("[NVS] Overriding soil wet_adc from dedicated NVS key: {} mV", wet);
+                config.gauges.soil_moisture.wet_adc = wet;
+            }
+            _ => {}
+        }
+
+        config
     }
 
     /// Serializes and commits `AppConfig` to NVS flash.
@@ -81,7 +112,34 @@ impl NvsConfigStorage {
             .set_str(NVS_KEY_CONFIG, &json_str)
             .map_err(|e| format!("Failed to write config to NVS: {}", e))?;
 
-        info!("[NVS] Configuration saved to flash");
+        // Also persist dedicated soil calibration keys for bulletproof survivability
+        let dry = config.gauges.soil_moisture.dry_adc;
+        let wet = config.gauges.soil_moisture.wet_adc;
+        if dry > 0 {
+            let _ = self.nvs_cfg.set_i32(NVS_KEY_SOIL_DRY, dry);
+        }
+        if wet > 0 {
+            let _ = self.nvs_cfg.set_i32(NVS_KEY_SOIL_WET, wet);
+        }
+
+        info!("[NVS] Configuration saved to flash (dry_adc: {} mV, wet_adc: {} mV)", dry, wet);
+        Ok(())
+    }
+
+    /// Directly updates and commits soil moisture calibration to flash.
+    #[allow(dead_code)]
+    pub fn save_soil_calibration(&self, dry: Option<i32>, wet: Option<i32>) -> Result<(), String> {
+        if let Some(d) = dry {
+            self.nvs_cfg
+                .set_i32(NVS_KEY_SOIL_DRY, d)
+                .map_err(|e| format!("Failed to save soil_dry: {}", e))?;
+        }
+        if let Some(w) = wet {
+            self.nvs_cfg
+                .set_i32(NVS_KEY_SOIL_WET, w)
+                .map_err(|e| format!("Failed to save soil_wet: {}", e))?;
+        }
+        info!("[NVS] Dedicated soil calibration committed: dry={:?}, wet={:?}", dry, wet);
         Ok(())
     }
 
