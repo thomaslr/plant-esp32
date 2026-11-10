@@ -4,6 +4,15 @@ All notable changes to the Plant ESP32 firmware and web dashboard will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.41] - 2026-11-10
+
+### 🛠️ Calibration Input Precision & Form Validation Fix
+- **Native 1-mV Precision (`step="1"`)**: Updated dry and wet probe calibration input fields in the web dashboard from artificial `step="10"` increments to native `step="1"`, removing the browser constraint validation failure that blocked saving values like `928 mV`.
+- **Defensive Step-Snapping & Range-Clamping**: Updated `sampleSoilProbe()` in `app.js` to automatically conform sampled readings to the input element's exact `step`, `min`, and `max` constraints before population, ensuring sampled calibration voltages can never trigger HTML5 form submission rejection.
+- **PWA Asset Invalidation**: Bumped web script asset to `app.js?v=26` and Service Worker cache to `plant-esp32-v14`.
+
+---
+
 ## [0.2.40] - 2026-11-10
 
 ### 🟢🟡 Flashing Live Sampling Indicator & UI Refinements

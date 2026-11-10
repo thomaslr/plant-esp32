@@ -129,10 +129,21 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch('/api/sensor/soil/sample', { method: 'POST' });
             if (!res.ok) throw new Error('HTTP ' + res.status);
             const data = await res.json();
-            const rawMv = Math.round(data.soil_raw);
+            let rawMv = Math.round(data.soil_raw);
+            if (targetInput) {
+                // Ensure value conforms strictly to input step/min/max so HTML5 validation never fails
+                if (targetInput.step && targetInput.step !== 'any') {
+                    const step = parseFloat(targetInput.step);
+                    if (!isNaN(step) && step > 0) {
+                        const min = targetInput.min ? parseFloat(targetInput.min) : 0;
+                        rawMv = Math.round((rawMv - min) / step) * step + min;
+                    }
+                }
+                if (targetInput.min) rawMv = Math.max(rawMv, parseInt(targetInput.min, 10));
+                if (targetInput.max) rawMv = Math.min(rawMv, parseInt(targetInput.max, 10));
+                targetInput.value = rawMv;
+            }
             sampledMv = rawMv;
-
-            if (targetInput) targetInput.value = rawMv;
 
             if (msg) {
                 msg.className = 'cfg-status-msg status-ok';
@@ -143,9 +154,20 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (err) {
             console.warn('Live soil sampling failed, falling back to telemetry:', err);
             if (lastTelemetry && lastTelemetry.soil_raw !== undefined && lastTelemetry.soil_raw > 0) {
-                const val = Math.round(lastTelemetry.soil_raw);
+                let val = Math.round(lastTelemetry.soil_raw);
+                if (targetInput) {
+                    if (targetInput.step && targetInput.step !== 'any') {
+                        const step = parseFloat(targetInput.step);
+                        if (!isNaN(step) && step > 0) {
+                            const min = targetInput.min ? parseFloat(targetInput.min) : 0;
+                            val = Math.round((val - min) / step) * step + min;
+                        }
+                    }
+                    if (targetInput.min) val = Math.max(val, parseInt(targetInput.min, 10));
+                    if (targetInput.max) val = Math.min(val, parseInt(targetInput.max, 10));
+                    targetInput.value = val;
+                }
                 sampledMv = val;
-                if (targetInput) targetInput.value = val;
                 if (msg) {
                     msg.className = 'cfg-status-msg status-ok';
                     msg.innerText = `📍 Captured ${typeName} Calibration (telemetry): ${val} mV (Click 'Save Settings' to commit)`;
