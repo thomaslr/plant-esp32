@@ -121,7 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (targetBtn) {
             targetBtn.classList.add('is-sampling');
             const txt = targetBtn.querySelector('.cal-btn-text');
-            if (txt) txt.textContent = 'Sampling (15 readings)...';
+            if (txt) txt.textContent = 'Stabilizing & Sampling...';
         }
 
         let sampledMv = null;

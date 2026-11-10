@@ -27,7 +27,7 @@
             <div class="header-title">
                 <h1>🌱 Plant Monitor & Waterer</h1>
                 <span class="badge" id="host-badge">plants.local</span>
-                <span class="badge" id="version-badge" style="background: #1e293b; color: #38bdf8; border: 1px solid #334155; font-size: 0.75rem;">v0.2.45 🌿</span>
+                <span class="badge" id="version-badge" style="background: #1e293b; color: #38bdf8; border: 1px solid #334155; font-size: 0.75rem;">v0.2.46 🌿</span>
                 <span class="badge" id="header-ota-badge" style="display: none; background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); font-size: 0.75rem; cursor: pointer;" title="New update available! Click to review.">✨ Update: --</span>
                 <span class="badge" id="clock-badge" style="background: #1e293b; color: #94a3b8; border: 1px solid #334155; font-size: 0.75rem; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; display: inline-flex; align-items: center; gap: 4px;" title="ESP32 Real-Time Clock (NTP Synchronized)">🕒 Connecting...</span>
             </div>
@@ -564,7 +564,7 @@
                         <span class="card-icon">🚀</span>
                     </div>
                     <ul class="diag-list" style="margin-bottom: 14px;">
-                        <li><span>Installed Firmware:</span> <strong id="diag-ota-ver">v0.2.45</strong></li>
+                        <li><span>Installed Firmware:</span> <strong id="diag-ota-ver">v0.2.46</strong></li>
                         <li><span>Active Boot Slot:</span> <strong id="diag-ota-slot">--</strong></li>
                         <li><span>Daily Update Check:</span> <strong id="diag-ota-status">Checking...</strong></li>
                     </ul>
@@ -645,7 +645,7 @@
                                 <div class="cal-step-card">
                                     <span class="cal-step-num">1</span>
                                     <div>
-                                        <strong>Dry Soil Baseline (0%):</strong> Insert the probe into your soil when it is dry and ready for watering. Wait ~10 seconds for the probe to settle in the soil, then click <strong>"📍 Sample Now"</strong> under Dry Calibration. The monitor takes 15 live readings to find the clean median voltage.
+                                        <strong>Dry Soil Baseline (0%):</strong> Insert the probe into your soil when it is dry and ready for watering. Wait ~10 seconds for the probe to settle in the soil, then click <strong>"📍 Sample Now"</strong> under Dry Calibration. The monitor stabilizes for 1.0s and takes 10 readings to find the clean median voltage.
                                     </div>
                                 </div>
                                 <div class="cal-step-card">
@@ -686,7 +686,7 @@
                                 <button type="button" class="info-circle-btn-sm btn-trigger-cal-info" title="How to calibrate dry baseline" aria-label="Dry calibration guide">i</button>
                             </label>
                             <input type="number" id="cfg-soil-dry-adc" min="500" max="3200" step="1" required>
-                            <button type="button" class="btn btn-secondary btn-cal-action" id="btn-cal-dry" title="Take 15 live readings to calibrate dry baseline"><span class="cal-pin-icon">📍</span> <span class="cal-btn-text">Sample Now</span></button>
+                            <button type="button" class="btn btn-secondary btn-cal-action" id="btn-cal-dry" title="Power probe for 1.0s and take 10 live readings to calibrate dry baseline"><span class="cal-pin-icon">📍</span> <span class="cal-btn-text">Sample Now</span></button>
                             <span class="field-hint">Reading in dry soil = 0% moisture baseline (auto-saves to Flash NVS).</span>
                         </div>
                         <div class="form-group">
@@ -695,7 +695,7 @@
                                 <button type="button" class="info-circle-btn-sm btn-trigger-cal-info" title="How to calibrate wet baseline" aria-label="Wet calibration guide">i</button>
                             </label>
                             <input type="number" id="cfg-soil-wet-adc" min="300" max="2500" step="1" required>
-                            <button type="button" class="btn btn-secondary btn-cal-action" id="btn-cal-wet" title="Take 15 live readings to calibrate wet baseline"><span class="cal-pin-icon">📍</span> <span class="cal-btn-text">Sample Now</span></button>
+                            <button type="button" class="btn btn-secondary btn-cal-action" id="btn-cal-wet" title="Power probe for 1.0s and take 10 live readings to calibrate wet baseline"><span class="cal-pin-icon">📍</span> <span class="cal-btn-text">Sample Now</span></button>
                             <span class="field-hint">Reading in thoroughly saturated soil = 100% moisture baseline (auto-saves to Flash NVS).</span>
                         </div>
                     </div>
@@ -886,7 +886,7 @@
             </div>
             <div class="modal-body">
                 <div class="modal-version-row">
-                    <span class="ver-chip ver-current" id="modal-ver-current">Current: v0.2.45</span>
+                    <span class="ver-chip ver-current" id="modal-ver-current">Current: v0.2.46</span>
                     <span class="ver-arrow">➔</span>
                     <span class="ver-chip ver-target" id="modal-ver-target">New: --</span>
                 </div>
@@ -912,6 +912,6 @@
         </div>
     </div>
 
-    <script src="app.js?v=30"></script>
+    <script src="app.js?v=31"></script>
 </body>
 </html>

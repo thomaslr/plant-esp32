@@ -4,6 +4,16 @@ All notable changes to the Plant ESP32 firmware and web dashboard will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.46] - 2026-11-11
+
+### ⏱️ 1.0s Soil Probe Settling & 50Hz/60Hz AC Ripple Rejection
+- **Extended 1000ms Analog Warm-Up**: Extended probe power-on settling delay from 150ms to 1000ms (1.0 second), guaranteeing complete dielectric saturation, filter capacitor plateauing, and full cable capacitance charging across all probe clones and soil types.
+- **25ms Sub-Sample Spacing with AC Ripple Rejection**: Spaced 10 ADC conversions 25ms apart (spanning 225ms across multiple full 50Hz and 60Hz AC line cycles). Median outlier rejection eliminates electromagnetic hum from nearby grow lights and USB power adapters.
+- **Responsive Sampling UI Indicator**: Updated sample button loading text to "Stabilizing & Sampling..." and refreshed calibration guide tooltips to reflect the 1.0s stabilization window.
+- **PWA Asset Refresh**: Bumped web script asset to `app.js?v=31` and Service Worker cache to `plant-esp32-v19`.
+
+---
+
 ## [0.2.45] - 2026-11-10
 
 ### 🧪 Canonical Analog Settling Time & Dynamic Dial Calibration

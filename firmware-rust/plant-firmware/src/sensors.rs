@@ -205,9 +205,10 @@ impl HardwareSensorManager {
         median_i32(&mut samples).unwrap_or(0)
     }
 
-    /// Powers on the capacitive soil sensor probe, allows 150ms for the 555 oscillator
-    /// and bypass/filter capacitors to stabilize into steady state, captures 10 readings
-    /// spaced 20ms apart with median filtering, and powers it OFF.
+    /// Powers on the capacitive soil sensor probe, allows 1000ms (1.0s) for the 555 oscillator
+    /// and bypass/filter capacitors to stabilize completely into steady state, captures 10 readings
+    /// spaced 25ms apart (spanning 250ms of 50Hz/60Hz AC noise rejection) with median filtering,
+    /// and powers it OFF.
     ///
     /// This canonical measurement routine is shared identically by the periodic background
     /// monitoring loop and the live calibration tool so that calibration voltages and
@@ -218,14 +219,14 @@ impl HardwareSensorManager {
             gpio_set_level(PIN_SOIL_POWER, 1);
         }
 
-        // 2. Allow 150ms for 555 timer oscillator and decoupling capacitors to reach steady state
-        sleep(Duration::from_millis(150));
+        // 2. Allow 1000ms (1.0s) for 555 timer oscillator and decoupling capacitors to reach complete steady state
+        sleep(Duration::from_millis(1000));
 
-        // 3. Multi-sample 10 readings spaced 20ms apart (spanning 180ms)
+        // 3. Multi-sample 10 readings spaced 25ms apart (spanning 225ms across multiple AC cycles)
         let mut samples = [0i32; 10];
         for i in 0..10 {
             samples[i] = read_raw_channel_mv(PIN_SOIL_MOISTURE_ADC);
-            sleep(Duration::from_millis(20));
+            sleep(Duration::from_millis(25));
         }
 
         unsafe {
