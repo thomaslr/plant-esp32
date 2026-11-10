@@ -119,22 +119,20 @@ document.addEventListener('DOMContentLoaded', () => {
         if (btnDry) btnDry.disabled = true;
         if (btnWet) btnWet.disabled = true;
         if (targetBtn) {
-            targetBtn.innerHTML = '⏳ Sampling (15 readings)...';
+            targetBtn.classList.add('is-sampling');
+            const txt = targetBtn.querySelector('.cal-btn-text');
+            if (txt) txt.textContent = 'Sampling (15 readings)...';
         }
 
+        let sampledMv = null;
         try {
             const res = await fetch('/api/sensor/soil/sample', { method: 'POST' });
             if (!res.ok) throw new Error('HTTP ' + res.status);
             const data = await res.json();
             const rawMv = Math.round(data.soil_raw);
+            sampledMv = rawMv;
 
             if (targetInput) targetInput.value = rawMv;
-
-            // Update live labels in both buttons
-            const curDryLbl = document.getElementById('lbl-cur-soil-dry');
-            const curWetLbl = document.getElementById('lbl-cur-soil-wet');
-            if (curDryLbl) curDryLbl.textContent = rawMv;
-            if (curWetLbl) curWetLbl.textContent = rawMv;
 
             if (msg) {
                 msg.className = 'cfg-status-msg status-ok';
@@ -146,6 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.warn('Live soil sampling failed, falling back to telemetry:', err);
             if (lastTelemetry && lastTelemetry.soil_raw !== undefined && lastTelemetry.soil_raw > 0) {
                 const val = Math.round(lastTelemetry.soil_raw);
+                sampledMv = val;
                 if (targetInput) targetInput.value = val;
                 if (msg) {
                     msg.className = 'cfg-status-msg status-ok';
@@ -157,15 +156,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert('No live soil probe reading available. Ensure plant monitor is online.');
             }
         } finally {
-            const curDry = document.getElementById('lbl-cur-soil-dry')?.textContent || '--';
-            const curWet = document.getElementById('lbl-cur-soil-wet')?.textContent || '--';
+            const fallbackVal = lastTelemetry && lastTelemetry.soil_raw ? Math.round(lastTelemetry.soil_raw) : '--';
+            const curVal = sampledMv !== null ? sampledMv : fallbackVal;
             if (btnDry) {
                 btnDry.disabled = false;
-                btnDry.innerHTML = `📍 Sample Now (<span id="lbl-cur-soil-dry">${curDry}</span> mV)`;
+                btnDry.classList.remove('is-sampling');
+                const txtDry = btnDry.querySelector('.cal-btn-text');
+                if (txtDry) {
+                    txtDry.innerHTML = `Sample Now (<span id="lbl-cur-soil-dry">${curVal}</span> mV)`;
+                }
             }
             if (btnWet) {
                 btnWet.disabled = false;
-                btnWet.innerHTML = `📍 Sample Now (<span id="lbl-cur-soil-wet">${curWet}</span> mV)`;
+                btnWet.classList.remove('is-sampling');
+                const txtWet = btnWet.querySelector('.cal-btn-text');
+                if (txtWet) {
+                    txtWet.innerHTML = `Sample Now (<span id="lbl-cur-soil-wet">${curVal}</span> mV)`;
+                }
             }
         }
     }

@@ -4,6 +4,15 @@ All notable changes to the Plant ESP32 firmware and web dashboard will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.40] - 2026-11-10
+
+### 🟢🟡 Flashing Live Sampling Indicator & UI Refinements
+- **Animated Dual-Phase Sampling Indicator**: Enhanced "Sample Now" calibration buttons with active status feedback during hardware sampling. The pin icon dynamically transforms from resting red (`📍`) to an active beacon rapidly flashing between glowing emerald green (`#22c55e`) and golden yellow (`#facc15`).
+- **GPU-Accelerated Smooth Animations**: Powered indicator color rotation via CSS keyframe GPU compositing (`cal-pin-flash`), ensuring 60 FPS transitions without layout jitter or text movement while the browser awaits the 15-reading hardware sample.
+- **PWA Cache Invalidation**: Bumped web dashboard assets to `style.css?v=8`, `app.js?v=25`, and service worker cache to `plant-esp32-v13`.
+
+---
+
 ## [0.2.39] - 2026-11-10
 
 ### 🪴 Live Multi-Sample Calibration & Gardener's Field Calibration Guide
