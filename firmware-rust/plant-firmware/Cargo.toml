@@ -1,7 +1,9 @@
 [package]
 name = "plant-firmware"
-version = "0.2.47"
+version = "0.2.48"
 edition = "2021"
+license = "GPL-3.0-only"
+publish = false
 
 [dependencies]
 plant-core = { path = "../plant-core" }

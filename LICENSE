@@ -1,0 +1,66 @@
+Plant Monitor & Automated Irrigation Controller (plant-esp32)
+Copyright (c) 2026 Robert Longbottom
+
+This repository is dual-licensed across its software and hardware components
+to keep the project genuinely open source for makers, researchers, and the
+community while offering commercial licensing options for businesses.
+
+------------------------------------------------------------------------
+1. Open-Source Licensing (By Component)
+------------------------------------------------------------------------
+
+* Software (`firmware-rust/`, `data/`, `installer/`, `scripts/`, `.github/`,
+  and software documentation):
+  Licensed under the GNU General Public License v3.0 only (`GPL-3.0-only`).
+  See `LICENSE-SOFTWARE` for the complete verbatim license text.
+
+* Hardware & Enclosures (`pcb/`, `enclosure/`, and hardware documentation):
+  Licensed under the CERN Open Hardware Licence Version 2 - Strongly
+  Reciprocal (`CERN-OHL-S-2.0`).
+  See `LICENSE-HARDWARE` for the complete verbatim license text.
+
+Under these licenses, anyone is free to build, study, modify, and share
+the designs and firmware, provided that:
+  1. Attribution and copyright/license notices are preserved.
+  2. Any distributed modifications or derivative works (including modified
+     firmware, PCBs, schematics, or enclosures) are published under the
+     same reciprocal open-source license (`GPL-3.0-only` for software,
+     `CERN-OHL-S-2.0` for hardware).
+
+------------------------------------------------------------------------
+2. Commercial Licensing Available
+------------------------------------------------------------------------
+
+If you are a company or organization wishing to:
+  * Incorporate the firmware, web interface, or hardware designs into a
+    closed-source or proprietary commercial product without the reciprocal
+    source-disclosure obligations of GPLv3 or CERN-OHL-S v2, or
+  * Distribute commercially certified/branded hardware or obtain OEM
+    support,
+
+a separate commercial license is available. Please contact:
+
+  Robert Longbottom
+  Email: robert.longbottom@gmail.com
+  Repository: https://github.com/thomaslr/plant-esp32
+
+------------------------------------------------------------------------
+3. Trademarks & Branding
+------------------------------------------------------------------------
+
+Neither `GPL-3.0-only` nor `CERN-OHL-S-2.0` grants permission to use the
+project names ("Plant Monitor", "plant-esp32"), logos, icons, or other
+branding to market third-party hardware or services or to imply official
+endorsement. Third-party builds and commercial products distributed under
+the open-source licenses must use distinct branding while retaining
+required attribution notices (e.g. "Based on plant-esp32 by Robert
+Longbottom").
+
+------------------------------------------------------------------------
+4. Third-Party Components
+------------------------------------------------------------------------
+
+Third-party libraries, toolchains, and hardware modules referenced or
+linked by this project (such as ESP-IDF and Rust crates listed in
+`firmware-rust/Cargo.toml` and `firmware-rust/Cargo.lock`) remain under
+their respective upstream licenses.

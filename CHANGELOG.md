@@ -4,6 +4,16 @@ All notable changes to the Plant ESP32 firmware and web dashboard will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.48] - 2026-11-11
+
+### 📄 Open-Source Dual Licensing (GPLv3 + CERN-OHL-S v2) & Commercial Option
+- **Software & Firmware Licensing (`GPL-3.0-only`)**: Added [`LICENSE-SOFTWARE`](LICENSE-SOFTWARE) covering `firmware-rust/`, `data/`, `installer/`, and `scripts/`, along with Cargo manifest metadata in `plant-core` and `plant-firmware`.
+- **Hardware & Enclosure Licensing (`CERN-OHL-S-2.0`)**: Added [`LICENSE-HARDWARE`](LICENSE-HARDWARE) (CERN Open Hardware Licence v2 – Strongly Reciprocal) covering KiCad PCBs (`pcb/`) and 3D printable enclosures (`enclosure/`).
+- **Commercial Licensing & Trademark Notice**: Added root [`LICENSE`](LICENSE) overview and updated `README.md` and embedded web dashboard footer with dual-license attribution and commercial licensing inquiry details.
+- **PWA Asset Refresh**: Bumped Service Worker cache to `plant-esp32-v21`.
+
+---
+
 ## [0.2.47] - 2026-11-11
 
 ### 🎯 Soil Moisture Dial Health Zones & Trigger Setpoint Indicator

@@ -4,7 +4,8 @@
 [![Rust](https://img.shields.io/badge/rust-nightly-orange.svg)](https://www.rust-lang.org/)
 [![Target](https://img.shields.io/badge/target-riscv32imc--esp--espidf-blue.svg)](https://github.com/esp-rs/esp-idf-template)
 [![Platform](https://img.shields.io/badge/hardware-ESP32--C3%20SuperMini-brightgreen.svg)](https://lastminuteengineers.com/esp32-c3-super-mini-pinout-reference/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE-SOFTWARE)
+[![License: CERN-OHL-S v2](https://img.shields.io/badge/License-CERN--OHL--S%20v2-orange.svg)](LICENSE-HARDWARE)
 
 An industrial-grade, memory-safe automated plant watering and environmental monitoring system built for the ultra-compact **ESP32-C3 SuperMini** (32-bit RISC-V) running on **ESP-IDF** and written in **bare-metal Rust**.
 
@@ -184,4 +185,15 @@ plant-esp32/
 
 ## 📄 License
 
-This project is licensed under the [MIT License](LICENSE).
+This project is open source and dual-licensed across software and hardware (see [LICENSE](LICENSE) for full details):
+
+| Component | Directories | License |
+| :--- | :--- | :--- |
+| **Software & Web UI** | [`firmware-rust/`](firmware-rust/), [`data/`](data/), [`installer/`](installer/), [`scripts/`](scripts/) | **[GNU GPLv3](LICENSE-SOFTWARE)** (`GPL-3.0-only`) |
+| **Hardware & Enclosure** | [`pcb/`](pcb/), [`enclosure/`](enclosure/) | **[CERN-OHL-S v2](LICENSE-HARDWARE)** (`CERN-OHL-S-2.0`) |
+
+### Commercial Licensing Available
+
+Tinkerers, makers, and researchers are free to build, modify, and share this project under **GPLv3** and **CERN-OHL-S v2** (preserving attribution and publishing any distributed modifications under the same license).
+
+Companies or organizations wishing to use, modify, or manufacture this project in a **closed-source or proprietary commercial product** without reciprocal source-disclosure obligations—or seeking official brand/trademark licensing—can obtain a commercial license. See [LICENSE](LICENSE) for contact details.
