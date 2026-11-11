@@ -1263,6 +1263,49 @@ function renderDialZones(containerId, min, max, zones) {
 }
 
 /**
+ * Draws an industrial setpoint notch + outer pointer triangle (▼) on the Soil Moisture SVG dial.
+ */
+function renderSoilTriggerMarker(triggerPct) {
+    const container = document.getElementById('marker-soil-trigger');
+    if (!container) return;
+
+    const pct = Math.max(0, Math.min(100, Number(triggerPct) || 0));
+    const cx = 100;
+    const cy = 105;
+    const angleDeg = (pct / 100) * 180;
+    const rad = Math.PI - (angleDeg * Math.PI / 180);
+
+    // Outward radial unit vector and perpendicular tangent unit vector
+    const ux = Math.cos(rad);
+    const uy = -Math.sin(rad);
+    const tx = Math.sin(rad);
+    const ty = Math.cos(rad);
+
+    // Radial tick across the colored arc (r=69..81)
+    const x1 = (cx + 69 * ux).toFixed(2);
+    const y1 = (cy + 69 * uy).toFixed(2);
+    const x2 = (cx + 81 * ux).toFixed(2);
+    const y2 = (cy + 81 * uy).toFixed(2);
+
+    // Outer inward-pointing triangle pointer (tip at r=81.5, base at r=89.5)
+    const tipX = (cx + 81.5 * ux).toFixed(2);
+    const tipY = (cy + 81.5 * uy).toFixed(2);
+    const baseR = 89.5;
+    const halfW = 4.2;
+    const b1x = (cx + baseR * ux - halfW * tx).toFixed(2);
+    const b1y = (cy + baseR * uy - halfW * ty).toFixed(2);
+    const b2x = (cx + baseR * ux + halfW * tx).toFixed(2);
+    const b2y = (cy + baseR * uy + halfW * ty).toFixed(2);
+
+    const roundedPct = Math.round(pct);
+    container.innerHTML =
+        `<title>Auto-Watering Trigger: ${roundedPct}%</title>` +
+        `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#0f172a" stroke-width="3.6" stroke-linecap="round" />` +
+        `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#fbbf24" stroke-width="2" stroke-linecap="butt" />` +
+        `<polygon points="${tipX},${tipY} ${b1x},${b1y} ${b2x},${b2y}" fill="#fbbf24" stroke="#0f172a" stroke-width="1.2" stroke-linejoin="round" />`;
+}
+
+/**
  * Redraws colored zones on all 5 dials based on current appConfig.
  */
 function renderAllDialZones() {
@@ -1270,16 +1313,16 @@ function renderAllDialZones() {
 
     // 1. Soil Moisture (0% - 100%)
     const sm = g.soil_moisture || DEFAULT_CONFIG.gauges.soil_moisture;
-    const soilTrigger = sm.trigger_threshold;
-    const soilOptMin = sm.optimal_min || 35;
-    const soilOptMax = sm.optimal_max || 75;
+    const soilTrigger = sm.trigger_threshold !== undefined ? sm.trigger_threshold : 30;
+    const soilOptMin = sm.optimal_min !== undefined ? sm.optimal_min : 35;
+    const soilOptMax = sm.optimal_max !== undefined ? sm.optimal_max : 75;
     const soilZones = [
-        { from: 0, to: soilTrigger, color: '#ef4444' }, // Red (Dry / Water Needed)
-        { from: soilTrigger, to: Math.max(soilTrigger, soilOptMin), color: '#f59e0b' }, // Amber (Low Moisture)
-        { from: Math.max(soilTrigger, soilOptMin), to: soilOptMax, color: '#10b981' }, // Green (Optimal)
+        { from: 0, to: soilOptMin, color: '#ef4444' }, // Red (Below Optimal / Dry)
+        { from: soilOptMin, to: soilOptMax, color: '#10b981' }, // Green (Optimal)
         { from: soilOptMax, to: 100, color: '#3b82f6' } // Blue (Saturated)
     ];
     renderDialZones('zones-soil', 0, 100, soilZones);
+    renderSoilTriggerMarker(soilTrigger);
 
     // 2. Reservoir Level (0% - 100%)
     const wl = g.water_level || DEFAULT_CONFIG.gauges.water_level;
@@ -1525,12 +1568,18 @@ function updateTelemetryUI(t) {
         const calculated = 100.0 * (1.0 - (rawMv - wetMv) / (dryMv - wetMv));
         soilVal = Math.max(0.0, Math.min(100.0, calculated));
     }
+    const soilOptMin = sm.optimal_min !== undefined ? sm.optimal_min : 35;
+    const soilOptMax = sm.optimal_max !== undefined ? sm.optimal_max : 75;
+    const soilTrigger = sm.trigger_threshold !== undefined ? sm.trigger_threshold : 30;
     let soilBadge = { className: 'badge-success', text: 'Optimal Moisture' };
-    if (soilVal < sm.trigger_threshold) {
-        soilBadge = { className: 'badge-danger', text: 'Dry - Water Needed' };
-    } else if (sm.optimal_min && soilVal < sm.optimal_min) {
-        soilBadge = { className: 'badge-warning', text: 'Low Moisture' };
-    } else if (sm.optimal_max && soilVal > sm.optimal_max) {
+    if (soilVal < soilOptMin) {
+        soilBadge = {
+            className: 'badge-danger',
+            text: soilVal < soilTrigger ? 'Dry - Water Needed' : 'Dry - Below Optimal'
+        };
+    } else if (soilVal < soilTrigger) {
+        soilBadge = { className: 'badge-warning', text: 'Watering Triggered' };
+    } else if (soilVal > soilOptMax) {
         soilBadge = { className: 'badge-info', text: 'Wet / Saturated' };
     }
     setDialState('soil', soilVal, 0, 100, `${Math.round(soilVal)}%`, soilBadge, `Raw: ${t.soil_raw || 0} mV`);

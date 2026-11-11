@@ -4,6 +4,16 @@ All notable changes to the Plant ESP32 firmware and web dashboard will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.47] - 2026-11-11
+
+### 🎯 Soil Moisture Dial Health Zones & Trigger Setpoint Indicator
+- **Optimal Range Driven Dial Zones**: Decoupled the Soil Moisture dial health bands from `trigger_threshold`. The **RED** band strictly marks moisture below `optimal_min` (`0%` to `optimal_min`), **GREEN** marks the optimal band (`optimal_min` to `optimal_max`), and **BLUE** marks saturated soil (`optimal_max` to `100%`).
+- **Auto-Watering Trigger Setpoint Marker (`▼`)**: Added `#marker-soil-trigger` to the Soil Moisture SVG dial (`renderSoilTriggerMarker`), plotting an amber radial notch across the track plus an outer inward-pointing triangle pointer (`▼`) with hover tooltip at the exact `trigger_threshold` percentage.
+- **Status Badge & Hint Alignment**: Updated `updateTelemetryUI` status badge classification so RED danger alerts align with `< optimal_min` (`Dry - Water Needed` / `Dry - Below Optimal`) and `>= optimal_min && < trigger_threshold` reports `Watering Triggered` (`badge-warning`), alongside clearer Threshold settings hints.
+- **PWA Asset Refresh**: Bumped web script asset to `app.js?v=32` and Service Worker cache to `plant-esp32-v20`.
+
+---
+
 ## [0.2.46] - 2026-11-11
 
 ### ⏱️ 1.0s Soil Probe Settling & 50Hz/60Hz AC Ripple Rejection
