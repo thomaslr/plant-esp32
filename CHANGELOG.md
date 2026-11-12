@@ -4,6 +4,12 @@ All notable changes to the Plant ESP32 firmware and web dashboard will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.49] - 2026-11-12
+
+- Fix laggy web UI: single-write HTTP responses with TCP_NODELAY, error propagation, more sockets with LRU purge, and sensor reads no longer hold the AppState mutex (new hw_lock).
+
+---
+
 ## [0.2.48] - 2026-11-11
 
 ### 📄 Open-Source Dual Licensing (GPLv3 + CERN-OHL-S v2) & Commercial Option

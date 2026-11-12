@@ -4,6 +4,7 @@
 //! switched soil probe power (GPIO 21 duty cycle), and ultrasonic timing (HC-SR04).
 
 use std::sync::atomic::{AtomicU32, Ordering};
+use std::sync::Mutex;
 use std::thread::sleep;
 use std::time::Duration;
 
@@ -41,6 +42,9 @@ unsafe impl Sync for TempSensorHandle {}
 pub struct HardwareSensorManager {
     preventive_resets_count: AtomicU32,
     temp_sensor: Option<TempSensorHandle>,
+    /// Serializes physical GPIO/ADC/I2C sensor operations so background acquisition and
+    /// live REST calibration requests never toggle pins concurrently, without holding `AppState`.
+    hw_lock: Mutex<()>,
 }
 
 impl HardwareSensorManager {
@@ -103,6 +107,7 @@ impl HardwareSensorManager {
         Self {
             preventive_resets_count: AtomicU32::new(0),
             temp_sensor,
+            hw_lock: Mutex::new(()),
         }
     }
 
@@ -111,6 +116,11 @@ impl HardwareSensorManager {
     /// Drives the ECHO pin LOW as an output for 10µs to clear any floating latch,
     /// then restores to high-impedance INPUT and pauses 30ms for acoustic damping.
     pub fn force_ultrasonic_reset(&self) {
+        let _guard = self.hw_lock.lock().unwrap_or_else(|e| e.into_inner());
+        self.force_ultrasonic_reset_unlocked();
+    }
+
+    fn force_ultrasonic_reset_unlocked(&self) {
         unsafe {
             gpio_set_direction(PIN_ULTRASONIC_ECHO, gpio_mode_t_GPIO_MODE_OUTPUT);
             gpio_set_level(PIN_ULTRASONIC_ECHO, 0);
@@ -124,6 +134,11 @@ impl HardwareSensorManager {
     /// Measures ultrasonic distance in centimeters with 5-sample median filtering
     /// and hard timeout recovery.
     pub fn read_ultrasonic_distance_cm(&self) -> f32 {
+        let _guard = self.hw_lock.lock().unwrap_or_else(|e| e.into_inner());
+        self.read_ultrasonic_distance_cm_unlocked()
+    }
+
+    fn read_ultrasonic_distance_cm_unlocked(&self) -> f32 {
         let mut samples = [0.0f32; 5];
         let mut valid_samples = 0;
 
@@ -131,7 +146,7 @@ impl HardwareSensorManager {
             unsafe {
                 // If ECHO pin is stuck HIGH before trigger, clear immediately
                 if gpio_get_level(PIN_ULTRASONIC_ECHO) == 1 {
-                    self.force_ultrasonic_reset();
+                    self.force_ultrasonic_reset_unlocked();
                 }
 
                 // Send 10µs TRIG pulse
@@ -169,7 +184,7 @@ impl HardwareSensorManager {
 
                 if !ended {
                     // Echo timed out: stuck latch or acoustic lost -> reset sensor
-                    self.force_ultrasonic_reset();
+                    self.force_ultrasonic_reset_unlocked();
                     continue;
                 }
 
@@ -214,6 +229,11 @@ impl HardwareSensorManager {
     /// monitoring loop and the live calibration tool so that calibration voltages and
     /// dashboard readings are 100% physically consistent.
     pub fn read_soil_moisture_raw(&self) -> i32 {
+        let _guard = self.hw_lock.lock().unwrap_or_else(|e| e.into_inner());
+        self.read_soil_moisture_raw_unlocked()
+    }
+
+    fn read_soil_moisture_raw_unlocked(&self) -> i32 {
         unsafe {
             // 1. Power ON probe (GPIO 21)
             gpio_set_level(PIN_SOIL_POWER, 1);
@@ -288,6 +308,7 @@ impl HardwareSensorManager {
 
     /// Reads all hardware sensors and compiles a `SensorReading` struct.
     pub fn read_all_sensors(&self, pump_active: bool, config: &AppConfig) -> SensorReading {
+        let _guard = self.hw_lock.lock().unwrap_or_else(|e| e.into_inner());
         // Prefer true UNIX epoch timestamp from synchronized NTP, fallback to boot uptime
         let unix_secs = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
@@ -303,14 +324,14 @@ impl HardwareSensorManager {
         let battery_voltage = self.read_battery_voltage();
         let chip_temp = self.read_chip_temperature();
 
-        let soil_raw_adc = self.read_soil_moisture_raw();
+        let soil_raw_adc = self.read_soil_moisture_raw_unlocked();
         let soil_percent = soil_percent(
             soil_raw_adc,
             config.gauges.soil_moisture.dry_adc,
             config.gauges.soil_moisture.wet_adc,
         );
 
-        let distance_cm = self.read_ultrasonic_distance_cm();
+        let distance_cm = self.read_ultrasonic_distance_cm_unlocked();
         let metrics = water_metrics(
             distance_cm,
             config.gauges.water_level.tank_height_cm,

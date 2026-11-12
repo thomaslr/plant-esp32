@@ -150,7 +150,7 @@ fn main() -> anyhow::Result<()> {
             let safety = SafetyManager::new(&config, pump_gate);
 
             // 7. Initialize Sensor Manager & 100-sample Persistent Flash Ring Buffer
-            let sensors = HardwareSensorManager::new();
+            let sensors = Arc::new(HardwareSensorManager::new());
             let history = storage.load_history(100);
 
             // 8. Start SNTP Time Synchronization
@@ -262,20 +262,19 @@ fn main() -> anyhow::Result<()> {
             thread::sleep(Duration::from_secs(startup_delay_sec as u64));
 
             loop {
-                let (pump_active, config, interval_sec) = {
+                let (pump_active, config, interval_sec, sensors) = {
                     let app = s_sensors.lock().unwrap();
                     (
                         app.safety.is_pump_active(),
                         app.config.clone(),
                         app.config.timing.sensor_read_interval_sec,
+                        Arc::clone(&app.sensors),
                     )
                 };
 
-                // Read all hardware sensors
-                let reading = {
-                    let app = s_sensors.lock().unwrap();
-                    app.sensors.read_all_sensors(pump_active, &config)
-                };
+                // Read all hardware sensors outside the AppState mutex so web requests
+                // and the 20 Hz SafetySupervisor are never stalled during probe settling
+                let reading = sensors.read_all_sensors(pump_active, &config);
 
                 // Push reading into circular RAM ring buffer and commit to flash
                 {

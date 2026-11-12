@@ -8,7 +8,10 @@ use std::sync::{Arc, Mutex};
 use embedded_svc::http::server::Request;
 use embedded_svc::http::{Headers, Method};
 use embedded_svc::io::{Read, Write};
-use esp_idf_svc::http::server::{Configuration as ServerConfig, EspHttpConnection, EspHttpServer};
+use esp_idf_svc::handle::RawHandle;
+use esp_idf_svc::http::server::{
+    Configuration as ServerConfig, EspHttpConnection, EspHttpServer, KeepAlive,
+};
 use esp_idf_svc::io::EspIOError;
 use log::{error, info};
 use plant_core::api::{
@@ -47,7 +50,7 @@ static ICON_512_PNG_GZ: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/icon-5
 pub struct AppState {
     pub config: AppConfig,
     pub safety: SafetyManager<HardwarePumpGate>,
-    pub sensors: HardwareSensorManager,
+    pub sensors: Arc<HardwareSensorManager>,
     pub history: RingBuffer<SensorReading>,
     pub storage: NvsConfigStorage,
     pub ip_address: String,
@@ -60,7 +63,13 @@ pub fn create_web_server(
 ) -> Result<EspHttpServer<'static>, EspIOError> {
     let server_config = ServerConfig {
         stack_size: 10240,
-        max_open_sockets: 6,
+        max_open_sockets: 10,
+        lru_purge_enable: true,
+        keep_alive: Some(KeepAlive {
+            idle_secs: 5,
+            interval_secs: 5,
+            probe_count: 3,
+        }),
         ..Default::default()
     };
     let mut server = EspHttpServer::new(&server_config)?;
@@ -247,18 +256,24 @@ pub fn create_web_server(
         let mut buf = vec![0u8; len];
         let _ = req.read_exact(&mut buf);
 
+        let (default_duration, tank_height_cm, sensors) = {
+            let app = s_water.lock().unwrap();
+            (
+                app.config.timing.manual_water_duration_sec,
+                app.config.gauges.water_level.tank_height_cm,
+                Arc::clone(&app.sensors),
+            )
+        };
+        let duration = parse_water_duration(&buf, default_duration);
+        let distance = sensors.read_ultrasonic_distance_cm();
+        let water_depth = if distance > 0.0 {
+            tank_height_cm - distance
+        } else {
+            0.0
+        };
+
         let (status_code, json) = {
             let mut app = s_water.lock().unwrap();
-            let default_duration = app.config.timing.manual_water_duration_sec;
-            let duration = parse_water_duration(&buf, default_duration);
-
-            let distance = app.sensors.read_ultrasonic_distance_cm();
-            let water_depth = if distance > 0.0 {
-                app.config.gauges.water_level.tank_height_cm - distance
-            } else {
-                0.0
-            };
-
             let now_ms = unsafe { (esp_idf_svc::sys::esp_timer_get_time() / 1000) as u32 };
             let result = app.safety.request_watering(
                 now_ms,
@@ -293,37 +308,40 @@ pub fn create_web_server(
     // 9. GET /api/sensor/health
     let s_health = Arc::clone(&state);
     server.fn_handler("/api/sensor/health", Method::Get, move |req| {
-        let (json, status_code) = {
+        let (resets, wifi_rssi, sensors) = {
             let app = s_health.lock().unwrap();
-            let resets = app.sensors.preventive_resets_count();
-            let heap = unsafe { esp_idf_svc::sys::esp_get_free_heap_size() };
-            let temp = app.sensors.read_chip_temperature();
-            let health = HealthResponse {
-                preventive_resets: resets,
-                adc_calibration: "eFuse factory curve active",
-                wifi_rssi: app.wifi_rssi,
-                free_heap_bytes: heap,
-                chip_temp_c: temp,
-            };
-            (to_json(&health), 200)
+            (
+                app.sensors.preventive_resets_count(),
+                app.wifi_rssi,
+                Arc::clone(&app.sensors),
+            )
         };
-        send_json(req, status_code, &json)
+        let heap = unsafe { esp_idf_svc::sys::esp_get_free_heap_size() };
+        let temp = sensors.read_chip_temperature();
+        let health = HealthResponse {
+            preventive_resets: resets,
+            adc_calibration: "eFuse factory curve active",
+            wifi_rssi,
+            free_heap_bytes: heap,
+            chip_temp_c: temp,
+        };
+        send_json(req, 200, &to_json(&health))
     })?;
 
     // 10. POST /api/sensor/ultrasonic/reset
     let s_reset = Arc::clone(&state);
     server.fn_handler("/api/sensor/ultrasonic/reset", Method::Post, move |req| {
-        let json = {
+        let sensors = {
             let app = s_reset.lock().unwrap();
-            app.sensors.force_ultrasonic_reset();
-            let count = app.sensors.preventive_resets_count();
-            let reset = ResetResponse {
-                success: true,
-                preventive_resets: count,
-            };
-            to_json(&reset)
+            Arc::clone(&app.sensors)
         };
-        send_json(req, 200, &json)
+        sensors.force_ultrasonic_reset();
+        let count = sensors.preventive_resets_count();
+        let reset = ResetResponse {
+            success: true,
+            preventive_resets: count,
+        };
+        send_json(req, 200, &to_json(&reset))
     })?;
 
     // 10b. POST & GET /api/sensor/soil/sample (Live high-precision 15-reading calibration sample)
@@ -342,9 +360,14 @@ pub fn create_web_server(
             None
         };
 
+        let sensors = {
+            let app = s_soil_cal_post.lock().unwrap();
+            Arc::clone(&app.sensors)
+        };
+        let raw = sensors.sample_soil_moisture_calibration();
+
         let (raw_mv, soil_pct, saved) = {
             let mut app = s_soil_cal_post.lock().unwrap();
-            let raw = app.sensors.sample_soil_moisture_calibration();
 
             let mut was_saved = false;
             if let Some(ref t) = target {
@@ -388,9 +411,13 @@ pub fn create_web_server(
 
     let s_soil_cal_get = Arc::clone(&state);
     server.fn_handler("/api/sensor/soil/sample", Method::Get, move |req| {
+        let sensors = {
+            let app = s_soil_cal_get.lock().unwrap();
+            Arc::clone(&app.sensors)
+        };
+        let raw = sensors.sample_soil_moisture_calibration();
         let (raw_mv, soil_pct) = {
             let app = s_soil_cal_get.lock().unwrap();
-            let raw = app.sensors.sample_soil_moisture_calibration();
             let dry = app.config.gauges.soil_moisture.dry_adc;
             let wet = app.config.gauges.soil_moisture.wet_adc;
             let pct = plant_core::sensors::soil_percent(raw, dry, wet);
@@ -520,7 +547,8 @@ pub fn create_provisioning_server(
 ) -> Result<EspHttpServer<'static>, EspIOError> {
     let server_config = ServerConfig {
         stack_size: 10240,
-        max_open_sockets: 6,
+        max_open_sockets: 8,
+        lru_purge_enable: true,
         ..Default::default()
     };
     let mut server = EspHttpServer::new(&server_config)?;
@@ -621,6 +649,27 @@ pub fn create_provisioning_server(
     Ok(server)
 }
 
+/// Enables `TCP_NODELAY` on the underlying lwIP socket so HTTP headers and chunks
+/// are transmitted immediately without stalling on Nagle + Delayed ACK + Wi-Fi Modem Sleep.
+fn set_tcp_nodelay(req: &mut Request<&mut EspHttpConnection>) {
+    unsafe {
+        let raw_req = req.connection().handle();
+        if !raw_req.is_null() {
+            let sockfd = esp_idf_svc::sys::httpd_req_to_sockfd(raw_req);
+            if sockfd >= 0 {
+                let nodelay: core::ffi::c_int = 1;
+                let _ = esp_idf_svc::sys::lwip_setsockopt(
+                    sockfd,
+                    esp_idf_svc::sys::IPPROTO_TCP as core::ffi::c_int,
+                    esp_idf_svc::sys::TCP_NODELAY as core::ffi::c_int,
+                    &nodelay as *const _ as *const core::ffi::c_void,
+                    core::mem::size_of::<core::ffi::c_int>() as esp_idf_svc::sys::socklen_t,
+                );
+            }
+        }
+    }
+}
+
 fn send_file(
     req: Request<&mut EspHttpConnection>,
     content_type: &str,
@@ -631,55 +680,61 @@ fn send_file(
 }
 
 fn send_binary(
-    req: Request<&mut EspHttpConnection>,
+    mut req: Request<&mut EspHttpConnection>,
     content_type: &str,
     content: &[u8],
     content_gz: &[u8],
 ) -> Result<(), EspIOError> {
     crate::led::notify_web_access();
+    set_tcp_nodelay(&mut req);
+
     let accepts_gzip = req
         .header("Accept-Encoding")
         .map(|v| v.contains("gzip"))
         .unwrap_or(false);
 
+    // Allow browsers and reverse proxies to cache static icons for 24 hours to reduce
+    // simultaneous connection contention during page load, while keeping HTML/JS/CSS fresh.
+    let cache_control = if content_type.starts_with("image/") {
+        "public, max-age=86400"
+    } else {
+        "no-cache"
+    };
+
     if accepts_gzip {
         let headers = [
             ("Content-Type", content_type),
             ("Content-Encoding", "gzip"),
-            ("Cache-Control", "no-cache"),
+            ("Cache-Control", cache_control),
         ];
         let mut resp = req.into_response(200, Some("OK"), &headers)?;
-        for chunk in content_gz.chunks(2048) {
-            let _ = resp.write_all(chunk);
-        }
+        resp.write_all(content_gz)?;
     } else {
         let headers = [
             ("Content-Type", content_type),
-            ("Cache-Control", "no-cache"),
+            ("Cache-Control", cache_control),
         ];
         let mut resp = req.into_response(200, Some("OK"), &headers)?;
-        for chunk in content.chunks(2048) {
-            let _ = resp.write_all(chunk);
-        }
+        resp.write_all(content)?;
     }
     Ok(())
 }
 
 fn send_json(
-    req: Request<&mut EspHttpConnection>,
+    mut req: Request<&mut EspHttpConnection>,
     status: u16,
     json: &str,
 ) -> Result<(), EspIOError> {
     crate::led::notify_web_access();
+    set_tcp_nodelay(&mut req);
     let headers = [
         ("Content-Type", "application/json"),
+        ("Cache-Control", "no-store"),
         ("Access-Control-Allow-Origin", "*"),
         ("Access-Control-Allow-Methods", "GET, POST, OPTIONS"),
         ("Access-Control-Allow-Headers", "*"),
     ];
     let mut resp = req.into_response(status, None, &headers)?;
-    for chunk in json.as_bytes().chunks(2048) {
-        let _ = resp.write_all(chunk);
-    }
+    resp.write_all(json.as_bytes())?;
     Ok(())
 }
