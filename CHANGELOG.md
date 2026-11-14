@@ -4,6 +4,14 @@ All notable changes to the Plant ESP32 firmware and web dashboard will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.51] - 2026-11-15
+
+### 🔢 Telemetry Log Row Index Column
+- **Web Dashboard Table Index**: Added a `#` index column (`1`..`N`, newest first) before the `Time` column in the Recent Telemetry Readings table (`data/index.html`, `data/app.js`) without modifying the binary NVS format or JSON API.
+- **PWA Asset Refresh**: Bumped web script asset to `app.js?v=34` and Service Worker cache to `plant-esp32-v23`.
+
+---
+
 ## [0.2.50] - 2026-11-14
 
 ### 📈 Sensor History Extension to 150 Samples & NVS Out-of-Space Protection

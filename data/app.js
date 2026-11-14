@@ -1884,7 +1884,7 @@ function renderLogTable(logs) {
     const tbody = document.getElementById('log-body');
     const badge = document.getElementById('log-count-badge');
     if (!logs || logs.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">No log data recorded yet.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;">No log data recorded yet.</td></tr>';
         if (badge) badge.innerText = '0 / 150 in Flash';
         renderTelemetryChart([]);
         return;
@@ -1894,7 +1894,7 @@ function renderLogTable(logs) {
         badge.innerText = `${logs.length} / 150 in Flash`;
     }
 
-    tbody.innerHTML = logs.map(r => {
+    tbody.innerHTML = logs.map((r, idx) => {
         const timeDisplay = formatReadingTime(r.timestamp, true);
         const relDisplay = formatReadingRelative(r.timestamp);
 
@@ -1915,6 +1915,7 @@ function renderLogTable(logs) {
 
         return `
         <tr>
+            <td style="color: #64748b; font-variant-numeric: tabular-nums;">${idx + 1}</td>
             <td title="Recorded: ${timeDisplay} (${relDisplay}, boot +${Math.round(r.timestamp)}s)">
                 <div style="font-weight: 500; color: #f8fafc;">${timeDisplay}</div>
                 <div style="font-size: 0.72rem; color: #64748b;">${relDisplay}</div>
