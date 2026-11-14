@@ -27,7 +27,7 @@
             <div class="header-title">
                 <h1>🌱 Plant Monitor & Waterer</h1>
                 <span class="badge" id="host-badge">plants.local</span>
-                <span class="badge" id="version-badge" style="background: #1e293b; color: #38bdf8; border: 1px solid #334155; font-size: 0.75rem;">v0.2.49 🌿</span>
+                <span class="badge" id="version-badge" style="background: #1e293b; color: #38bdf8; border: 1px solid #334155; font-size: 0.75rem;">v0.2.50 🌿</span>
                 <span class="badge" id="header-ota-badge" style="display: none; background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); font-size: 0.75rem; cursor: pointer;" title="New update available! Click to review.">✨ Update: --</span>
                 <span class="badge" id="clock-badge" style="background: #1e293b; color: #94a3b8; border: 1px solid #334155; font-size: 0.75rem; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; display: inline-flex; align-items: center; gap: 4px;" title="ESP32 Real-Time Clock (NTP Synchronized)">🕒 Connecting...</span>
             </div>
@@ -392,7 +392,7 @@
                 <div class="log-header">
                     <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
                         <h3 style="margin: 0;">Recent Telemetry Readings</h3>
-                        <span id="log-count-badge" class="badge" style="background: #1e293b; color: #38bdf8; border: 1px solid #334155; font-size: 0.75rem;">Capacity: 100 in Flash</span>
+                        <span id="log-count-badge" class="badge" style="background: #1e293b; color: #38bdf8; border: 1px solid #334155; font-size: 0.75rem;">Capacity: 150 in Flash</span>
                     </div>
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <label for="select-log-limit" style="font-size: 0.85rem; color: #94a3b8; margin: 0;">Show:</label>
@@ -400,7 +400,8 @@
                             <option value="15">15 readings</option>
                             <option value="30">30 readings</option>
                             <option value="50" selected>50 readings</option>
-                            <option value="100">100 readings (max)</option>
+                            <option value="100">100 readings</option>
+                            <option value="150">150 readings (max)</option>
                         </select>
                         <button id="btn-refresh-logs" class="btn btn-small">Refresh</button>
                     </div>
@@ -913,6 +914,6 @@
         </div>
     </div>
 
-    <script src="app.js?v=32"></script>
+    <script src="app.js?v=33"></script>
 </body>
 </html>

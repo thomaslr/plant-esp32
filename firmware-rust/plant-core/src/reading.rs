@@ -1,6 +1,14 @@
 //! Sensor sample type (from `ring_buffer.h`) and the display rounding helpers
 //! used throughout the JSON API.
 
+/// Maximum number of sensor readings persisted in the 24 KiB NVS partition.
+/// 150 * 57 B = 8,550 B, leaving room for NVS copy-on-write garbage collection
+/// alongside config and Wi-Fi namespaces.
+pub const MAX_HISTORY_CAPACITY: usize = 150;
+
+/// Hard byte ceiling for the serialized NVS history blob (`MAX_HISTORY_CAPACITY * BINARY_SIZE`).
+pub const MAX_HISTORY_BLOB_BYTES: usize = MAX_HISTORY_CAPACITY * SensorReading::BINARY_SIZE;
+
 /// One complete acquisition cycle.
 #[derive(Debug, Clone, Copy, Default, PartialEq)]
 pub struct SensorReading {
@@ -103,6 +111,20 @@ impl SensorReading {
             ldr_percent,
         })
     }
+
+    /// Serializes at most `MAX_HISTORY_CAPACITY` of the most recent readings into
+    /// a binary blob strictly bounded by `MAX_HISTORY_BLOB_BYTES`.
+    /// Returns `(blob, truncated)` where `truncated` is `true` if older entries were dropped.
+    pub fn encode_history_bounded(items: &[Self]) -> (Vec<u8>, bool) {
+        let start = items.len().saturating_sub(MAX_HISTORY_CAPACITY);
+        let slice = &items[start..];
+        let mut blob = Vec::with_capacity(slice.len() * Self::BINARY_SIZE);
+        for item in slice {
+            blob.extend_from_slice(&item.to_binary());
+        }
+        debug_assert!(blob.len() <= MAX_HISTORY_BLOB_BYTES);
+        (blob, start > 0)
+    }
 }
 
 /// `roundf(x * 10) / 10` - one decimal place, half away from zero, in `f32`
@@ -160,5 +182,29 @@ mod tests {
         assert_eq!(decoded.humidity_pct, r.humidity_pct);
         assert_eq!(decoded.light_lux, r.light_lux);
         assert_eq!(decoded.ldr_percent, None);
+    }
+
+    #[test]
+    fn encode_history_bounded_caps_to_max_capacity_and_bytes() {
+        let mut items = Vec::with_capacity(200);
+        for i in 0..200u32 {
+            items.push(SensorReading { timestamp: i, ..Default::default() });
+        }
+
+        let (blob, truncated) = SensorReading::encode_history_bounded(&items);
+        assert!(truncated);
+        assert_eq!(blob.len(), MAX_HISTORY_BLOB_BYTES);
+        assert_eq!(blob.len(), 150 * SensorReading::BINARY_SIZE);
+
+        // Kept the newest 150 items (timestamps 50..=199)
+        let first = SensorReading::from_binary(&blob[..SensorReading::BINARY_SIZE]).unwrap();
+        let last = SensorReading::from_binary(&blob[blob.len() - SensorReading::BINARY_SIZE..]).unwrap();
+        assert_eq!(first.timestamp, 50);
+        assert_eq!(last.timestamp, 199);
+
+        // Under-limit input is not truncated
+        let (small_blob, small_truncated) = SensorReading::encode_history_bounded(&items[..10]);
+        assert!(!small_truncated);
+        assert_eq!(small_blob.len(), 10 * SensorReading::BINARY_SIZE);
     }
 }

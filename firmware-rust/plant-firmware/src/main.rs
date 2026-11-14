@@ -149,9 +149,9 @@ fn main() -> anyhow::Result<()> {
             let pump_gate = HardwarePumpGate::new(Arc::clone(&pump_speed));
             let safety = SafetyManager::new(&config, pump_gate);
 
-            // 7. Initialize Sensor Manager & 100-sample Persistent Flash Ring Buffer
+            // 7. Initialize Sensor Manager & 150-sample Persistent Flash Ring Buffer
             let sensors = Arc::new(HardwareSensorManager::new());
-            let history = storage.load_history(100);
+            let history = storage.load_history(plant_core::reading::MAX_HISTORY_CAPACITY);
 
             // 8. Start SNTP Time Synchronization
             let primary_ntp = config

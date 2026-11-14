@@ -198,11 +198,11 @@ pub fn to_json<T: Serialize>(value: &T) -> String {
     serde_json::to_string(value).expect("API structs serialise infallibly")
 }
 
-/// `GET /api/sensor-log?n=` parsing: default 10, clamp to 1..=100; missing,
+/// `GET /api/sensor-log?n=` parsing: default 10, clamp to 1..=150; missing,
 /// non-numeric or non-positive values fall back to 10.
 pub fn parse_log_count(n: Option<&str>) -> usize {
     match n.and_then(|s| s.trim().parse::<i64>().ok()) {
-        Some(v) if v > 0 => (v as usize).min(100),
+        Some(v) if v > 0 => (v as usize).min(crate::reading::MAX_HISTORY_CAPACITY),
         _ => 10,
     }
 }
@@ -385,7 +385,8 @@ mod tests {
         assert_eq!(parse_log_count(Some("")), 10);
         assert_eq!(parse_log_count(Some("-4")), 10);
         assert_eq!(parse_log_count(Some("100")), 100);
-        assert_eq!(parse_log_count(Some("5000")), 100);
+        assert_eq!(parse_log_count(Some("150")), 150);
+        assert_eq!(parse_log_count(Some("5000")), 150);
     }
 
     #[test]

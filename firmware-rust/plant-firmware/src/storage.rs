@@ -6,7 +6,7 @@
 use esp_idf_svc::nvs::{EspDefaultNvsPartition, EspNvs, NvsDefault};
 use log::{debug, error, info, warn};
 use plant_core::config::AppConfig;
-use plant_core::reading::SensorReading;
+use plant_core::reading::{SensorReading, MAX_HISTORY_BLOB_BYTES, MAX_HISTORY_CAPACITY};
 use plant_core::ring_buffer::RingBuffer;
 
 const CFG_NAMESPACE: &str = "plant_cfg";
@@ -185,9 +185,10 @@ impl NvsConfigStorage {
         Ok(())
     }
 
-    /// Loads persisted sensor history from NVS into a RingBuffer (up to capacity 100).
+    /// Loads persisted sensor history from NVS into a RingBuffer (clamped to `MAX_HISTORY_CAPACITY`).
     pub fn load_history(&self, capacity: usize) -> RingBuffer<SensorReading> {
-        let max_bytes = capacity * SensorReading::BINARY_SIZE;
+        let effective_capacity = capacity.clamp(1, MAX_HISTORY_CAPACITY);
+        let max_bytes = effective_capacity * SensorReading::BINARY_SIZE;
         let mut buf = vec![0u8; max_bytes];
 
         match self.nvs_log.get_blob(NVS_KEY_HISTORY, &mut buf) {
@@ -201,32 +202,70 @@ impl NvsConfigStorage {
                     }
                 }
                 info!("[NVS] Loaded {} historical sensor readings from flash", items.len());
-                RingBuffer::from_items(items, capacity)
+                RingBuffer::from_items(items, effective_capacity)
             }
             Ok(None) => {
                 info!("[NVS] No historical sensor readings found in flash. Starting fresh buffer.");
-                RingBuffer::new(capacity)
+                RingBuffer::new(effective_capacity)
             }
             Err(e) => {
                 warn!("[NVS] Failed to read historical sensor readings: {}. Starting fresh.", e);
-                RingBuffer::new(capacity)
+                RingBuffer::new(effective_capacity)
             }
         }
     }
 
-    /// Saves the current RingBuffer history to NVS flash.
+    /// Saves the current RingBuffer history to NVS flash, enforcing `MAX_HISTORY_BLOB_BYTES`.
+    ///
+    /// If NVS reports `ESP_ERR_NVS_NOT_ENOUGH_SPACE` during copy-on-write update,
+    /// removes the old blob first to free space and retries, falling back to the
+    /// newest half of the buffer if the partition is still too full.
     pub fn save_history(&self, history: &RingBuffer<SensorReading>) -> Result<(), String> {
         let items = history.all();
-        let mut blob = Vec::with_capacity(items.len() * SensorReading::BINARY_SIZE);
-        for item in &items {
-            blob.extend_from_slice(&item.to_binary());
+        let (blob, truncated) = SensorReading::encode_history_bounded(&items);
+        if truncated {
+            warn!(
+                "[NVS] History exceeded {} samples ({}); truncated oldest entries before flash write",
+                MAX_HISTORY_CAPACITY,
+                items.len()
+            );
+        }
+        if blob.len() > MAX_HISTORY_BLOB_BYTES {
+            return Err(format!(
+                "Refusing to write oversized history blob ({} B > {} B limit)",
+                blob.len(),
+                MAX_HISTORY_BLOB_BYTES
+            ));
         }
 
-        self.nvs_log
-            .set_blob(NVS_KEY_HISTORY, &blob)
-            .map_err(|e| format!("Failed to write history blob to NVS: {}", e))?;
-
-        debug!("[NVS] Committed {} telemetry samples to flash", items.len());
-        Ok(())
+        match self.nvs_log.set_blob(NVS_KEY_HISTORY, &blob) {
+            Ok(()) => {
+                debug!("[NVS] Committed {} telemetry samples ({} B) to flash", blob.len() / SensorReading::BINARY_SIZE, blob.len());
+                Ok(())
+            }
+            Err(e) if e.code() == esp_idf_svc::sys::ESP_ERR_NVS_NOT_ENOUGH_SPACE => {
+                warn!("[NVS] Low NVS space writing {} B history; erasing old blob and retrying", blob.len());
+                let _ = self.nvs_log.remove(NVS_KEY_HISTORY);
+                match self.nvs_log.set_blob(NVS_KEY_HISTORY, &blob) {
+                    Ok(()) => Ok(()),
+                    Err(e2) if e2.code() == esp_idf_svc::sys::ESP_ERR_NVS_NOT_ENOUGH_SPACE => {
+                        let rec_size = SensorReading::BINARY_SIZE;
+                        let half_samples = (blob.len() / rec_size) / 2;
+                        let offset = blob.len() - (half_samples * rec_size);
+                        let reduced = &blob[offset..];
+                        warn!(
+                            "[NVS] Still low on NVS space; trimming history to newest {} samples ({} B)",
+                            half_samples,
+                            reduced.len()
+                        );
+                        self.nvs_log
+                            .set_blob(NVS_KEY_HISTORY, reduced)
+                            .map_err(|e3| format!("Failed to write trimmed history blob to NVS: {}", e3))
+                    }
+                    Err(e2) => Err(format!("Failed to write history blob to NVS: {}", e2)),
+                }
+            }
+            Err(e) => Err(format!("Failed to write history blob to NVS: {}", e)),
+        }
     }
 }

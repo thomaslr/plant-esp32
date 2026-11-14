@@ -4,6 +4,15 @@ All notable changes to the Plant ESP32 firmware and web dashboard will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.50] - 2026-11-14
+
+### 📈 Sensor History Extension to 150 Samples & NVS Out-of-Space Protection
+- **Extended Ring Buffer to 150 Lines**: Increased historical sensor log capacity from 100 to 150 readings (~25 hours of history at 10-minute intervals) without requiring partition table changes.
+- **NVS Out-of-Space Safeguards**: Added `MAX_HISTORY_BLOB_BYTES` (8,550 bytes) hard ceiling and `SensorReading::encode_history_bounded()` to truncate older entries before serialization. Implemented automatic recovery in `storage.save_history()` that deletes the old blob and trims samples if NVS copy-on-write returns `ESP_ERR_NVS_NOT_ENOUGH_SPACE`.
+- **API & UI Synchronization**: Updated `/api/sensor-log?n=` clamping to support up to 150 readings, added `150 readings (max)` option to the dashboard log view selector, and bumped Service Worker cache to `plant-esp32-v22`.
+
+---
+
 ## [0.2.49] - 2026-11-12
 
 - Fix laggy web UI: single-write HTTP responses with TCP_NODELAY, error propagation, more sockets with LRU purge, and sensor reads no longer hold the AppState mutex (new hw_lock).
