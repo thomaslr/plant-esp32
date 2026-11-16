@@ -1,6 +1,6 @@
 [package]
 name = "plant-firmware"
-version = "0.2.54"
+version = "0.2.55"
 edition = "2021"
 license = "GPL-3.0-only"
 publish = false

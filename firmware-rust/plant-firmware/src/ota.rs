@@ -257,37 +257,26 @@ pub fn update_from_url(url: &str) -> Result<(), String> {
     let _guard = OtaGuard;
 
     let mut ota = EspOta::new().map_err(|e| format!("Failed to initialize OTA: {:?}", e))?;
-    let mut update = ota
-        .initiate_update()
-        .map_err(|e| format!("Failed to initiate OTA update: {:?}", e))?;
-
-    // GitHub Releases download requires following 2 redirects, ending in a ~1.2 KB
-    // signed Azure/AWS S3 blob URL with long auth tokens.
-    // buffer_size_tx must be large enough (e.g. 4096 bytes) so esp_http_client
-    // does not error with "HTTP_CLIENT: Out of buffer".
-    let config = HttpConfig {
-        follow_redirects_policy: FollowRedirectsPolicy::FollowGetHead,
-        crt_bundle_attach: Some(esp_idf_svc::sys::esp_crt_bundle_attach),
-        buffer_size: Some(8192),
-        buffer_size_tx: Some(4096),
-        timeout: Some(Duration::from_secs(60)),
-        ..Default::default()
-    };
-
-    let mut conn = EspHttpConnection::new(&config)
-        .map_err(|e| format!("Failed to create HTTP client: {:?}", e))?;
-
-    conn.initiate_request(Method::Get, url, &[("User-Agent", "plant-esp32-ota")])
-        .map_err(|e| format!("Failed to initiate HTTP GET: {:?}", e))?;
-
-    conn.initiate_response()
-        .map_err(|e| format!("Failed to get HTTP response: {:?}", e))?;
-
     let status = conn.status();
     if !(200..300).contains(&status) {
-        let _ = update.abort();
         return Err(format!("Server returned HTTP {}", status));
     }
+
+    // Determine content length if provided by the HTTP server to avoid a blocking
+    // full-partition erase that trips the 10-second Task Watchdog.
+    let content_len = conn
+        .header("Content-Length")
+        .and_then(|v| v.parse::<usize>().ok());
+
+    let mut update = if let Some(len) = content_len {
+        info!("[OTA] Content-Length is {} bytes; using incremental sector erase", len);
+        ota.initiate_update_with_known_size(len)
+            .map_err(|e| format!("Failed to initiate OTA update with known size: {:?}", e))?
+    } else {
+        info!("[OTA] Content-Length unknown; falling back to full partition erase");
+        ota.initiate_update()
+            .map_err(|e| format!("Failed to initiate OTA update: {:?}", e))?
+    };
 
     // Heap-allocate the chunk buffer rather than burning stack space.
     let mut buf = vec![0u8; 4096];
@@ -350,8 +339,8 @@ pub fn flash_stream<R: Read>(mut reader: R, expected_len: usize) -> Result<(), S
 
     let mut ota = EspOta::new().map_err(|e| format!("Failed to initialize OTA: {:?}", e))?;
     let mut update = ota
-        .initiate_update()
-        .map_err(|e| format!("Failed to initiate OTA update: {:?}", e))?;
+        .initiate_update_with_known_size(expected_len)
+        .map_err(|e| format!("Failed to initiate OTA update with known size: {:?}", e))?;
 
     let mut buf = [0u8; 2048];
     let mut total_bytes = 0usize;

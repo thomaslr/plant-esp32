@@ -4,6 +4,13 @@ All notable changes to the Plant ESP32 firmware and web dashboard will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.55] - 2026-11-16
+
+### ⚡ Non-Blocking Incremental OTA Flash Erase
+- **Watchdog Timeout Prevention in OTA**: Switched `EspOta::initiate_update()` to `EspOta::initiate_update_with_known_size()` using the HTTP `Content-Length` header in `update_from_url()` and `flash_stream()`. This prevents ESP-IDF from executing a synchronous 10-second erase of the entire 1,984 KB partition at the start, preventing FreeRTOS Task Watchdog resets during OTA updates (`firmware-rust/plant-firmware/src/ota.rs`).
+
+---
+
 ## [0.2.54] - 2026-11-16
 
 ### 🔄 Dual-OTA Verification Test
@@ -21,6 +28,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.2.52] - 2026-11-16
 
 - Sync header with TimeStation: remove clock badge, add live uptime badge and GitHub link
+
+---
+
+## [0.2.55] - 2026-11-16
+
+### ⚡ Non-Blocking Incremental OTA Flash Erase
+- **Watchdog Timeout Prevention in OTA**: Switched `EspOta::initiate_update()` to `EspOta::initiate_update_with_known_size()` using the HTTP `Content-Length` header in `update_from_url()` and `flash_stream()`. This prevents ESP-IDF from executing a synchronous 10-second erase of the entire 1,984 KB partition at the start, preventing FreeRTOS Task Watchdog resets during OTA updates (`firmware-rust/plant-firmware/src/ota.rs`).
 
 ---
 
