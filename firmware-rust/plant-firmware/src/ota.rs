@@ -257,6 +257,29 @@ pub fn update_from_url(url: &str) -> Result<(), String> {
     let _guard = OtaGuard;
 
     let mut ota = EspOta::new().map_err(|e| format!("Failed to initialize OTA: {:?}", e))?;
+
+    // GitHub Releases download requires following 2 redirects, ending in a ~1.2 KB
+    // signed Azure/AWS S3 blob URL with long auth tokens.
+    // buffer_size_tx must be large enough (e.g. 4096 bytes) so esp_http_client
+    // does not error with "HTTP_CLIENT: Out of buffer".
+    let config = HttpConfig {
+        follow_redirects_policy: FollowRedirectsPolicy::FollowGetHead,
+        crt_bundle_attach: Some(esp_idf_svc::sys::esp_crt_bundle_attach),
+        buffer_size: Some(8192),
+        buffer_size_tx: Some(4096),
+        timeout: Some(Duration::from_secs(60)),
+        ..Default::default()
+    };
+
+    let mut conn = EspHttpConnection::new(&config)
+        .map_err(|e| format!("Failed to create HTTP client: {:?}", e))?;
+
+    conn.initiate_request(Method::Get, url, &[("User-Agent", "plant-esp32-ota")])
+        .map_err(|e| format!("Failed to initiate HTTP GET: {:?}", e))?;
+
+    conn.initiate_response()
+        .map_err(|e| format!("Failed to get HTTP response: {:?}", e))?;
+
     let status = conn.status();
     if !(200..300).contains(&status) {
         return Err(format!("Server returned HTTP {}", status));
