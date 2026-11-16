@@ -4,6 +4,14 @@ All notable changes to the Plant ESP32 firmware and web dashboard will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.57] - 2026-11-16
+
+### 🛡️ Pause Sensor NVS History Writes During OTA
+- **Prevent Mid-OTA Heap Exhaustion**: Pause the periodic sensor reading and `save_history()` (10.8 KB allocation + NVS flash write) loop in `main.rs` while `ota::is_ota_in_progress()` is `true`, eliminating the `10800 bytes` OOM abort at ~700 KB during GitHub HTTPS OTA downloads.
+- **Yield Watchdog & Speed Up RSA Verify**: Yield 1 ms every 8 chunks in `update_from_url()` so `IDLE0` feeds the task watchdog during flash writes, and tune `CONFIG_MBEDTLS_MPI_WINDOW_SIZE=4` in `sdkconfig.defaults` for faster 4096-bit RSA verification.
+
+---
+
 ## [0.2.56] - 2026-11-16
 
 ### 🔒 GitHub HTTPS OTA TLS Heap Optimization
@@ -36,6 +44,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.2.52] - 2026-11-16
 
 - Sync header with TimeStation: remove clock badge, add live uptime badge and GitHub link
+
+---
+
+## [0.2.57] - 2026-11-16
+
+### 🛡️ Pause Sensor NVS History Writes During OTA
+- **Prevent Mid-OTA Heap Exhaustion**: Pause the periodic sensor reading and `save_history()` (10.8 KB allocation + NVS flash write) loop in `main.rs` while `ota::is_ota_in_progress()` is `true`, eliminating the `10800 bytes` OOM abort at ~700 KB during GitHub HTTPS OTA downloads.
+- **Yield Watchdog & Speed Up RSA Verify**: Yield 1 ms every 8 chunks in `update_from_url()` so `IDLE0` feeds the task watchdog during flash writes, and tune `CONFIG_MBEDTLS_MPI_WINDOW_SIZE=4` in `sdkconfig.defaults` for faster 4096-bit RSA verification.
 
 ---
 

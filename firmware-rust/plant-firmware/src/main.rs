@@ -262,6 +262,11 @@ fn main() -> anyhow::Result<()> {
             thread::sleep(Duration::from_secs(startup_delay_sec as u64));
 
             loop {
+                if crate::ota::is_ota_in_progress() {
+                    thread::sleep(Duration::from_secs(2));
+                    continue;
+                }
+
                 let (pump_active, config, interval_sec, sensors) = {
                     let app = s_sensors.lock().unwrap();
                     (

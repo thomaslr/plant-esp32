@@ -305,6 +305,7 @@ pub fn update_from_url(url: &str) -> Result<(), String> {
     let mut buf = vec![0u8; 4096];
     let mut total_bytes = 0usize;
     let mut last_log_bytes = 0usize;
+    let mut chunks = 0usize;
 
     loop {
         match conn.read(&mut buf) {
@@ -314,6 +315,10 @@ pub fn update_from_url(url: &str) -> Result<(), String> {
                     .write(&buf[..n])
                     .map_err(|e| format!("Failed writing flash chunk: {:?}", e))?;
                 total_bytes += n;
+                chunks += 1;
+                if chunks % 8 == 0 {
+                    std::thread::sleep(Duration::from_millis(1));
+                }
                 if total_bytes - last_log_bytes >= 102400 {
                     info!("[OTA] Downloaded and flashed {} KB...", total_bytes / 1024);
                     last_log_bytes = total_bytes;
