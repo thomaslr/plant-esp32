@@ -4,6 +4,13 @@ All notable changes to the Plant ESP32 firmware and web dashboard will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.54] - 2026-11-16
+
+### 🔄 Dual-OTA Verification Test
+- **Over-The-Air Switch Verification**: Test payload to verify alternating dual-slot OTA execution (`ota_0` -> `ota_1`).
+
+---
+
 ## [0.2.53] - 2026-11-16
 
 ### 📊 Telemetry Chart Tooltip Fix
@@ -14,6 +21,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.2.52] - 2026-11-16
 
 - Sync header with TimeStation: remove clock badge, add live uptime badge and GitHub link
+
+---
+
+## [0.2.54] - 2026-11-16
+
+### 🔄 Dual-OTA Verification Test
+- **Over-The-Air Switch Verification**: Test payload to verify alternating dual-slot OTA execution (`ota_0` -> `ota_1`).
 
 ---
 
