@@ -208,7 +208,7 @@ where
 {
     std::thread::Builder::new()
         .name("OtaCheckWorker".to_string())
-        .stack_size(24 * 1024)
+        .stack_size(16 * 1024)
         .spawn(move || {
             // Initial delay after boot to let Wi-Fi and SNTP settle
             info!("[OTA] Autonomous check worker initialized; will run initial check in 60s");
@@ -265,7 +265,7 @@ pub fn update_from_url(url: &str) -> Result<(), String> {
     let config = HttpConfig {
         follow_redirects_policy: FollowRedirectsPolicy::FollowGetHead,
         crt_bundle_attach: Some(esp_idf_svc::sys::esp_crt_bundle_attach),
-        buffer_size: Some(8192),
+        buffer_size: Some(4096),
         buffer_size_tx: Some(4096),
         timeout: Some(Duration::from_secs(60)),
         ..Default::default()

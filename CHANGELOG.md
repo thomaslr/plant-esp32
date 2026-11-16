@@ -4,6 +4,14 @@ All notable changes to the Plant ESP32 firmware and web dashboard will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.56] - 2026-11-16
+
+### 🔒 GitHub HTTPS OTA TLS Heap Optimization
+- **Fix 4096-bit RSA Verification Failure (`0x4290`) on GitHub CDN Redirects**: Enabled `CONFIG_MBEDTLS_DYNAMIC_BUFFER=y`, `CONFIG_MBEDTLS_DYNAMIC_FREE_CONFIG_DATA=y`, `CONFIG_MBEDTLS_DYNAMIC_FREE_CA_CERT=y`, `CONFIG_MBEDTLS_ASYMMETRIC_CONTENT_LEN=y` (`4096` TX buffer), and `CONFIG_MBEDTLS_MPI_WINDOW_SIZE=2` in `sdkconfig.defaults` to prevent `MBEDTLS_ERR_MPI_ALLOC_FAILED` during 4096-bit RSA verification of `release-assets.githubusercontent.com`.
+- **Reduce OTA Thread Stack Footprint**: Trimmed `OtaCheckWorker` stack from `24 KB` to `16 KB` and `OtaDownload` stack from `32 KB` to `20 KB`, and reduced `update_from_url()` HTTP RX buffer from `8192` to `4096` bytes (`ota.rs`, `web.rs`).
+
+---
+
 ## [0.2.55] - 2026-11-16
 
 ### ⚡ Non-Blocking Incremental OTA Flash Erase
@@ -28,6 +36,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.2.52] - 2026-11-16
 
 - Sync header with TimeStation: remove clock badge, add live uptime badge and GitHub link
+
+---
+
+## [0.2.56] - 2026-11-16
+
+### 🔒 GitHub HTTPS OTA TLS Heap Optimization
+- **Fix 4096-bit RSA Verification Failure (`0x4290`) on GitHub CDN Redirects**: Enabled `CONFIG_MBEDTLS_DYNAMIC_BUFFER=y`, `CONFIG_MBEDTLS_DYNAMIC_FREE_CONFIG_DATA=y`, `CONFIG_MBEDTLS_DYNAMIC_FREE_CA_CERT=y`, `CONFIG_MBEDTLS_ASYMMETRIC_CONTENT_LEN=y` (`4096` TX buffer), and `CONFIG_MBEDTLS_MPI_WINDOW_SIZE=2` in `sdkconfig.defaults` to prevent `MBEDTLS_ERR_MPI_ALLOC_FAILED` during 4096-bit RSA verification of `release-assets.githubusercontent.com`.
+- **Reduce OTA Thread Stack Footprint**: Trimmed `OtaCheckWorker` stack from `24 KB` to `16 KB` and `OtaDownload` stack from `32 KB` to `20 KB`, and reduced `update_from_url()` HTTP RX buffer from `8192` to `4096` bytes (`ota.rs`, `web.rs`).
 
 ---
 
