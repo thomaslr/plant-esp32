@@ -10,6 +10,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.52] - 2026-11-16
+
+### ⏱️ Header Uptime Badge & GitHub Link
+- **Live Header Uptime Badge**: Replaced the header NTP clock badge with a live `⏱️` system uptime badge (`#uptime-badge`) that ticks every second using `tabular-nums` formatting (`data/index.html`, `data/app.js`, `data/style.css`).
+- **GitHub Header Button**: Added a compact pill link to the `plant-esp32` GitHub repository directly in the dashboard header.
+
+---
+
 ## [0.2.51] - 2026-11-15
 
 ### 🔢 Telemetry Log Row Index Column
