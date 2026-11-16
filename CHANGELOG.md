@@ -4,6 +4,14 @@ All notable changes to the Plant ESP32 firmware and web dashboard will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.58] - 2026-11-16
+
+### 🪶 Free 20 KB Heap for GitHub HTTPS OTA Streaming
+- **On-Demand OTA Check Thread**: Reduced the permanent `OtaCheckWorker` sleep loop stack from `16 KB` to `4 KB`, spawning the `16 KB` `OtaCheckOnce` TLS worker only during the brief boot/nightly check (`ota.rs`).
+- **Trimmed OTA Download Buffers**: Reduced `OtaDownload` thread stack from `20 KB` to `16 KB` (`web.rs`) and `update_from_url()` RX/chunk buffers from `4096` to `2048` bytes (`ota.rs`), preventing `Dynamic Impl: alloc(1736 bytes) failed` (`-0x7F00`) during TLS record reads.
+
+---
+
 ## [0.2.57] - 2026-11-16
 
 ### 🛡️ Pause Sensor NVS History Writes During OTA
@@ -44,6 +52,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.2.52] - 2026-11-16
 
 - Sync header with TimeStation: remove clock badge, add live uptime badge and GitHub link
+
+---
+
+## [0.2.58] - 2026-11-16
+
+### 🪶 Free 20 KB Heap for GitHub HTTPS OTA Streaming
+- **On-Demand OTA Check Thread**: Reduced the permanent `OtaCheckWorker` sleep loop stack from `16 KB` to `4 KB`, spawning the `16 KB` `OtaCheckOnce` TLS worker only during the brief boot/nightly check (`ota.rs`).
+- **Trimmed OTA Download Buffers**: Reduced `OtaDownload` thread stack from `20 KB` to `16 KB` (`web.rs`) and `update_from_url()` RX/chunk buffers from `4096` to `2048` bytes (`ota.rs`), preventing `Dynamic Impl: alloc(1736 bytes) failed` (`-0x7F00`) during TLS record reads.
 
 ---
 

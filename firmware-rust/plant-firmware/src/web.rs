@@ -497,7 +497,7 @@ pub fn create_web_server(
         // Give the OTA worker a dedicated, generous stack.
         let spawn_result = std::thread::Builder::new()
             .name("OtaDownload".to_string())
-            .stack_size(20 * 1024)
+            .stack_size(16 * 1024)
             .spawn(move || {
                 std::thread::sleep(std::time::Duration::from_millis(500));
                 if let Err(e) = crate::ota::update_from_url(&url) {

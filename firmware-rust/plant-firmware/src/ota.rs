@@ -199,6 +199,22 @@ pub fn check_latest_version() -> Result<OtaCheckResult, String> {
     Ok(result)
 }
 
+fn run_version_check_once(label: &'static str) {
+    match std::thread::Builder::new()
+        .name("OtaCheckOnce".to_string())
+        .stack_size(16 * 1024)
+        .spawn(move || {
+            if let Err(e) = check_latest_version() {
+                warn!("[OTA] {} update check failed: {}", label, e);
+            }
+        }) {
+        Ok(handle) => {
+            let _ = handle.join();
+        }
+        Err(e) => warn!("[OTA] Failed to spawn {} check thread: {:?}", label, e),
+    }
+}
+
 /// Spawns the autonomous background worker for OTA update checks.
 /// - Checks shortly after boot (~60 seconds after startup).
 /// - Checks once per day sometime after midnight (~02:00 AM local time).
@@ -208,16 +224,14 @@ where
 {
     std::thread::Builder::new()
         .name("OtaCheckWorker".to_string())
-        .stack_size(16 * 1024)
+        .stack_size(4 * 1024)
         .spawn(move || {
             // Initial delay after boot to let Wi-Fi and SNTP settle
             info!("[OTA] Autonomous check worker initialized; will run initial check in 60s");
             std::thread::sleep(Duration::from_secs(60));
 
             // 1. Shortly after boot check:
-            if let Err(e) = check_latest_version() {
-                warn!("[OTA] Boot update check failed: {}", e);
-            }
+            run_version_check_once("Boot");
 
             let mut last_checked_day: Option<i64> = None;
 
@@ -239,9 +253,7 @@ where
                     if hour == 2 && last_checked_day != Some(day) {
                         last_checked_day = Some(day);
                         info!("[OTA] Nightly post-midnight update check running (local hour: 2 AM)...");
-                        if let Err(e) = check_latest_version() {
-                            warn!("[OTA] Nightly update check failed: {}", e);
-                        }
+                        run_version_check_once("Nightly");
                     }
                 }
             }
@@ -265,7 +277,7 @@ pub fn update_from_url(url: &str) -> Result<(), String> {
     let config = HttpConfig {
         follow_redirects_policy: FollowRedirectsPolicy::FollowGetHead,
         crt_bundle_attach: Some(esp_idf_svc::sys::esp_crt_bundle_attach),
-        buffer_size: Some(4096),
+        buffer_size: Some(2048),
         buffer_size_tx: Some(4096),
         timeout: Some(Duration::from_secs(60)),
         ..Default::default()
@@ -302,7 +314,7 @@ pub fn update_from_url(url: &str) -> Result<(), String> {
     };
 
     // Heap-allocate the chunk buffer rather than burning stack space.
-    let mut buf = vec![0u8; 4096];
+    let mut buf = vec![0u8; 2048];
     let mut total_bytes = 0usize;
     let mut last_log_bytes = 0usize;
     let mut chunks = 0usize;
