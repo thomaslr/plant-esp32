@@ -2177,8 +2177,9 @@ function showChartTooltip(pt, idx, total, canvasRect) {
     `;
     tooltip.style.display = 'block';
 
-    const targetX = Math.max(70, Math.min(canvasRect.width - 70, xPos));
-    const targetY = 32;
+    const halfW = (tooltip.offsetWidth || 160) / 2;
+    const targetX = Math.max(halfW + 8, Math.min(canvasRect.width - halfW - 8, xPos));
+    const targetY = 10;
 
     tooltip.style.left = `${targetX}px`;
     tooltip.style.top = `${targetY}px`;

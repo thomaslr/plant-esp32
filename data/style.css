@@ -606,7 +606,7 @@ header {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
     backdrop-filter: blur(6px);
     line-height: 1.5;
-    transform: translate(-50%, -120%);
+    transform: translate(-50%, 0);
     white-space: nowrap;
     transition: opacity 0.1s ease;
 }
