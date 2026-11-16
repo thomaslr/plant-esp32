@@ -1771,6 +1771,7 @@ function updateFullStatusUI(data) {
     const uptime = data.uptime_sec || 0;
     latestDeviceUptimeSec = uptime;
     statusFetchWallTime = Date.now();
+    updateHeaderUptime();
     const hrs = Math.floor(uptime / 3600);
     const mins = Math.floor((uptime % 3600) / 60);
     const secs = uptime % 60;
@@ -1778,6 +1779,28 @@ function updateFullStatusUI(data) {
 
     // Synchronize client-side clock with ESP32 reported time
     syncDeviceClock(data);
+}
+
+function formatHeaderUptime(totalSec) {
+    const sec = Math.max(0, Math.floor(Number(totalSec) || 0));
+    const days = Math.floor(sec / 86400);
+    const hrs = Math.floor((sec % 86400) / 3600);
+    const mins = Math.floor((sec % 3600) / 60);
+    if (days > 0) return `⏱️ ${days}d ${hrs}h ${mins}m`;
+    return `⏱️ ${hrs}h ${mins}m`;
+}
+
+function updateHeaderUptime() {
+    if (latestDeviceUptimeSec === null || statusFetchWallTime === null) return;
+    const currentSec = latestDeviceUptimeSec + Math.floor((Date.now() - statusFetchWallTime) / 1000);
+    const badge = document.getElementById('uptime-badge');
+    if (badge) {
+        const hrs = Math.floor(currentSec / 3600);
+        const mins = Math.floor((currentSec % 3600) / 60);
+        const secs = currentSec % 60;
+        badge.textContent = formatHeaderUptime(currentSec);
+        badge.title = `ESP32 System Uptime: ${hrs}h ${mins}m ${secs}s`;
+    }
 }
 
 let espClockOffsetMs = null;
@@ -1793,27 +1816,23 @@ function syncDeviceClock(data) {
 
         renderHeaderClock();
         if (!clockIntervalTimer) {
-            clockIntervalTimer = setInterval(renderHeaderClock, 1000);
+            clockIntervalTimer = setInterval(() => {
+                renderHeaderClock();
+                updateHeaderUptime();
+            }, 1000);
         }
     }
 }
 
 function renderHeaderClock() {
-    const clockBadge = document.getElementById('clock-badge');
     const diagTime = document.getElementById('diag-time');
     const diagNtp = document.getElementById('diag-ntp');
 
     if (espClockOffsetMs === null) {
-        if (clockBadge) clockBadge.innerText = '🕒 Connecting...';
         return;
     }
 
     if (!espNtpSynced) {
-        if (clockBadge) {
-            clockBadge.style.color = '#f59e0b';
-            clockBadge.innerHTML = '🕒 Syncing NTP...';
-            clockBadge.title = 'ESP32 is waiting for NTP time synchronization';
-        }
         if (diagNtp) diagNtp.innerHTML = '<span style="color: #f59e0b;">Syncing with NTP...</span>';
         return;
     }
@@ -1831,12 +1850,6 @@ function renderHeaderClock() {
 
     const dateStr = `${year}-${month}-${day}`;
     const timeStr = `${hours}:${minutes}:${seconds}`;
-
-    if (clockBadge) {
-        clockBadge.style.color = '#cbd5e1';
-        clockBadge.innerHTML = `<span style="color: #38bdf8;">🕒</span> ${dateStr} ${timeStr}`;
-        clockBadge.title = `ESP32 Time: ${dateStr} ${timeStr} (NTP Synchronized)`;
-    }
 
     if (diagTime) diagTime.innerText = `${dateStr} ${timeStr}`;
     if (diagNtp) diagNtp.innerHTML = '<span style="color: #10b981;">Synchronized (hourly)</span>';
