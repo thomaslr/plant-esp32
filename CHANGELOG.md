@@ -4,6 +4,15 @@ All notable changes to the Plant ESP32 firmware and web dashboard will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.59] - 2026-11-18
+
+### 📉 Reduce Persistent Sensor History to 10 Records
+- **Micro-Footprint NVS Flash Storage**: Reduced `MAX_HISTORY_CAPACITY` from 150 to 10 records (`570 B` total), cutting NVS partition occupancy to ~2.3% and minimizing copy-on-write sector wear (`reading.rs`, `api.rs`).
+- **Minimal Heap Usage**: Dropped JSON serialization allocation from ~10.8 KB to <1 KB during sensor logging and web retrieval, giving maximum free heap headroom to TLS, HTTP, and Wi-Fi drivers.
+- **Web Dashboard Synchronisation**: Updated telemetry history badge (`Capacity: 10 in Flash`) and log selection dropdown to 5 and 10 records (`index.html`, `app.js`).
+
+---
+
 ## [0.2.58] - 2026-11-16
 
 ### 🪶 Free 20 KB Heap for GitHub HTTPS OTA Streaming
@@ -52,6 +61,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.2.52] - 2026-11-16
 
 - Sync header with TimeStation: remove clock badge, add live uptime badge and GitHub link
+
+---
+
+## [0.2.59] - 2026-11-18
+
+### 📉 Reduce Persistent Sensor History to 10 Records
+- **Micro-Footprint NVS Flash Storage**: Reduced `MAX_HISTORY_CAPACITY` from 150 to 10 records (`570 B` total), cutting NVS partition occupancy to ~2.3% and minimizing copy-on-write sector wear (`reading.rs`, `api.rs`).
+- **Minimal Heap Usage**: Dropped JSON serialization allocation from ~10.8 KB to <1 KB during sensor logging and web retrieval, giving maximum free heap headroom to TLS, HTTP, and Wi-Fi drivers.
+- **Web Dashboard Synchronisation**: Updated telemetry history badge (`Capacity: 10 in Flash`) and log selection dropdown to 5 and 10 records (`index.html`, `app.js`).
 
 ---
 

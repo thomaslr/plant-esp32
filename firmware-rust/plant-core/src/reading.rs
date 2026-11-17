@@ -2,9 +2,8 @@
 //! used throughout the JSON API.
 
 /// Maximum number of sensor readings persisted in the 24 KiB NVS partition.
-/// 150 * 57 B = 8,550 B, leaving room for NVS copy-on-write garbage collection
-/// alongside config and Wi-Fi namespaces.
-pub const MAX_HISTORY_CAPACITY: usize = 150;
+/// 10 * 57 B = 570 B, keeping NVS footprint minuscule and heap allocations tiny.
+pub const MAX_HISTORY_CAPACITY: usize = 10;
 
 /// Hard byte ceiling for the serialized NVS history blob (`MAX_HISTORY_CAPACITY * BINARY_SIZE`).
 pub const MAX_HISTORY_BLOB_BYTES: usize = MAX_HISTORY_CAPACITY * SensorReading::BINARY_SIZE;
@@ -194,12 +193,12 @@ mod tests {
         let (blob, truncated) = SensorReading::encode_history_bounded(&items);
         assert!(truncated);
         assert_eq!(blob.len(), MAX_HISTORY_BLOB_BYTES);
-        assert_eq!(blob.len(), 150 * SensorReading::BINARY_SIZE);
+        assert_eq!(blob.len(), 10 * SensorReading::BINARY_SIZE);
 
-        // Kept the newest 150 items (timestamps 50..=199)
+        // Kept the newest 10 items (timestamps 190..=199)
         let first = SensorReading::from_binary(&blob[..SensorReading::BINARY_SIZE]).unwrap();
         let last = SensorReading::from_binary(&blob[blob.len() - SensorReading::BINARY_SIZE..]).unwrap();
-        assert_eq!(first.timestamp, 50);
+        assert_eq!(first.timestamp, 190);
         assert_eq!(last.timestamp, 199);
 
         // Under-limit input is not truncated

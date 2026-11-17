@@ -198,7 +198,7 @@ pub fn to_json<T: Serialize>(value: &T) -> String {
     serde_json::to_string(value).expect("API structs serialise infallibly")
 }
 
-/// `GET /api/sensor-log?n=` parsing: default 10, clamp to 1..=150; missing,
+/// `GET /api/sensor-log?n=` parsing: default 10, clamp to 1..=10; missing,
 /// non-numeric or non-positive values fall back to 10.
 pub fn parse_log_count(n: Option<&str>) -> usize {
     match n.and_then(|s| s.trim().parse::<i64>().ok()) {
@@ -379,14 +379,17 @@ mod tests {
     #[test]
     fn log_count_parsing() {
         assert_eq!(parse_log_count(None), 10);
-        assert_eq!(parse_log_count(Some("15")), 15);
+        assert_eq!(parse_log_count(Some("5")), 5);
         assert_eq!(parse_log_count(Some("0")), 10);
         assert_eq!(parse_log_count(Some("abc")), 10);
         assert_eq!(parse_log_count(Some("")), 10);
         assert_eq!(parse_log_count(Some("-4")), 10);
-        assert_eq!(parse_log_count(Some("100")), 100);
-        assert_eq!(parse_log_count(Some("150")), 150);
-        assert_eq!(parse_log_count(Some("5000")), 150);
+        assert_eq!(parse_log_count(Some("10")), 10);
+        assert_eq!(parse_log_count(Some("15")), 10);
+        assert_eq!(parse_log_count(Some("50")), 10);
+        assert_eq!(parse_log_count(Some("100")), 10);
+        assert_eq!(parse_log_count(Some("150")), 10);
+        assert_eq!(parse_log_count(Some("5000")), 10);
     }
 
     #[test]

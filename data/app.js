@@ -1898,13 +1898,13 @@ function renderLogTable(logs) {
     const badge = document.getElementById('log-count-badge');
     if (!logs || logs.length === 0) {
         tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;">No log data recorded yet.</td></tr>';
-        if (badge) badge.innerText = '0 / 150 in Flash';
+        if (badge) badge.innerText = '0 / 10 in Flash';
         renderTelemetryChart([]);
         return;
     }
 
     if (badge) {
-        badge.innerText = `${logs.length} / 150 in Flash`;
+        badge.innerText = `${logs.length} / 10 in Flash`;
     }
 
     tbody.innerHTML = logs.map((r, idx) => {
