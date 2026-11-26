@@ -649,9 +649,11 @@ pub fn create_provisioning_server(
     Ok(server)
 }
 
-/// Enables `TCP_NODELAY` on the underlying lwIP socket so HTTP headers and chunks
-/// are transmitted immediately without stalling on Nagle + Delayed ACK + Wi-Fi Modem Sleep.
-fn set_tcp_nodelay(req: &mut Request<&mut EspHttpConnection>) {
+/// Configures the underlying lwIP socket for responsive HTTP delivery:
+/// - `TCP_NODELAY = 1`: sends headers and body immediately without Nagle stalls.
+/// - `SO_SNDTIMEO = 15s`: overrides ESP-IDF httpd's 5s default so transient 2.4 GHz
+///   packet retransmissions do not trigger premature `ERR_CONNECTION_RESET`.
+fn configure_http_socket(req: &mut Request<&mut EspHttpConnection>) {
     unsafe {
         let raw_req = req.connection().handle();
         if !raw_req.is_null() {
@@ -665,10 +667,23 @@ fn set_tcp_nodelay(req: &mut Request<&mut EspHttpConnection>) {
                     &nodelay as *const _ as *const core::ffi::c_void,
                     core::mem::size_of::<core::ffi::c_int>() as esp_idf_svc::sys::socklen_t,
                 );
+                let timeout = esp_idf_svc::sys::timeval {
+                    tv_sec: 15,
+                    tv_usec: 0,
+                };
+                let _ = esp_idf_svc::sys::lwip_setsockopt(
+                    sockfd,
+                    esp_idf_svc::sys::SOL_SOCKET as core::ffi::c_int,
+                    esp_idf_svc::sys::SO_SNDTIMEO as core::ffi::c_int,
+                    &timeout as *const _ as *const core::ffi::c_void,
+                    core::mem::size_of::<esp_idf_svc::sys::timeval>() as esp_idf_svc::sys::socklen_t,
+                );
             }
         }
     }
 }
+
+const ASSET_ETAG: &str = concat!("\"", env!("CARGO_PKG_VERSION"), "\"");
 
 fn send_file(
     req: Request<&mut EspHttpConnection>,
@@ -686,32 +701,52 @@ fn send_binary(
     content_gz: &[u8],
 ) -> Result<(), EspIOError> {
     crate::led::notify_web_access();
-    set_tcp_nodelay(&mut req);
+    configure_http_socket(&mut req);
 
-    let accepts_gzip = req
-        .header("Accept-Encoding")
-        .map(|v| v.contains("gzip"))
-        .unwrap_or(false);
-
-    // Allow browsers and reverse proxies to cache static icons for 24 hours to reduce
-    // simultaneous connection contention during page load, while keeping HTML/JS/CSS fresh.
+    // Allow browsers and reverse proxies to cache static icons for 24 hours,
+    // and validate HTML/JS/CSS via firmware-version ETag for instant 304 responses.
     let cache_control = if content_type.starts_with("image/") {
         "public, max-age=86400"
     } else {
         "no-cache"
     };
 
+    if req
+        .header("If-None-Match")
+        .map(|v| v.trim() == ASSET_ETAG)
+        .unwrap_or(false)
+    {
+        let headers = [
+            ("ETag", ASSET_ETAG),
+            ("Cache-Control", cache_control),
+            ("Content-Length", "0"),
+        ];
+        let _resp = req.into_response(304, Some("Not Modified"), &headers)?;
+        return Ok(());
+    }
+
+    let accepts_gzip = req
+        .header("Accept-Encoding")
+        .map(|v| v.contains("gzip"))
+        .unwrap_or(false);
+
     if accepts_gzip {
+        let len_str = content_gz.len().to_string();
         let headers = [
             ("Content-Type", content_type),
             ("Content-Encoding", "gzip"),
+            ("Content-Length", len_str.as_str()),
+            ("ETag", ASSET_ETAG),
             ("Cache-Control", cache_control),
         ];
         let mut resp = req.into_response(200, Some("OK"), &headers)?;
         resp.write_all(content_gz)?;
     } else {
+        let len_str = content.len().to_string();
         let headers = [
             ("Content-Type", content_type),
+            ("Content-Length", len_str.as_str()),
+            ("ETag", ASSET_ETAG),
             ("Cache-Control", cache_control),
         ];
         let mut resp = req.into_response(200, Some("OK"), &headers)?;
@@ -726,9 +761,11 @@ fn send_json(
     json: &str,
 ) -> Result<(), EspIOError> {
     crate::led::notify_web_access();
-    set_tcp_nodelay(&mut req);
+    configure_http_socket(&mut req);
+    let len_str = json.len().to_string();
     let headers = [
         ("Content-Type", "application/json"),
+        ("Content-Length", len_str.as_str()),
         ("Cache-Control", "no-store"),
         ("Access-Control-Allow-Origin", "*"),
         ("Access-Control-Allow-Methods", "GET, POST, OPTIONS"),

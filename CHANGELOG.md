@@ -4,6 +4,15 @@ All notable changes to the Plant ESP32 firmware and web dashboard will be docume
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.60] - 2026-11-26
+
+### 🌐 Reliable Web UI Delivery & Distinct HTTP Activity LED
+- **Demand-Based Wi-Fi Wake During HTTP Sessions**: Temporarily switches Wi-Fi power-save to `WIFI_PS_NONE` upon incoming HTTP activity (`notify_web_access()`) and automatically restores `WIFI_PS_MIN_MODEM` after 15 seconds of HTTP idle (`wifi.rs`, `led.rs`). Eliminates DTIM sleep latency spikes during multi-asset browser page loads while preserving idle power savings.
+- **Hardened HTTP Socket & Caching**: Added `Content-Length`, firmware-versioned `ETag` (`304 Not Modified`) validation for static assets, and a 15-second `SO_SNDTIMEO` socket send timeout (`web.rs`), preventing `net::ERR_CONNECTION_RESET` mid-stream resets on 2.4 GHz packet retransmissions.
+- **Distinct HTTP Access LED Pattern**: Replaced the HTTP access double-pulse (which closely resembled the 2-beat idle heartbeat) with a rapid 5-blip "network activity flutter" (`30ms ON / 35ms OFF × 5`, `250ms` pause) in `led.rs`.
+
+---
+
 ## [0.2.59] - 2026-11-18
 
 ### 📉 Reduce Persistent Sensor History to 10 Records
@@ -61,6 +70,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.2.52] - 2026-11-16
 
 - Sync header with TimeStation: remove clock badge, add live uptime badge and GitHub link
+
+---
+
+## [0.2.60] - 2026-11-26
+
+### 🌐 Reliable Web UI Delivery & Distinct HTTP Activity LED
+- **Demand-Based Wi-Fi Wake During HTTP Sessions**: Temporarily switches Wi-Fi power-save to `WIFI_PS_NONE` upon incoming HTTP activity (`notify_web_access()`) and automatically restores `WIFI_PS_MIN_MODEM` after 15 seconds of HTTP idle (`wifi.rs`, `led.rs`). Eliminates DTIM sleep latency spikes during multi-asset browser page loads while preserving idle power savings.
+- **Hardened HTTP Socket & Caching**: Added `Content-Length`, firmware-versioned `ETag` (`304 Not Modified`) validation for static assets, and a 15-second `SO_SNDTIMEO` socket send timeout (`web.rs`), preventing `net::ERR_CONNECTION_RESET` mid-stream resets on 2.4 GHz packet retransmissions.
+- **Distinct HTTP Access LED Pattern**: Replaced the HTTP access double-pulse (which closely resembled the 2-beat idle heartbeat) with a rapid 5-blip "network activity flutter" (`30ms ON / 35ms OFF × 5`, `250ms` pause) in `led.rs`.
 
 ---
 

@@ -6,6 +6,7 @@
 //!    with a captive portal allowing users/friends to configure Wi-Fi credentials from any phone.
 
 use std::ffi::CString;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 use esp_idf_svc::eventloop::EspSystemEventLoop;
 use esp_idf_svc::hal::modem::Modem;
@@ -24,8 +25,30 @@ use plant_core::config::WifiConfig;
 
 use crate::storage::WifiCredentials;
 
+static WIFI_HTTP_BOOST_ACTIVE: AtomicBool = AtomicBool::new(false);
+
+/// Temporarily disables Wi-Fi modem sleep (`WIFI_PS_NONE`) during active HTTP
+/// browsing so multi-packet HTML/JS/CSS responses don't stall on DTIM sleep.
+pub fn boost_wifi_for_http() {
+    if !WIFI_HTTP_BOOST_ACTIVE.swap(true, Ordering::SeqCst) {
+        unsafe {
+            let _ = esp_wifi_set_ps(wifi_ps_type_t_WIFI_PS_NONE);
+        }
+    }
+}
+
+/// Restores the configured `modem_sleep` setting after HTTP activity goes idle.
+pub fn restore_wifi_ps_if_boosted(modem_sleep: bool) {
+    if WIFI_HTTP_BOOST_ACTIVE.swap(false, Ordering::SeqCst) && modem_sleep {
+        unsafe {
+            let _ = esp_wifi_set_ps(wifi_ps_type_t_WIFI_PS_MIN_MODEM);
+        }
+    }
+}
+
 /// Configures runtime Wi-Fi radio parameters (TX power, bandwidth, modem sleep).
 pub fn apply_wifi_radio_config(cfg: &WifiConfig) {
+    WIFI_HTTP_BOOST_ACTIVE.store(false, Ordering::SeqCst);
     unsafe {
         let _ = esp_wifi_set_max_tx_power(cfg.tx_power);
         let bw = if cfg.force_20mhz {

@@ -10,12 +10,12 @@
 //! - Watering Active: Solid ON while pump is running.
 //! - Hardware Factory Reset: Solid ON while BOOT button held, followed by 5 rapid confirmation blips upon 5s reset.
 //! - Firmware OTA Flashing: Fast 10 Hz continuous strobe (50ms ON / 50ms OFF) while flash writing.
-//! - Remote Web Access: Quick double-pulse flicker (40ms ON, 60ms OFF, 40ms ON, 400ms pause) on HTTP activity.
+//! - Remote Web Access: Rapid 5-blip network activity flutter (30ms ON, 35ms OFF x5, 250ms pause) on HTTP activity.
 //! - Wi-Fi Connecting: Distinct beacon blink (200ms ON, 800ms OFF).
 //! - Reservoir Dry: Accelerando frequency sweep (low to high blink) over 3 seconds.
 //! - Ultrasonic Sensor Fault: 4 blips (4 pulses: 160ms ON, 240ms OFF, 2000ms pause).
 //! - Soil Moisture Sensor Fault: Triple blip (3 pulses: 160ms ON, 240ms OFF, 2000ms pause).
-//! - Normal Healthy Idle: Single calm 100ms blip once every 10 seconds.
+//! - Normal Healthy Idle: Calm double-pulse heartbeat (80ms ON, 120ms OFF, 80ms ON) once every 10 seconds.
 
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::{Arc, Mutex};
@@ -86,10 +86,12 @@ fn sleep_responsive(ms: u64) {
     }
 }
 
-/// Notifies the visual signaling system of an incoming web request.
+/// Notifies the visual signaling system of an incoming web request and wakes Wi-Fi
+/// from modem sleep briefly so multi-asset page loads complete without stalling.
 pub fn notify_web_access() {
     let now_ms = unsafe { (esp_idf_svc::sys::esp_timer_get_time() / 1000) as u32 };
     LAST_HTTP_ACTIVITY_MS.store(now_ms, Ordering::Relaxed);
+    crate::wifi::boost_wifi_for_http();
 }
 
 /// Active fault categories monitored by the visual signaling supervisor.
@@ -168,7 +170,11 @@ pub fn query_status(state: &Arc<Mutex<AppState>>) -> SystemLedStatus {
 
     let now_ms = unsafe { (esp_idf_svc::sys::esp_timer_get_time() / 1000) as u32 };
     let last_http = LAST_HTTP_ACTIVITY_MS.load(Ordering::Relaxed);
-    let web_active = last_http > 0 && now_ms.saturating_sub(last_http) < 2500;
+    let http_elapsed = now_ms.saturating_sub(last_http);
+    let web_active = last_http > 0 && http_elapsed < 2500;
+    if last_http > 0 && http_elapsed >= 15_000 && !crate::ota::is_ota_in_progress() {
+        crate::wifi::restore_wifi_ps_if_boosted(app.config.wifi.modem_sleep);
+    }
 
     SystemLedStatus {
         pump_active,
@@ -345,14 +351,22 @@ pub fn run_led_supervisor(state: Arc<Mutex<AppState>>) -> ! {
         }
 
         // 4. Web Traffic Activity (Remote user browsing/interacting with Web UI)
-        // Distinct fast double-tap flicker (40ms ON, 60ms OFF, 40ms ON, 400ms pause)
+        // Distinct rapid 5-blip network activity flutter (30ms ON, 35ms OFF x5, 250ms pause)
         if status.web_active {
-            pulse(40, 60);
-            pulse(40, 400);
+            for _ in 0..4 {
+                if is_boot_button_held()
+                    || is_factory_reset_in_progress()
+                    || crate::ota::is_ota_in_progress()
+                {
+                    break;
+                }
+                pulse(30, 35);
+            }
+            pulse(30, 250);
             continue;
         }
 
-        // 5. Normal Healthy Idle: 100ms pulse once every 10 seconds
+        // 5. Normal Healthy Idle: calm double-pulse heartbeat once every 10 seconds
         play_idle_heartbeat(&state);
     }
 }
